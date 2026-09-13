@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NGUYỄN HỮU PHI — Suno Bulk Studio</title>
   <meta name="description" content="Portfolio các công cụ tự động hóa sáng tạo nội dung, AI Music và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="shortcut icon" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/cat-square.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -133,6 +136,20 @@ button {
   font-size: 1.1rem;
   color: #000;
   box-shadow: 0 0 14px var(--amber-glow);
+}
+
+.logo-cat-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 10px rgba(245, 158, 11, 0.45));
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.logo-brand:hover .logo-cat-img {
+  transform: scale(1.15) rotate(-6deg);
 }
 
 .nav-menu {
@@ -1076,7 +1093,7 @@ button {
   <header class="navbar">
     <div class="container nav-wrap">
       <a href="#" class="logo-brand">
-        <div class="logo-badge">⚡</div>
+        <img src="assets/cat-icon.png" alt="Fikat Cat" class="logo-cat-img">
         <span>FIKAT PROJECT</span>
       </a>
 
@@ -1407,7 +1424,7 @@ button {
       <div class="footer-content">
         <div class="footer-brand">
           <div class="logo-brand" style="margin-bottom: 8px;">
-            <div class="logo-badge" style="width: 32px; height: 32px; font-size: 0.95rem;">⚡</div>
+            <img src="assets/cat-icon.png" alt="Fikat Cat" class="logo-cat-img" style="width: 36px; height: 36px;">
             <span>FIKAT PROJECT</span>
           </div>
           <p style="font-size: 0.85rem; color: var(--text-dim); max-width: 360px;">
