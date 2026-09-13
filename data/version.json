@@ -1,0 +1,144 @@
+{
+  "appId": "suno-bulk-studio",
+  "name": "Suno Bulk Studio",
+  "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
+  "currentVersion": "2.0",
+  "releaseDate": "2026-09-14",
+  "status": "stable",
+  "statusText": "Hoạt động ổn định",
+  "download": {
+    "zipFile": "Suno_Bulk_Downloader.zip",
+    "fileName": "Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip",
+    "fileSize": "116.8 MB",
+    "architecture": "Windows x64 (Win 10 / 11)",
+    "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
+    "requirements": "Windows 10 / 11 64-bit, Microsoft Edge WebView2"
+  },
+  "keyFeatures": [
+    {
+      "icon": "✂️",
+      "title": "Bóc tách Stem Nhạc Cụ Chuyên Nghiệp (12 Stems)",
+      "desc": "Bóc tách Stems chuẩn Suno: Auto Split (12 stems gồm Lead Vocal, Drums, Bass, Guitar, Piano, Strings, Synth...), Split from mix (Vocal & Beat) và Advanced Split tra cứu 240+ nhạc cụ. Tự động xuất MIDI và gom gọn vào 1 file ZIP."
+    },
+    {
+      "icon": "📋",
+      "title": "Chạy Prompt theo File Sheet (Excel / CSV)",
+      "desc": "Tự động đọc danh sách prompt từ file .xlsx, .csv, .txt (Cột 1: STT, Cột 2: Prompt). Tự bốc ngẫu nhiên 5-10 lượt mỗi dòng, gửi xong tự xóa sạch và chuyển sang dòng kế tiếp."
+    },
+    {
+      "icon": "⚡",
+      "title": "Hỗ trợ Model Suno v6 Mới nhất",
+      "desc": "Tự động nhận diện và đồng bộ với model v6 Pro, v6-wild, v6-mini mới nhất trên tài khoản Web Suno."
+    },
+    {
+      "icon": "📁",
+      "title": "Tự động tạo Workspace mới mỗi Prompt",
+      "desc": "Tự động tạo Workspace riêng biệt sạch 0 bài cho từng Prompt, chống nghẽn Web Suno khi chạy hàng trăm bài."
+    },
+    {
+      "icon": "📥",
+      "title": "Tự động tạo Playlist & Tải song song",
+      "desc": "Tự động tạo Playlist công khai, gom bài và quét link tải về máy song song đa luồng cực nhanh."
+    },
+    {
+      "icon": "🔐",
+      "title": "Giải mã DRM Audio Native",
+      "desc": "Thuật toán giải mã bảo vệ bản quyền Suno trực tiếp bằng JWT Clerk token, lưu MP3/WAV chuẩn 320kbps kèm bìa album."
+    },
+    {
+      "icon": "🛡️",
+      "title": "100% Độc lập (Self-Contained)",
+      "desc": "Được biên dịch theo chuẩn .NET 8 LTS, không cần cài đặt thêm .NET SDK hay runtime bên ngoài, giải nén là chạy ngay."
+    }
+  ],
+  "changelog": [
+    {
+      "version": "2.0",
+      "date": "14/09/2026",
+      "tag": "Đại bản phát hành 2.0",
+      "badge": "latest",
+      "highlights": [
+        "Tính năng bóc tách Stems nhạc cụ chuyên nghiệp chuẩn Suno: Auto Split (12 Stems), Split from mix (Vocal & Beat) và Advanced Split tra cứu 240+ nhạc cụ",
+        "Hỗ trợ trích xuất toàn bộ Stems, xuất kèm file MIDI (.midi) và tự động gom trọn bộ vào 1 file ZIP (.zip)",
+        "Nâng cấp toàn diện typography và màu sắc giao diện: khắc phục triệt để chữ mờ, nhỏ, tăng độ tương phản sắc nét",
+        "Thanh cuộn 6px mượt mà sleek bo góc cao cấp, căn chỉnh giao diện chuẩn Suno Studio v2.0"
+      ]
+    },
+    {
+      "version": "1.5.2",
+      "date": "13/09/2026",
+      "tag": "Tính năng lớn",
+      "badge": "feature",
+      "highlights": [
+        "Tự động tạo Workspace mới tinh cho mỗi Prompt/Lượt chạy (sạch 0 bài, chống treo lag Web Suno)",
+        "Thêm cơ chế Timeout an toàn 60s tự động giải phóng các bài bị server Suno từ chối/bỏ qua",
+        "Thêm nút 'Quét đồng bộ' từ tài khoản Suno và tự động gỡ bộ lọc kẹt"
+      ]
+    },
+    {
+      "version": "1.5.1",
+      "date": "13/09/2026",
+      "tag": "Bản vá ổn định (Hotfix)",
+      "badge": "patch",
+      "highlights": [
+        "Khắc phục triệt để lỗi đứng im ở trạng thái 'Chuyển đổi…' khi prompt dài vượt quá giới hạn đường dẫn Windows MAX_PATH",
+        "Thêm cơ chế tự động thử lại 3 lần (Retry Backoff) xử lý độ trễ truyền dữ liệu CDN của Suno khi bật Tự động tải",
+        "Thêm tham số -nostdin và timeout an toàn cho FFmpeg, chống treo tiến trình xử lý âm thanh ngầm",
+        "Đồng bộ chuẩn xác thông báo lỗi giữa Hàng đợi tạo nhạc và Hàng đợi tải"
+      ]
+    },
+    {
+      "version": "1.5.0",
+      "date": "12/09/2026",
+      "tag": "Bản phát hành lớn",
+      "badge": "feature",
+      "highlights": [
+        "Hỗ trợ đầy đủ thế hệ Model Suno v6 Pro / v6-wild / v6-mini",
+        "Khắc phục triệt để lỗi WebView2 0x800700AA bằng cơ chế SharedEnv",
+        "Chuyển toàn bộ ứng dụng sang .NET 8.0 LTS Self-Contained chạy mượt trên mọi máy tính không cần cài thêm gì",
+        "Đóng gói kèm file ZIP chuẩn chống chặn khi gửi qua Zalo / Telegram"
+      ]
+    },
+    {
+      "version": "1.4.0",
+      "date": "11/09/2026",
+      "tag": "Tính năng lớn",
+      "badge": "feature",
+      "highlights": [
+        "Thêm chế độ Chạy theo Sheet (.xlsx, .csv, .txt) với công tắc Bật/Tắt riêng",
+        "Hỗ trợ file cấu trúc 2 cột (Cột 1: STT, Cột 2: Prompt)",
+        "Thiết lập ngẫu nhiên 5 đến 10 lượt gửi cho mỗi prompt",
+        "Tự động xóa sạch textarea trên trình duyệt Suno và chuyển sang prompt tiếp theo"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "11/09/2026",
+      "tag": "Tối ưu hóa",
+      "badge": "patch",
+      "highlights": [
+        "Tích hợp tự động hóa quy trình Playlist: Tạo playlist -> Thêm bài -> Công khai -> Quét tải",
+        "Tự động tải về máy ngay khi từng bài hoàn thành",
+        "Sửa lỗi giải mã DRM khi thiếu glt token bằng Clerk JWT"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "05/09/2026",
+      "tag": "Khởi tạo",
+      "badge": "initial",
+      "highlights": [
+        "Giao diện WPF Warm Amber Dark theme",
+        "Quét link bài hát và playlist Suno",
+        "Tải đa luồng, hỗ trợ chuyển đổi MP3/WAV qua FFmpeg tích hợp"
+      ]
+    }
+  ],
+  "contact": {
+    "zalo": "0795538491",
+    "zaloUrl": "https://zalo.me/0795538491",
+    "email": "fikat.ft@gmail.com",
+    "emailUrl": "mailto:fikat.ft@gmail.com"
+  }
+}

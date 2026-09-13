@@ -1,0 +1,1848 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NGUYỄN HỮU PHI — Suno Bulk Studio</title>
+  <meta name="description" content="Portfolio các công cụ tự động hóa sáng tạo nội dung, AI Music và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+/* ==========================================================================
+   SUNO STUDIO & CREATOR PORTFOLIO - REFINED HIGH-END DARK AMBER THEME
+   ========================================================================== */
+
+:root {
+  --bg-primary: #080604;
+  --bg-surface: #0f0c08;
+  --bg-card: rgba(18, 14, 9, 0.75);
+  --bg-card-hover: rgba(28, 21, 14, 0.85);
+  --border-subtle: rgba(245, 158, 11, 0.15);
+  --border-active: rgba(245, 158, 11, 0.45);
+  --border-glow: rgba(245, 158, 11, 0.25);
+  
+  --amber-primary: #f59e0b;
+  --amber-deep: #d97706;
+  --amber-glow: rgba(245, 158, 11, 0.35);
+  --amber-soft: rgba(245, 158, 11, 0.12);
+  
+  --text-main: #f5eee4;
+  --text-muted: #9e8e7c;
+  --text-dim: #6d5d4d;
+  
+  --green-online: #22c55e;
+  --green-glow: rgba(34, 197, 94, 0.35);
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 9999px;
+  
+  --shadow-card: 0 16px 40px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(245, 158, 11, 0.12);
+  --shadow-glow: 0 0 30px var(--amber-glow);
+  --transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reset & Base */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-primary);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.18) 0%, transparent 55%),
+    radial-gradient(circle at 15% 35%, rgba(180, 83, 9, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 65%, rgba(245, 158, 11, 0.06) 0%, transparent 45%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ════════════════════════ TOP NAVBAR ════════════════════════ */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(8, 6, 4, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 14px 0;
+}
+
+.nav-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: nowrap;
+}
+
+.logo-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logo-badge {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, var(--amber-primary), var(--amber-deep));
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #000;
+  box-shadow: 0 0 14px var(--amber-glow);
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.nav-link {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: var(--transition);
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.nav-link:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-link.active {
+  color: var(--amber-primary);
+  background: var(--amber-soft);
+  border: 1px solid var(--border-subtle);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4ade80;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--green-online);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--green-glow);
+  animation: pulse-green 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+/* Primary Button */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--amber-primary), var(--amber-deep));
+  color: #000;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 13px 26px;
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 20px var(--amber-glow);
+  transition: var(--transition);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.5);
+  background: linear-gradient(135deg, #fbbf24, var(--amber-primary));
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-main);
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 11px 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.btn-ghost:hover {
+  background: var(--amber-soft);
+  color: var(--amber-primary);
+  border-color: var(--border-active);
+  transform: translateY(-2px);
+}
+
+/* ════════════════════════ HERO SPOTLIGHT ════════════════════════ */
+.hero-section {
+  padding: 70px 0 60px;
+  position: relative;
+}
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 52px;
+  align-items: center;
+}
+
+.hero-badge-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: var(--amber-soft);
+  border: 1px solid var(--border-subtle);
+  color: var(--amber-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  white-space: nowrap;
+}
+
+.hero-title {
+  font-size: 3.3rem;
+  line-height: 1.14;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 18px;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #fff 35%, var(--amber-primary) 95%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.hero-desc {
+  font-size: 1.12rem;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  max-width: 580px;
+  line-height: 1.65;
+}
+
+.hero-cta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.meta-stats {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-val {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--amber-primary);
+}
+
+.stat-lbl {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+/* Featured App Showcase Card */
+.app-card-featured {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 30px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
+}
+
+.app-card-featured::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber-primary), transparent);
+}
+
+.card-header-live {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.version-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--border-active);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--amber-primary);
+  white-space: nowrap;
+}
+
+.feature-bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.feature-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+.bullet-icon {
+  color: var(--amber-primary);
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.download-box {
+  background: rgba(8, 6, 4, 0.85);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.download-box-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 0.82rem;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.download-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-top: 12px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ════════════════════════ FEATURE TABS SECTION ════════════════════════ */
+.features-section {
+  padding: 70px 0;
+}
+
+.section-header {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 40px;
+}
+
+.section-tag {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber-primary);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.section-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 14px;
+}
+
+.section-desc {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+.feature-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  border-radius: var(--radius-pill);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.tab-btn.active, .tab-btn:hover {
+  color: #000;
+  background: linear-gradient(135deg, var(--amber-primary), var(--amber-deep));
+  border-color: var(--amber-primary);
+  box-shadow: 0 4px 18px var(--amber-glow);
+}
+
+/* CRITICAL FIX: Tab Content is a pure block container */
+.tab-content {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 44px;
+  box-shadow: var(--shadow-card);
+  width: 100%;
+}
+
+.tab-pane {
+  display: none;
+  width: 100%;
+}
+
+.tab-pane.active {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 44px;
+  align-items: center;
+  width: 100%;
+}
+
+.pane-text h3 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: #fff;
+}
+
+.pane-text p {
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+/* CRITICAL FIX: Highlight items use standard clean list layout without flex stacking bugs */
+.pane-highlights {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pane-highlights li {
+  position: relative;
+  padding-left: 28px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.pane-highlights li strong {
+  color: #fff;
+}
+
+.pane-highlights li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: var(--amber-primary);
+  font-size: 1rem;
+}
+
+.pane-preview {
+  background: #090704;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  border-radius: var(--radius-md);
+  padding: 24px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: #e2d7c7;
+  box-shadow: inset 0 0 35px rgba(0, 0, 0, 0.85);
+  overflow-x: auto;
+}
+
+.preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.window-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.window-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.window-dot:nth-child(1) { background: #ef4444; }
+.window-dot:nth-child(2) { background: #f59e0b; }
+.window-dot:nth-child(3) { background: #22c55e; }
+
+/* ════════════════════════ PROJECTS CATALOG ════════════════════════ */
+.projects-section {
+  padding: 60px 0 80px;
+}
+
+.filter-bar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 36px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 9px 20px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.filter-btn.active, .filter-btn:hover {
+  background: var(--amber-soft);
+  color: var(--amber-primary);
+  border-color: var(--border-active);
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 28px;
+}
+
+.project-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--border-active);
+  box-shadow: var(--shadow-glow), 0 16px 36px rgba(0, 0, 0, 0.9);
+}
+
+.project-card.featured-card {
+  border-color: rgba(245, 158, 11, 0.45);
+  background: linear-gradient(180deg, rgba(30, 22, 14, 0.85) 0%, rgba(16, 12, 8, 0.85) 100%);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.project-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--amber-soft);
+  color: var(--amber-primary);
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.project-version {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.project-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+.project-desc {
+  font-size: 0.92rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.tech-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.tech-tag {
+  font-size: 0.76rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  color: #d1c5b4;
+  white-space: nowrap;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 18px;
+  margin-top: auto;
+}
+
+.card-link {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--amber-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+  white-space: nowrap;
+}
+
+.card-link:hover {
+  transform: translateX(4px);
+}
+
+/* ════════════════════════ CHANGELOG TIMELINE ════════════════════════ */
+.changelog-section {
+  padding: 70px 0;
+  background: rgba(12, 9, 6, 0.5);
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.timeline {
+  max-width: 820px;
+  margin: 0 auto;
+  position: relative;
+  padding-left: 36px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--amber-primary), rgba(217, 119, 6, 0.1));
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 36px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -36px;
+  top: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  border: 3px solid var(--amber-primary);
+  box-shadow: 0 0 10px var(--amber-glow);
+}
+
+.timeline-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 22px 26px;
+}
+
+.timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.timeline-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.timeline-date {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+
+.timeline-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 0.92rem;
+  color: var(--text-muted);
+}
+
+.timeline-list li {
+  position: relative;
+  padding-left: 20px;
+  line-height: 1.55;
+}
+
+.timeline-list li::before {
+  content: '▹';
+  position: absolute;
+  left: 0;
+  color: var(--amber-primary);
+}
+
+/* ════════════════════════ REALTIME TOAST ════════════════════════ */
+.live-toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 1000;
+  background: rgba(16, 12, 8, 0.95);
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--amber-primary);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85), 0 0 24px var(--amber-glow);
+  border-radius: var(--radius-md);
+  padding: 20px 24px;
+  max-width: 400px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transform: translateY(160%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.live-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.toast-icon {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.toast-body {
+  flex: 1;
+}
+
+.toast-title {
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.toast-msg {
+  font-size: 0.86rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.toast-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-toast {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--amber-primary);
+  color: #000;
+  white-space: nowrap;
+}
+
+.btn-toast-dismiss {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  padding: 7px 12px;
+  white-space: nowrap;
+}
+
+/* ════════════════════════ CONTACT SECTION ════════════════════════ */
+.contact-section {
+  padding: 60px 0 90px;
+  position: relative;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 28px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.contact-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 32px 28px;
+  display: flex;
+  gap: 22px;
+  align-items: flex-start;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+.contact-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--amber-primary), transparent);
+  opacity: 0;
+  transition: var(--transition);
+}
+
+.contact-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-active);
+  box-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.9), 0 0 28px var(--amber-glow);
+}
+
+.contact-card:hover::before {
+  opacity: 1;
+}
+
+.contact-icon-wrap {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.zalo-icon-wrap {
+  background: rgba(14, 165, 233, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.email-icon-wrap {
+  background: var(--amber-soft);
+  color: var(--amber-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.contact-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.contact-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--amber-primary);
+  margin-bottom: 6px;
+}
+
+.contact-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  font-family: var(--font-mono);
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.contact-text {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin-bottom: 20px;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ════════════════════════ FOOTER ════════════════════════ */
+.footer {
+  padding: 60px 0 32px;
+  border-top: 1px solid var(--border-subtle);
+  background: #060503;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+.footer-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 28px;
+  margin-bottom: 28px;
+}
+
+.footer-copy {
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+/* ════════════════════════ RESPONSIVE ════════════════════════ */
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .tab-pane.active {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-menu {
+    display: none;
+  }
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  .tab-content {
+    padding: 24px;
+  }
+  .projects-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-card {
+    padding: 24px 20px;
+    gap: 16px;
+  }
+}
+
+</style>
+</head>
+<body>
+
+  <!-- ════════════════════════ TOP NAVBAR ════════════════════════ -->
+  <header class="navbar">
+    <div class="container nav-wrap">
+      <a href="#" class="logo-brand">
+        <div class="logo-badge">⚡</div>
+        <span>FIKAT PROJECT</span>
+      </a>
+
+      <nav>
+        <ul class="nav-menu">
+          <li><a href="#featured" class="nav-link active">Suno Studio</a></li>
+          <li><a href="#features" class="nav-link">Tính năng</a></li>
+          <li><a href="#packages" class="nav-link">Bản phát hành</a></li>
+          <li><a href="#changelog" class="nav-link">Lịch sử cập nhật</a></li>
+          <li><a href="#contact" class="nav-link">Liên hệ</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span>Online • Realtime</span>
+        </div>
+        <button id="checkUpdateBtn" class="btn-ghost" title="Kiểm tra phiên bản mới theo thời gian thực">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+          Kiểm tra cập nhật
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ════════════════════════ HERO SPOTLIGHT ════════════════════════ -->
+  <section id="featured" class="hero-section">
+    <div class="container hero-grid">
+      
+      <!-- Hero Left: Info & Actions -->
+      <div class="hero-content">
+        <div class="hero-badge-tag">
+          <span>🔥 TIÊU ĐIỂM DỰ ÁN</span>
+          <span>•</span>
+          <span id="heroVersionBadge">v2.0</span>
+        </div>
+        <h1 class="hero-title">
+          Tạo & Tải Nhạc <br>
+          <span class="gradient-text">Suno AI Hàng Loạt</span>
+        </h1>
+        <p class="hero-desc">
+          Công cụ tối thượng tự động nạp Sheet Excel/CSV, bốc ngẫu nhiên số lượt gửi, bóc tách Stems chuyên nghiệp (12 stems/MIDI/ZIP), hỗ trợ đầy đủ thế hệ Model Suno v6 mới nhất và tải nhạc DRM chất lượng cao song song về máy.
+        </p>
+
+        <div class="hero-cta-group">
+          <a id="heroDownloadBtn" href="https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip" class="btn-primary" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Tải bản mới nhất (.ZIP)</span>
+          </a>
+          <a href="#features" class="btn-ghost">
+            <span>Khám phá tính năng</span>
+            <span style="font-size: 1.1rem; line-height: 1;">↓</span>
+          </a>
+        </div>
+
+        <div class="meta-stats">
+          <div class="stat-item">
+            <span class="stat-val" id="heroFileSize">116.8 MB</span>
+            <span class="stat-lbl">Dung lượng file</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val">.NET 8.0 LTS</span>
+            <span class="stat-lbl">Self-Contained (Chạy ngay)</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" id="heroReleaseDate">14/09/2026</span>
+            <span class="stat-lbl">Ngày phát hành</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero Right: Live Status Card -->
+      <div class="hero-visual">
+        <div class="app-card-featured">
+          <div class="card-header-live">
+            <div>
+              <div style="font-size: 0.78rem; color: var(--text-dim); text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 2px;">CẬP NHẬT TRỰC TIẾP</div>
+              <h2 style="font-size: 1.45rem; font-weight: 800; color: #fff;">Suno Bulk Studio</h2>
+            </div>
+            <span id="cardVersionChip" class="version-chip">v2.0 • STABLE</span>
+          </div>
+
+          <ul class="feature-bullets">
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span><strong>Chạy theo Sheet:</strong> Đọc 2 cột (STT, Prompt), ngẫu nhiên 5-10 lượt, tự xóa & đổi prompt.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span><strong>Model Suno v6:</strong> Hỗ trợ v6 Pro, v6-wild, v6-mini mới nhất.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span><strong>Tải DRM song song:</strong> Tự tạo Playlist công khai, gom link tải đa luồng 320kbps.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span><strong>Chống chặn khi gửi:</strong> Nén ZIP chuẩn, không lỗi SmartScreen / Zalo / Telegram.</span>
+            </li>
+          </ul>
+
+          <div class="download-box">
+            <div class="download-box-header">
+              <span style="display: inline-flex; align-items: center; gap: 8px; color: #4ade80; font-weight: 600;">
+                <span class="status-dot"></span>
+                <span>Tương thích Windows 10 & 11 (64-bit)</span>
+              </span>
+              <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--amber-primary); font-weight: 700;">Portable 100%</span>
+            </div>
+            <a id="cardDownloadBtn" href="https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip" class="btn-primary" style="width: 100%; justify-content: center;" download>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Tải File Cài Đặt (.ZIP)</span>
+            </a>
+            <div class="download-details">
+              <span>Bản sạch virus, đã mã hóa Obfuscar</span>
+              <span>Không cần cài thêm phần mềm phụ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════ FEATURE SHOWCASE TABS ════════════════════════ -->
+  <section id="features" class="features-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">CÁC TÍNH NĂNG ĐỘT PHÁ</span>
+        <h2 class="section-title">Trải nghiệm tự động hóa Suno AI toàn diện</h2>
+        <p class="section-desc">Được tối ưu để xử lý số lượng lớn bài hát trong thời gian ngắn nhất mà không bị giới hạn hoặc lỗi.</p>
+      </div>
+
+      <div class="feature-tabs">
+        <button class="tab-btn active" data-tab="tab-sheet">📋 Chạy theo File Sheet (Excel / CSV)</button>
+        <button class="tab-btn" data-tab="tab-v6">⚡ Model Suno v6 Mới Nhất</button>
+        <button class="tab-btn" data-tab="tab-download">📥 Tự Động Hóa Playlist & Tải DRM</button>
+      </div>
+
+      <div class="tab-content">
+        <!-- Tab 1: Sheet Mode -->
+        <div id="tab-sheet" class="tab-pane active">
+          <div class="pane-text">
+            <h3>Chạy danh sách Prompt từ Sheet tự động</h3>
+            <p>Không cần ngồi gõ từng prompt thủ công. Chỉ cần nạp file Excel hoặc CSV 2 cột, tool sẽ thay bạn thực hiện tất cả công việc.</p>
+            <ul class="pane-highlights">
+              <li><strong>Cấu trúc 2 cột:</strong> Cột 1 là STT, Cột 2 là Prompt mô tả bài hát.</li>
+              <li><strong>Ngẫu nhiên thông minh:</strong> Tự động bốc từ 5 đến 10 lượt gửi mỗi prompt.</li>
+              <li><strong>Tự xóa & chuyển dòng:</strong> Xóa sạch ô nhập trên Suno sau khi hoàn tất lượt và chuyển ngay sang prompt kế tiếp.</li>
+            </ul>
+          </div>
+          <div class="pane-preview">
+            <div class="preview-bar">
+              <div class="window-dots"><div class="window-dot"></div><div class="window-dot"></div><div class="window-dot"></div></div>
+              <span>Sheet_Prompts.xlsx — Simulator</span>
+            </div>
+            <div style="color: #6ee7b7; margin-bottom: 8px;">[ROW 1] STT: 1 | Prompt: Pop ballad with emotional female vocals</div>
+            <div style="color: #f59e0b; margin-bottom: 8px;">➜ Bốc ngẫu nhiên: 7 lượt (= 14 bài)</div>
+            <div style="color: #93c5fd; margin-bottom: 8px;">➜ Đang gửi lượt 1.. 2.. 3.. 4.. 5.. 6.. 7 [OK]</div>
+            <div style="color: #f43f5e; margin-bottom: 8px;">➜ Xóa sạch prompt DOM Suno...</div>
+            <div style="color: #6ee7b7;">[ROW 2] STT: 2 | Prompt: Acoustic guitar energetic rock</div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Model v6 -->
+        <div id="tab-v6" class="tab-pane">
+          <div class="pane-text">
+            <h3>Hỗ trợ trọn vẹn thế hệ Model Suno v6</h3>
+            <p>Tương thích ngay lập tức với các model âm nhạc mạnh mẽ nhất của Suno mà không cần cấu hình phức tạp.</p>
+            <ul class="pane-highlights">
+              <li><strong>Mặc định theo Web:</strong> Tự động dùng đúng model v6 mà tài khoản bạn đang chọn.</li>
+              <li><strong>Lựa chọn đa dạng:</strong> v6 Pro, v6-wild (thử nghiệm) và v6-mini (tiết kiệm).</li>
+              <li><strong>Chất lượng đỉnh cao:</strong> Vocal trong trẻo, giai điệu bắt tai chuẩn phòng thu.</li>
+            </ul>
+          </div>
+          <div class="pane-preview">
+            <div class="preview-bar">
+              <div class="window-dots"><div class="window-dot"></div><div class="window-dot"></div><div class="window-dot"></div></div>
+              <span>Suno Model Engine — v6.0</span>
+            </div>
+            <div style="color: #f59e0b; margin-bottom: 12px;">ACTIVE_MODEL: "v6" (Pro - Refined Audio)</div>
+            <div style="color: #e2d7c7; margin-bottom: 6px;">Sample Rate: 48,000 Hz | Dual Channel Stereo</div>
+            <div style="color: #e2d7c7; margin-bottom: 6px;">Output Format: MP3 320kbps / Lossless WAV</div>
+            <div style="color: #4ade80;">Latency per batch: 2.0s (Anti-429 Safe Delay)</div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Download & DRM -->
+        <div id="tab-download" class="tab-pane">
+          <div class="pane-text">
+            <h3>Quy trình gom Playlist và Tải nhạc tự động</h3>
+            <p>Giải quyết triệt để lỗi chặn link riêng tư bằng cách tự động gom bài vào playlist công khai và tải song song đa luồng.</p>
+            <ul class="pane-highlights">
+              <li><strong>Tạo Playlist tức thì:</strong> Tự động thêm bài đã tạo vào playlist trên tài khoản của bạn.</li>
+              <li><strong>Tải song song đa luồng:</strong> Tải 5–10 bài cùng lúc với thanh tiến trình trực quan.</li>
+              <li><strong>Giải mã DRM:</strong> Trích xuất audio gốc có bản quyền, nhúng sẵn ảnh bìa và ID3 metadata.</li>
+            </ul>
+          </div>
+          <div class="pane-preview">
+            <div class="preview-bar">
+              <div class="window-dots"><div class="window-dot"></div><div class="window-dot"></div><div class="window-dot"></div></div>
+              <span>Download_Queue — Multi-thread</span>
+            </div>
+            <div style="color: #4ade80; margin-bottom: 6px;">[1/10] Summer Pop Melody.mp3 — 100% [HOÀN TẤT]</div>
+            <div style="color: #4ade80; margin-bottom: 6px;">[2/10] Sunset Ocean Acoustic.mp3 — 100% [HOÀN TẤT]</div>
+            <div style="color: #f59e0b; margin-bottom: 6px;">[3/10] Night Drive Ballad.mp3 — 68% [Đang tải...]</div>
+            <div style="color: #f59e0b;">[4/10] EDM Festival Drop.mp3 — 45% [Đang tải...]</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ APPLICATION PACKAGE ════════════════════════ -->
+  <section id="packages" class="projects-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">PHIÊN BẢN PHÁT HÀNH</span>
+        <h2 class="section-title">Gói Ứng Dụng Suno Bulk Studio</h2>
+        <p class="section-desc">Bản build chính thức .NET 8.0 LTS Self-Contained chạy độc lập 100%, tích hợp sẵn tính năng tự động cập nhật realtime.</p>
+      </div>
+
+      <!-- Dynamic Projects Grid (Rendered by app.js) -->
+      <div id="projectsGrid" class="projects-grid" style="display: flex; justify-content: center; max-width: 680px; margin: 0 auto;">
+        <!-- Javascript renders project cards here dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ CHANGELOG TIMELINE ════════════════════════ -->
+  <section id="changelog" class="changelog-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">LỊCH SỬ PHÁT HÀNH</span>
+        <h2 class="section-title">Nhật ký cập nhật Suno Bulk Studio</h2>
+        <p class="section-desc">Theo dõi các phiên bản, tính năng mới và các bản vá lỗi được phát hành theo thời gian thực.</p>
+      </div>
+
+      <!-- Timeline Container (Rendered by app.js from version.json) -->
+      <div id="changelogTimeline" class="timeline">
+        <!-- Javascript renders timeline items here dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ CONTACT SECTION ════════════════════════ -->
+  <section id="contact" class="contact-section">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-tag">KẾT NỐI & HỖ TRỢ</span>
+        <h2 class="section-title">Kênh Liên Hệ Trực Tiếp</h2>
+        <p class="section-desc">Mọi thắc mắc kỹ thuật, yêu cầu nâng cấp tính năng riêng hoặc hỗ trợ sử dụng tool, bạn có thể liên hệ trực tiếp với tôi qua các kênh dưới đây.</p>
+      </div>
+
+      <div class="contact-grid">
+        <!-- Zalo Card -->
+        <div class="contact-card">
+          <div class="contact-icon-wrap zalo-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+            </svg>
+          </div>
+          <div class="contact-info">
+            <div class="contact-badge">ZALO TRỰC TIẾP</div>
+            <h3 class="contact-title">0795538491</h3>
+            <p class="contact-text">Hỗ trợ kỹ thuật 1-1, kích hoạt bản quyền và tiếp nhận yêu cầu nâng cấp tool nhanh nhất.</p>
+            <div class="contact-actions">
+              <a href="https://zalo.me/0795538491" target="_blank" rel="noopener noreferrer" class="btn-primary" style="padding: 10px 20px; font-size: 0.88rem;">
+                <span>Nhắn Zalo ngay</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </a>
+              <button class="btn-ghost copy-btn" data-copy="0795538491" style="padding: 10px 16px; font-size: 0.88rem;" title="Sao chép số Zalo">
+                <span>Sao chép</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Email Card -->
+        <div class="contact-card">
+          <div class="contact-icon-wrap email-icon-wrap">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <div class="contact-info">
+            <div class="contact-badge">HỘP THƯ HỖ TRỢ</div>
+            <h3 class="contact-title">fikat.ft@gmail.com</h3>
+            <p class="contact-text">Tiếp nhận báo cáo log sự cố, ý kiến đóng góp và đề xuất hợp tác dự án lâu dài.</p>
+            <div class="contact-actions">
+              <a href="mailto:fikat.ft@gmail.com" class="btn-primary" style="padding: 10px 20px; font-size: 0.88rem;">
+                <span>Gửi Email</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="7" y1="17" x2="17" y2="7"></line>
+                  <polyline points="7 7 17 7 17 17"></polyline>
+                </svg>
+              </a>
+              <button class="btn-ghost copy-btn" data-copy="fikat.ft@gmail.com" style="padding: 10px 16px; font-size: 0.88rem;" title="Sao chép địa chỉ Email">
+                <span>Sao chép</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════════════ FOOTER ════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-brand">
+          <div class="logo-brand" style="margin-bottom: 8px;">
+            <div class="logo-badge" style="width: 32px; height: 32px; font-size: 0.95rem;">⚡</div>
+            <span>FIKAT PROJECT</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-dim); max-width: 360px;">
+            Chuyên phát triển các giải pháp phần mềm tự động hóa, tool AI và tiện ích xử lý đa phương tiện cho nhà sáng tạo.
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 40px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 700; color: #fff; margin-bottom: 12px; font-size: 0.9rem;">Liên kết nhanh</div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+              <li><a href="#featured" class="nav-link" style="padding: 0;">Suno Bulk Studio</a></li>
+              <li><a href="#features" class="nav-link" style="padding: 0;">Tính năng</a></li>
+              <li><a href="#packages" class="nav-link" style="padding: 0;">Bản phát hành</a></li>
+              <li><a href="#changelog" class="nav-link" style="padding: 0;">Lịch sử phiên bản</a></li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-weight: 700; color: #fff; margin-bottom: 12px; font-size: 0.9rem;">Kênh liên hệ</div>
+            <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem;">
+              <li>
+                <a href="https://zalo.me/0795538491" target="_blank" rel="noopener noreferrer" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); transition: var(--transition);">
+                  <span style="color: #38bdf8;">💬</span>
+                  <span>Zalo: <strong style="color: #fff;">0795538491</strong></span>
+                </a>
+              </li>
+              <li>
+                <a href="mailto:fikat.ft@gmail.com" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); transition: var(--transition);">
+                  <span style="color: var(--amber-primary);">📧</span>
+                  <span>Email: <strong style="color: #fff;">fikat.ft@gmail.com</strong></span>
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-copy">
+        © 2026 FIKAT PROJECT. Tất cả các quyền được bảo lưu. Phát triển bởi Nguyễn Hữu Phi.
+      </div>
+    </div>
+  </footer>
+  <!-- ════════════════════════ REALTIME UPDATE TOAST NOTIFICATION ════════════════════════ -->
+  <div id="liveToast" class="live-toast">
+    <div class="toast-icon">🚀</div>
+    <div class="toast-body">
+      <div class="toast-title">Thông Báo Cập Nhật Realtime</div>
+      <div id="toastMsg" class="toast-msg">Đã phát hiện phiên bản mới!</div>
+      <div class="toast-actions">
+        <a id="toastDownloadBtn" href="https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip" class="btn-toast" download>Tải ngay ⬇</a>
+        <button id="toastDismissBtn" class="btn-toast-dismiss">Bỏ qua</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+window.__INITIAL_VERSION__ = {"appId": "suno-bulk-studio", "name": "Suno Bulk Studio", "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI", "currentVersion": "2.0", "releaseDate": "2026-09-14", "status": "stable", "statusText": "Hoạt động ổn định", "download": {"zipFile": "Suno_Bulk_Downloader.zip", "fileName": "Suno_Bulk_Downloader.zip", "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip", "fileSize": "116.8 MB", "architecture": "Windows x64 (Win 10 / 11)", "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)", "requirements": "Windows 10 / 11 64-bit, Microsoft Edge WebView2"}, "keyFeatures": [{"icon": "✂️", "title": "Bóc tách Stem Nhạc Cụ Chuyên Nghiệp (12 Stems)", "desc": "Bóc tách Stems chuẩn Suno: Auto Split (12 stems gồm Lead Vocal, Drums, Bass, Guitar, Piano, Strings, Synth...), Split from mix (Vocal & Beat) và Advanced Split tra cứu 240+ nhạc cụ. Tự động xuất MIDI và gom gọn vào 1 file ZIP."}, {"icon": "📋", "title": "Chạy Prompt theo File Sheet (Excel / CSV)", "desc": "Tự động đọc danh sách prompt từ file .xlsx, .csv, .txt (Cột 1: STT, Cột 2: Prompt). Tự bốc ngẫu nhiên 5-10 lượt mỗi dòng, gửi xong tự xóa sạch và chuyển sang dòng kế tiếp."}, {"icon": "⚡", "title": "Hỗ trợ Model Suno v6 Mới nhất", "desc": "Tự động nhận diện và đồng bộ với model v6 Pro, v6-wild, v6-mini mới nhất trên tài khoản Web Suno."}, {"icon": "📁", "title": "Tự động tạo Workspace mới mỗi Prompt", "desc": "Tự động tạo Workspace riêng biệt sạch 0 bài cho từng Prompt, chống nghẽn Web Suno khi chạy hàng trăm bài."}, {"icon": "📥", "title": "Tự động tạo Playlist & Tải song song", "desc": "Tự động tạo Playlist công khai, gom bài và quét link tải về máy song song đa luồng cực nhanh."}, {"icon": "🔐", "title": "Giải mã DRM Audio Native", "desc": "Thuật toán giải mã bảo vệ bản quyền Suno trực tiếp bằng JWT Clerk token, lưu MP3/WAV chuẩn 320kbps kèm bìa album."}, {"icon": "🛡️", "title": "100% Độc lập (Self-Contained)", "desc": "Được biên dịch theo chuẩn .NET 8 LTS, không cần cài đặt thêm .NET SDK hay runtime bên ngoài, giải nén là chạy ngay."}], "changelog": [{"version": "2.0", "date": "14/09/2026", "tag": "Đại bản phát hành 2.0", "badge": "latest", "highlights": ["Tính năng bóc tách Stems nhạc cụ chuyên nghiệp chuẩn Suno: Auto Split (12 Stems), Split from mix (Vocal & Beat) và Advanced Split tra cứu 240+ nhạc cụ", "Hỗ trợ trích xuất toàn bộ Stems, xuất kèm file MIDI (.midi) và tự động gom trọn bộ vào 1 file ZIP (.zip)", "Nâng cấp toàn diện typography và màu sắc giao diện: khắc phục triệt để chữ mờ, nhỏ, tăng độ tương phản sắc nét", "Thanh cuộn 6px mượt mà sleek bo góc cao cấp, căn chỉnh giao diện chuẩn Suno Studio v2.0"]}, {"version": "1.5.2", "date": "13/09/2026", "tag": "Tính năng lớn", "badge": "feature", "highlights": ["Tự động tạo Workspace mới tinh cho mỗi Prompt/Lượt chạy (sạch 0 bài, chống treo lag Web Suno)", "Thêm cơ chế Timeout an toàn 60s tự động giải phóng các bài bị server Suno từ chối/bỏ qua", "Thêm nút 'Quét đồng bộ' từ tài khoản Suno và tự động gỡ bộ lọc kẹt"]}, {"version": "1.5.1", "date": "13/09/2026", "tag": "Bản vá ổn định (Hotfix)", "badge": "patch", "highlights": ["Khắc phục triệt để lỗi đứng im ở trạng thái 'Chuyển đổi…' khi prompt dài vượt quá giới hạn đường dẫn Windows MAX_PATH", "Thêm cơ chế tự động thử lại 3 lần (Retry Backoff) xử lý độ trễ truyền dữ liệu CDN của Suno khi bật Tự động tải", "Thêm tham số -nostdin và timeout an toàn cho FFmpeg, chống treo tiến trình xử lý âm thanh ngầm", "Đồng bộ chuẩn xác thông báo lỗi giữa Hàng đợi tạo nhạc và Hàng đợi tải"]}, {"version": "1.5.0", "date": "12/09/2026", "tag": "Bản phát hành lớn", "badge": "feature", "highlights": ["Hỗ trợ đầy đủ thế hệ Model Suno v6 Pro / v6-wild / v6-mini", "Khắc phục triệt để lỗi WebView2 0x800700AA bằng cơ chế SharedEnv", "Chuyển toàn bộ ứng dụng sang .NET 8.0 LTS Self-Contained chạy mượt trên mọi máy tính không cần cài thêm gì", "Đóng gói kèm file ZIP chuẩn chống chặn khi gửi qua Zalo / Telegram"]}, {"version": "1.4.0", "date": "11/09/2026", "tag": "Tính năng lớn", "badge": "feature", "highlights": ["Thêm chế độ Chạy theo Sheet (.xlsx, .csv, .txt) với công tắc Bật/Tắt riêng", "Hỗ trợ file cấu trúc 2 cột (Cột 1: STT, Cột 2: Prompt)", "Thiết lập ngẫu nhiên 5 đến 10 lượt gửi cho mỗi prompt", "Tự động xóa sạch textarea trên trình duyệt Suno và chuyển sang prompt tiếp theo"]}, {"version": "1.3.0", "date": "11/09/2026", "tag": "Tối ưu hóa", "badge": "patch", "highlights": ["Tích hợp tự động hóa quy trình Playlist: Tạo playlist -> Thêm bài -> Công khai -> Quét tải", "Tự động tải về máy ngay khi từng bài hoàn thành", "Sửa lỗi giải mã DRM khi thiếu glt token bằng Clerk JWT"]}, {"version": "1.0.0", "date": "05/09/2026", "tag": "Khởi tạo", "badge": "initial", "highlights": ["Giao diện WPF Warm Amber Dark theme", "Quét link bài hát và playlist Suno", "Tải đa luồng, hỗ trợ chuyển đổi MP3/WAV qua FFmpeg tích hợp"]}], "contact": {"zalo": "0795538491", "zaloUrl": "https://zalo.me/0795538491", "email": "fikat.ft@gmail.com", "emailUrl": "mailto:fikat.ft@gmail.com"}};
+window.__INITIAL_PROJECTS__ = [{"id": "suno-bulk-studio", "name": "Suno Bulk Studio", "category": "ai-music", "categoryLabel": "AI Music & Automation", "version": "2.0", "updatedAt": "14/09/2026", "status": "active", "featured": true, "shortDesc": "Phần mềm chuyên dụng tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.", "techStack": [".NET 8.0 LTS", "WPF", "WebView2", "FFmpeg", "Native JS Injector"], "badge": "Bản mới nhất", "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip", "hasLiveUpdates": true, "highlights": ["Bóc tách Stems nhạc cụ chuyên nghiệp (12 stems, Vocal/Beat, MIDI & gom ZIP)", "Tự động tạo Workspace riêng biệt sạch 0 bài mỗi Prompt (Chống lag Suno)", "Chạy Prompt tự động từ File Sheet (Excel / CSV / TXT)", "Hỗ trợ thế hệ Model Suno v6 Pro, v6-wild, v6-mini", "Tự động tạo Playlist công khai & Tải song song", "Giải mã DRM âm thanh Suno 320kbps MP3 / WAV"]}];
+</script>
+
+<script>
+/* ==========================================================================
+   PORTFOLIO & REALTIME LIVE UPDATE ENGINE
+   ========================================================================== */
+
+(function () {
+  'use strict';
+
+  let currentAppVersion = null;
+  let isCheckingUpdate = false;
+
+  // DOM Elements
+  const heroVersionBadge = document.getElementById('heroVersionBadge');
+  const heroDownloadBtn = document.getElementById('heroDownloadBtn');
+  const heroFileSize = document.getElementById('heroFileSize');
+  const heroReleaseDate = document.getElementById('heroReleaseDate');
+  const cardVersionChip = document.getElementById('cardVersionChip');
+  const cardDownloadBtn = document.getElementById('cardDownloadBtn');
+  const checkUpdateBtn = document.getElementById('checkUpdateBtn');
+  const projectsGrid = document.getElementById('projectsGrid');
+  const changelogTimeline = document.getElementById('changelogTimeline');
+  const liveToast = document.getElementById('liveToast');
+  const toastMsg = document.getElementById('toastMsg');
+  const toastDownloadBtn = document.getElementById('toastDownloadBtn');
+  const toastDismissBtn = document.getElementById('toastDismissBtn');
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    loadVersionData();
+    loadProjectsData();
+    setupTabs();
+    setupFilters();
+    setupEventListeners();
+
+    // Live polling every 20 seconds for real-time update detection
+    setInterval(() => {
+      checkForUpdatesSilent();
+    }, 20000);
+  });
+
+  /* --------------------------------------------------------------------------
+     Helper: Fetch latest release from GitHub API or local JSON fallback
+     -------------------------------------------------------------------------- */
+  async function fetchVersionPayload() {
+    let data = window.__INITIAL_VERSION__ ? JSON.parse(JSON.stringify(window.__INITIAL_VERSION__)) : null;
+
+    // 1. Try local data/version.json first if available
+    try {
+      const response = await fetch(`data/version.json?_t=${Date.now()}`);
+      if (response.ok) {
+        data = await response.json();
+      }
+    } catch (e) {}
+
+    // 2. Query GitHub Releases API for real-time release info (always up to date)
+    try {
+      const ghRes = await fetch('https://api.github.com/repos/fikatuwu/fikat/releases/latest', {
+        headers: { 'Accept': 'application/vnd.github.v3+json' }
+      });
+      if (ghRes.ok) {
+        const gh = await ghRes.json();
+        const rawTag = gh.tag_name || '';
+        const cleanVer = rawTag.replace(/^[vV]\.?/, '');
+        const zipAsset = (gh.assets || []).find(a => (a.name || '').endsWith('.zip')) || (gh.assets || [])[0];
+        
+        if (cleanVer) {
+          if (!data) data = {};
+          data.currentVersion = cleanVer;
+          if (gh.published_at) {
+            const d = new Date(gh.published_at);
+            data.releaseDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+          }
+          if (!data.download) data.download = {};
+          if (zipAsset) {
+            data.download.directUrl = zipAsset.browser_download_url;
+            data.download.fileName = zipAsset.name;
+            if (zipAsset.size) {
+              data.download.fileSize = (zipAsset.size / (1024 * 1024)).toFixed(1) + ' MB';
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('GitHub API check warning:', e);
+    }
+
+    return data || window.__INITIAL_VERSION__;
+  }
+
+  /* --------------------------------------------------------------------------
+     1. Version & Release Data Loader (Realtime)
+     -------------------------------------------------------------------------- */
+  async function loadVersionData(showFeedback = false) {
+    if (isCheckingUpdate) return;
+    isCheckingUpdate = true;
+
+    if (checkUpdateBtn && showFeedback) {
+      checkUpdateBtn.innerHTML = '🔄 Đang kiểm tra...';
+      checkUpdateBtn.disabled = true;
+    }
+
+    try {
+      const data = await fetchVersionPayload();
+      if (!data) throw new Error('Không thể lấy thông tin phiên bản.');
+
+      const newVersion = data.currentVersion;
+      const isFirstLoad = currentAppVersion === null;
+      const hasNewerVersion = currentAppVersion !== null && newVersion !== currentAppVersion;
+
+      currentAppVersion = newVersion;
+
+      // Update UI elements
+      if (heroVersionBadge) heroVersionBadge.textContent = `v${data.currentVersion}`;
+      if (cardVersionChip) cardVersionChip.textContent = `v${data.currentVersion} • ${(data.status || 'STABLE').toUpperCase()}`;
+      if (heroFileSize && data.download) heroFileSize.textContent = data.download.fileSize;
+      if (heroReleaseDate) heroReleaseDate.textContent = data.releaseDate;
+
+      // Update download links
+      const downloadPath = (data.download && data.download.directUrl) ? data.download.directUrl : `./downloads/${data.download ? data.download.fileName : 'Suno_Bulk_Downloader.zip'}`;
+      const fileName = data.download ? data.download.fileName : 'Suno_Bulk_Downloader.zip';
+      if (heroDownloadBtn) {
+        heroDownloadBtn.href = downloadPath;
+        heroDownloadBtn.setAttribute('download', fileName);
+      }
+      if (cardDownloadBtn) {
+        cardDownloadBtn.href = downloadPath;
+        cardDownloadBtn.setAttribute('download', fileName);
+      }
+      if (toastDownloadBtn) {
+        toastDownloadBtn.href = downloadPath;
+        toastDownloadBtn.setAttribute('download', fileName);
+      }
+
+      // Render Changelog
+      if (data.changelog) renderChangelog(data.changelog);
+
+      // Trigger Toast notification if new update is detected in realtime
+      if (hasNewerVersion) {
+        showToast(`Phiên bản mới v${newVersion} đã sẵn sàng! (${data.releaseDate})`);
+      } else if (showFeedback) {
+        showToast(`Bạn đang ở phiên bản mới nhất: v${currentAppVersion} (${data.statusText || 'Hoạt động ổn định'})`);
+      }
+    } catch (err) {
+      console.warn('Lỗi kiểm tra phiên bản:', err);
+      if (showFeedback) {
+        showToast('Không thể kết nối máy chủ kiểm tra cập nhật.');
+      }
+    } finally {
+      isCheckingUpdate = false;
+      if (checkUpdateBtn && showFeedback) {
+        setTimeout(() => {
+          checkUpdateBtn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+            Kiểm tra cập nhật
+          `;
+          checkUpdateBtn.disabled = false;
+        }, 1000);
+      }
+    }
+  }
+
+  async function checkForUpdatesSilent() {
+    try {
+      const data = await fetchVersionPayload();
+      if (data && currentAppVersion && data.currentVersion !== currentAppVersion) {
+        loadVersionData(false);
+      }
+    } catch (e) { }
+  }
+
+  /* --------------------------------------------------------------------------
+     2. Dynamic Projects Catalog Loader
+     -------------------------------------------------------------------------- */
+  async function loadProjectsData() {
+    if (!projectsGrid) return;
+
+    let projects;
+    try {
+      const response = await fetch(`data/projects.json?_t=${Date.now()}`);
+      if (response.ok) projects = await response.json();
+      else projects = window.__INITIAL_PROJECTS__;
+    } catch (err) {
+      projects = window.__INITIAL_PROJECTS__;
+    }
+
+    if (projects && projects.length > 0) {
+      if (currentAppVersion && projects[0]) {
+        projects[0].version = currentAppVersion;
+      }
+      renderProjects(projects);
+    } else {
+      projectsGrid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; color: var(--text-dim); padding: 40px;">
+          Chưa thể nạp danh sách dự án.
+        </div>
+      `;
+    }
+  }
+
+  function renderProjects(projects, filterCategory = 'all') {
+    if (!projectsGrid) return;
+    projectsGrid.innerHTML = '';
+
+    const filtered = filterCategory === 'all'
+      ? projects
+      : projects.filter(p => p.category === filterCategory);
+
+    filtered.forEach(p => {
+      const card = document.createElement('div');
+      card.className = `project-card ${p.featured ? 'featured-card' : ''}`;
+
+      const techTagsHtml = (p.techStack || [])
+        .map(t => `<span class="tech-tag">${escapeHtml(t)}</span>`)
+        .join('');
+
+      card.innerHTML = `
+        <div>
+          <div class="card-top">
+            <span class="project-badge">${escapeHtml(p.badge || 'Công cụ')}</span>
+            <span class="project-version">${escapeHtml(p.version || 'v1.0')}</span>
+          </div>
+          <h3 class="project-title">${escapeHtml(p.name)}</h3>
+          <p class="project-desc">${escapeHtml(p.shortDesc)}</p>
+          <div class="tech-tags">${techTagsHtml}</div>
+        </div>
+        <div class="card-footer">
+          <span style="font-size: 0.8rem; color: var(--text-dim);">${escapeHtml(p.categoryLabel || '')}</span>
+          ${p.downloadUrl && p.downloadUrl !== '#'
+            ? `<a href="${p.downloadUrl}" class="card-link" download>Tải về ⬇</a>`
+            : `<a href="#featured" class="card-link">Chi tiết ➔</a>`
+          }
+        </div>
+      `;
+      projectsGrid.appendChild(card);
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     3. Changelog Renderer
+     -------------------------------------------------------------------------- */
+  function renderChangelog(changelogList) {
+    if (!changelogTimeline || !changelogList) return;
+    changelogTimeline.innerHTML = '';
+
+    changelogList.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'timeline-item';
+
+      const listHtml = (item.highlights || [])
+        .map(h => `<li>${escapeHtml(h)}</li>`)
+        .join('');
+
+      const badgeHtml = item.badge === 'latest'
+        ? '<span class="status-pill" style="font-size: 0.72rem; padding: 2px 8px;">Bản mới nhất</span>'
+        : '';
+
+      el.innerHTML = `
+        <div class="timeline-card">
+          <div class="timeline-header">
+            <div class="timeline-title">
+              <span>v${escapeHtml(item.version)}</span>
+              ${badgeHtml}
+            </div>
+            <span class="timeline-date">${escapeHtml(item.date)}</span>
+          </div>
+          <ul class="timeline-list">
+            ${listHtml}
+          </ul>
+        </div>
+      `;
+      changelogTimeline.appendChild(el);
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     4. Interactive Feature Tabs
+     -------------------------------------------------------------------------- */
+  function setupTabs() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanes.forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) {
+          targetPane.classList.add('active');
+        }
+      });
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     5. Category Filter Buttons
+     -------------------------------------------------------------------------- */
+  function setupFilters() {
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.getAttribute('data-filter');
+
+        fetch(`data/projects.json?_t=${Date.now()}`)
+          .then(r => r.json())
+          .then(data => renderProjects(data, cat))
+          .catch(() => {});
+      });
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     6. Event Listeners & Toast Notifications
+     -------------------------------------------------------------------------- */
+  function setupEventListeners() {
+    if (checkUpdateBtn) {
+      checkUpdateBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        loadVersionData(true);
+      });
+    }
+
+    if (toastDismissBtn && liveToast) {
+      toastDismissBtn.addEventListener('click', () => {
+        liveToast.classList.remove('show');
+      });
+    }
+
+    // Copy to clipboard buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const textToCopy = btn.getAttribute('data-copy');
+        if (!textToCopy) return;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const originalContent = btn.innerHTML;
+          btn.innerHTML = '<span>✓ Đã chép</span>';
+          showToast(`Đã sao chép: ${textToCopy}`);
+          setTimeout(() => {
+            btn.innerHTML = originalContent;
+          }, 2200);
+        }).catch(() => {
+          showToast(`Hãy sao chép thủ công: ${textToCopy}`);
+        });
+      });
+    });
+  }
+
+  function showToast(message) {
+    if (!liveToast || !toastMsg) return;
+    toastMsg.textContent = message;
+    liveToast.classList.add('show');
+
+    // Auto dismiss after 6 seconds
+    setTimeout(() => {
+      liveToast.classList.remove('show');
+    }, 6000);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+})();
+
+</script>
+</body>
+</html>
