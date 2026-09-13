@@ -27,9 +27,9 @@
       "desc": "Tự động đọc danh sách prompt từ file .xlsx, .csv, .txt (Cột 1: STT, Cột 2: Prompt). Tự bốc ngẫu nhiên 5-10 lượt mỗi dòng, gửi xong tự xóa sạch và chuyển sang dòng kế tiếp."
     },
     {
-      "icon": "⚡",
-      "title": "Hỗ trợ Model Suno v6 Mới nhất",
-      "desc": "Tự động nhận diện và đồng bộ với model v6 Pro, v6-wild, v6-mini mới nhất trên tài khoản Web Suno."
+      "icon": "🎹",
+      "title": "Trích xuất MIDI & Gom ZIP Trọn Bộ",
+      "desc": "Tự động trích xuất tệp MIDI giai điệu (.midi) và gom toàn bộ track stems vào một file ZIP nén duy nhất cực kỳ tiện lợi."
     },
     {
       "icon": "📁",
