@@ -1,0 +1,5 @@
+﻿name = "restless-sun-f9c3"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "."

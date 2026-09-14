@@ -1,0 +1,11 @@
+﻿{
+  "name": "restless-sun-f9c3",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.109.0"
+  }
+}
