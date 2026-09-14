@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "2.0",
+  "currentVersion": "3.0",
   "releaseDate": "2026-09-14",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v2.0/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.0/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -54,10 +54,23 @@
   ],
   "changelog": [
     {
+      "version": "3.0",
+      "date": "14/09/2026",
+      "tag": "Đại bản phát hành 3.0",
+      "badge": "latest",
+      "highlights": [
+        "Cơ chế Dừng tức thì (Instant Cancellation): Ngắt và hủy ngay lập tức mọi tiến trình quét, tải và tách nhạc khi ấn nút Dừng",
+        "Trình quản lý phiên & Đa tài khoản (Session Manager): Ngăn ngừa triệt để lỗi đơ, xung đột và crash khi chuyển đổi tài khoản",
+        "Bảo mật giao diện trình duyệt: Ẩn hoàn toàn tab Web nội bộ, hỗ trợ đăng nhập qua popup và nút Đăng xuất xóa sạch cookie",
+        "Hệ thống xác thực Bản quyền Online Cloud Server: Kết nối Cloudflare Worker tự động nhận diện mã máy HWID, bảo mật HMAC-SHA256 kèm bộ nhớ đệm offline 12 tiếng",
+        "Bóc tách Stems chuyên nghiệp chuẩn Suno: Auto Split (12 Stems), Split from mix (Vocal & Beat), xuất file MIDI và gom tự động vào 1 file ZIP"
+      ]
+    },
+    {
       "version": "2.0",
       "date": "14/09/2026",
       "tag": "Đại bản phát hành 2.0",
-      "badge": "latest",
+      "badge": "feature",
       "highlights": [
         "Tính năng bóc tách Stems nhạc cụ chuyên nghiệp chuẩn Suno: Auto Split (12 Stems), Split from mix (Vocal & Beat) và Advanced Split tra cứu 240+ nhạc cụ",
         "Hỗ trợ trích xuất toàn bộ Stems, xuất kèm file MIDI (.midi) và tự động gom trọn bộ vào 1 file ZIP (.zip)",
