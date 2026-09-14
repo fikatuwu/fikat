@@ -1,4 +1,4 @@
-[
+﻿[
   {
     "id": "suno-bulk-studio",
     "name": "Suno Bulk Studio",
@@ -20,6 +20,28 @@
       "Tự động tạo Workspace riêng biệt sạch 0 bài mỗi Prompt (Chống lag Suno)",
       "Hệ thống xác thực Bản quyền Online Cloud Server an toàn tuyệt đối",
       "Giải mã DRM âm thanh Suno 320kbps MP3 / WAV"
+    ]
+  },
+  {
+    "id": "tool-random-nhac",
+    "name": "Tool Random Nhạc & Ghép Video",
+    "category": "media-automation",
+    "categoryLabel": "Media Automation & Audio",
+    "version": "1.2.0",
+    "updatedAt": "14/09/2026",
+    "status": "active",
+    "featured": true,
+    "shortDesc": "Công cụ xáo trộn và ghép playlist nhạc ngẫu nhiên thông minh (nhạc hay ở đầu, nhạc tổng ở sau không trùng lặp) và tự động thay nhạc vào video hàng loạt bằng FFmpeg Native.",
+    "techStack": [".NET 10 LTS", "WPF C#", "FFmpeg Native", "HWID Cloud Auth"],
+    "badge": "Mới ra mắt",
+    "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip",
+    "hasLiveUpdates": true,
+    "highlights": [
+      "🎲 Ghép Playlist thông minh: Min-Max bài hay ở đầu, Min-Max bài tổng ở sau không trùng",
+      "🎬 Thay nhạc vào video hàng loạt: Ghép cặp 1.mp4 + 1.mp3 -> 1.mp4, video tự lặp khớp độ dài nhạc",
+      "🛡️ Xác thực Bản Quyền Online Cloud Server: Đồng bộ mã máy HWID và quản lý trạng thái từ xa",
+      "⚡ Tối ưu FFmpeg Lossless: Nối nhạc và ghép video trực tiếp không encode lại hình ảnh",
+      "📦 Bộ nhớ Meta ID chống lặp bài: Tự động gom các bài đã chọn vào thư mục DA DUNG"
     ]
   }
 ]
