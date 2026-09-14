@@ -59,6 +59,19 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 75px;
+}
+
+section[id] {
+  scroll-margin-top: 75px;
+}
+
+#featured, #random-nhac {
+  min-height: calc(100vh - 75px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 body {
@@ -1322,113 +1335,112 @@ button {
   </section>
 
   <!-- ════════════════════════ RANDOM NHẠC & GHÉP VIDEO SPOTLIGHT ════════════════════════ -->
-  <section id="random-nhac" class="hero-section" style="padding-top: 60px; padding-bottom: 60px; border-top: 1px solid var(--border-subtle);">
-    <div class="container">
-      <div class="hero-grid">
-        <div class="hero-left">
-          <div class="version-chip" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.12);">
-            <span class="status-dot" style="background: #818cf8; box-shadow: 0 0 10px #818cf8;"></span>
-            <span style="color: #a5b4fc;">TOOL RANDOM NHẠC &amp; GHÉP VIDEO</span>
-            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #c7d2fe; font-weight: 700; margin-left: 8px;">v1.2.0</span>
+  <section id="random-nhac" class="hero-section" style="border-top: 1px solid var(--border-subtle); padding: 50px 0;">
+    <div class="container hero-grid">
+      
+      <!-- Left Column: Info & Actions -->
+      <div class="hero-content">
+        <div class="hero-badge-tag" style="border-color: rgba(99, 102, 241, 0.4); background: rgba(99, 102, 241, 0.12); color: #a5b4fc;">
+          <span class="status-dot" style="background: #818cf8; box-shadow: 0 0 10px #818cf8;"></span>
+          <span>TOOL RANDOM NHẠC &amp; GHÉP VIDEO</span>
+          <span>•</span>
+          <span style="font-family: var(--font-mono); font-size: 0.82rem; color: #c7d2fe; font-weight: 700;">v1.2.0</span>
+        </div>
+
+        <h2 class="hero-title" style="font-size: 3rem;">
+          Xáo Trộn Nhạc &amp; <br>
+          <span style="background: linear-gradient(135deg, #fff 35%, #818cf8 95%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Ghép Video Tự Động</span>
+        </h2>
+
+        <p class="hero-desc">
+          Giải pháp tạo Playlist ngẫu nhiên chuyên nghiệp: phân tầng bài hay ở đầu và nhạc tổng ở sau không trùng lặp, tích hợp tự động chuyển đổi định dạng WAV sang MP3 320kbps và thay nhạc vào video hàng loạt bằng FFmpeg Native.
+        </p>
+
+        <div class="hero-cta-group">
+          <a href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="btn-primary" style="background: linear-gradient(135deg, #6366f1, #4f46e5); border-color: #818cf8; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);" download>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Tải Tool Random Nhạc (.ZIP)</span>
+          </a>
+          <a href="#packages" class="btn-ghost" style="border-color: rgba(99, 102, 241, 0.35); color: #c7d2fe;">
+            <span>Xem bảng so sánh</span>
+            <span style="font-size: 1.1rem; line-height: 1;">↓</span>
+          </a>
+        </div>
+
+        <div class="meta-stats" style="border-top-color: rgba(99, 102, 241, 0.2);">
+          <div class="stat-item">
+            <span class="stat-val" style="color: #a5b4fc;">Min-Max</span>
+            <span class="stat-lbl">Nhạc Hay &amp; Nhạc Tổng</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" style="color: #38bdf8;">Auto WAV ➜ MP3</span>
+            <span class="stat-lbl">320kbps High Quality</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val" style="color: #4ade80;">HWID Cloud</span>
+            <span class="stat-lbl">Bản Quyền Tự Động</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Status Card -->
+      <div class="hero-visual">
+        <div class="app-card-featured" style="border-color: rgba(99, 102, 241, 0.35); box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.85), 0 0 30px rgba(99, 102, 241, 0.15);">
+          <div class="card-header-live">
+            <div>
+              <div style="font-size: 0.78rem; color: #a5b4fc; text-transform: uppercase; font-weight: 700; letter-spacing: 0.06em; margin-bottom: 2px;">CẬP NHẬT TRỰC TIẾP</div>
+              <h3 style="font-size: 1.45rem; font-weight: 800; color: #fff;">Tool Random Nhạc</h3>
+            </div>
+            <span class="version-chip" style="border-color: rgba(99, 102, 241, 0.5); background: rgba(99, 102, 241, 0.18); color: #c7d2fe;">v1.2.0 • PRO</span>
           </div>
 
-          <h2 class="hero-title" style="font-size: 2.7rem; margin-top: 14px;">
-            XÁO TRỘN NHẠC &amp;<br>
-            <span style="background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">GHÉP VIDEO TỰ ĐỘNG</span>
-          </h2>
+          <ul class="feature-bullets">
+            <li class="feature-bullet">
+              <span class="bullet-icon" style="color: #818cf8;">✓</span>
+              <span><strong>Ghép Playlist Đẳng Cấp:</strong> Thiết lập Min-Max nhạc hay ở đầu, Min-Max nhạc tổng ở sau, tự động kiểm tra thời lượng ngắn nhất/dài nhất.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon" style="color: #818cf8;">✓</span>
+              <span><strong>Hỗ Trợ Toàn Diện MP3 &amp; WAV:</strong> Tự động nhận diện và convert WAV sang MP3 320kbps siêu tốc bằng FFmpeg Native.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon" style="color: #818cf8;">✓</span>
+              <span><strong>Tự Động Cất Bài Đã Dùng:</strong> Tự động chuyển nhạc tổng đã chọn vào thư mục <code>DA DUNG</code> và ghi nhớ Meta ID chống lặp vĩnh viễn.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon" style="color: #818cf8;">✓</span>
+              <span><strong>Thay Nhạc Video Hàng Loạt:</strong> Tự ghép cặp <code>1.mp4 + 1.mp3 → 1.mp4</code>. Video tự động loop đến khi khớp chính xác độ dài audio.</span>
+            </li>
+          </ul>
 
-          <p class="hero-desc">
-            Giải pháp tạo Playlist ngẫu nhiên chuyên nghiệp: phân tầng bài hay ở đầu và nhạc tổng ở sau không trùng lặp, kết hợp module tự động thay nhạc vào video hàng loạt chuẩn xác từng giây bằng FFmpeg Native.
-          </p>
-
-          <div class="hero-stats">
-            <div class="stat-box">
-              <span class="stat-val" style="color: #a5b4fc;">Min-Max</span>
-              <span class="stat-lbl">Nhạc Hay &amp; Nhạc Tổng</span>
+          <div class="download-box" style="border-color: rgba(99, 102, 241, 0.25);">
+            <div class="download-box-header">
+              <span style="display: inline-flex; align-items: center; gap: 8px; color: #818cf8; font-weight: 600;">
+                <span class="status-dot" style="background: #818cf8;"></span>
+                <span>Tương thích Windows 10 &amp; 11 (64-bit)</span>
+              </span>
+              <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc; font-weight: 700;">Portable 100%</span>
             </div>
-            <div class="stat-box">
-              <span class="stat-val" style="color: #38bdf8;">Lossless</span>
-              <span class="stat-lbl">Ghép Video Siêu Tốc</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-val" style="color: #4ade80;">HWID Cloud</span>
-              <span class="stat-lbl">Bản Quyền Online</span>
-            </div>
-          </div>
-
-          <div class="hero-cta-group">
-            <a href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-color: #6366f1;" download>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <a href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #6366f1, #4f46e5); border-color: #818cf8;" download>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
               <span>Tải Tool Random Nhạc (.ZIP)</span>
             </a>
-            <a href="#packages" class="btn-ghost" style="border-color: rgba(99, 102, 241, 0.3);">
-              <span>Xem bảng so sánh</span>
-            </a>
-          </div>
-
-          <div class="hero-meta">
-            <span>Dung lượng: ~81.4 MB</span>
-            <span>•</span>
-            <span>Windows 10 / 11 (64-bit)</span>
-            <span>•</span>
-            <span>Portable chạy ngay</span>
-          </div>
-        </div>
-
-        <div class="hero-right">
-          <div class="hero-card" style="border-color: rgba(99, 102, 241, 0.35); box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(99, 102, 241, 0.15);">
-            <div class="card-header-status">
-              <span style="color: #a5b4fc; font-weight: 700;">ĐẶC QUYỀN NỔI BẬT</span>
-              <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #818cf8;">Bản quyền Cloud</span>
-            </div>
-
-            <ul class="bullet-list">
-              <li>
-                <span class="bullet-icon" style="color: #818cf8;">✓</span>
-                <span><strong>Ghép Playlist Đẳng Cấp:</strong> Thiết lập Min-Max nhạc hay ở đầu, Min-Max nhạc tổng ở sau, tự động kiểm tra thời lượng ngắn nhất/dài nhất.</span>
-              </li>
-              <li>
-                <span class="bullet-icon" style="color: #818cf8;">✓</span>
-                <span><strong>Tự Động Cất Bài Đã Dùng:</strong> Tự động chuyển nhạc tổng đã chọn vào thư mục <code>DA DUNG</code> và ghi nhớ Meta ID chống lặp bài vĩnh viễn.</span>
-              </li>
-              <li>
-                <span class="bullet-icon" style="color: #818cf8;">✓</span>
-                <span><strong>Thay Nhạc Video Hàng Loạt:</strong> Tự ghép cặp <code>1.mp4 + 1.mp3 → 1.mp4</code>. Video tự động loop đến khi khớp chính xác độ dài audio.</span>
-              </li>
-              <li>
-                <span class="bullet-icon" style="color: #818cf8;">✓</span>
-                <span><strong>Xác Thực HWID Cloud:</strong> Dùng chung hệ thống quản trị bản quyền với Suno Bulk Studio, bảo mật HMAC-SHA256, hỗ trợ duyệt từ xa.</span>
-              </li>
-            </ul>
-
-            <div class="download-box" style="border-color: rgba(99, 102, 241, 0.25);">
-              <div class="download-box-header">
-                <span style="display: inline-flex; align-items: center; gap: 8px; color: #818cf8; font-weight: 600;">
-                  <span class="status-dot" style="background: #818cf8;"></span>
-                  <span>Tương thích Windows 10 &amp; 11 (64-bit)</span>
-                </span>
-                <span style="font-family: var(--font-mono); font-size: 0.8rem; color: #a5b4fc; font-weight: 700;">Portable 100%</span>
-              </div>
-              <a href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="btn-primary" style="width: 100%; justify-content: center; background: linear-gradient(135deg, #4f46e5, #7c3aed); border-color: #6366f1;" download>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                <span>Tải Tool Random Nhạc (.ZIP)</span>
-              </a>
-              <div class="download-details">
-                <span>Nhúng sẵn FFmpeg Native bên trong</span>
-                <span>Không cần cài đặt thêm runtime</span>
-              </div>
+            <div class="download-details">
+              <span>Nhúng sẵn FFmpeg Native bên trong</span>
+              <span>Dung lượng: ~81.4 MB</span>
             </div>
           </div>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -1973,6 +1985,24 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
         liveToast.classList.remove('show');
       });
     }
+
+    // Smooth scroll for nav links & active indicator
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const href = link.getAttribute('href');
+        if (href && href.startsWith('#')) {
+          const target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            history.pushState(null, '', href);
+          }
+        }
+      });
+    });
 
     // Copy to clipboard buttons
     document.querySelectorAll('.copy-btn').forEach(btn => {
