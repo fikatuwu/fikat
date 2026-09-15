@@ -763,6 +763,64 @@
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div id="toastContainer" style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none"></div>
+
+  <!-- Approve Modal -->
+  <div id="approveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center">
+    <div style="background:#0f0c08;border:1px solid rgba(245,158,11,0.35);border-radius:16px;padding:28px;width:400px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,0.8)">
+      <h3 style="margin:0 0 6px;color:#fff;font-size:1rem;">✅ Duyệt Tài Khoản</h3>
+      <p id="approveUserDesc" style="color:var(--text-muted);font-size:.84rem;margin:0 0 18px"></p>
+      <div style="margin-bottom:16px">
+        <div style="font-size:.82rem;font-weight:700;color:#fff;margin-bottom:10px">🛠 Cấp quyền tải Tool:</div>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="toolCheck_suno" value="suno-bulk-studio" style="width:16px;height:16px;accent-color:#f59e0b">
+          <span>
+            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎵 Suno Bulk Studio</span>
+            <span style="display:block;font-size:.74rem;color:var(--text-muted)">Tạo & tải nhạc Suno hàng loạt</span>
+          </span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer">
+          <input type="checkbox" id="toolCheck_random" value="tool-random-nhac" style="width:16px;height:16px;accent-color:#f59e0b">
+          <span>
+            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎲 Tool Random Nhạc</span>
+            <span style="display:block;font-size:.74rem;color:var(--text-muted)">Trộn & ghép playlist ngẫu nhiên</span>
+          </span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="closeApproveModal()" class="btn-ghost" style="padding:8px 16px;font-size:.84rem">Hủy</button>
+        <button onclick="submitApprove()" class="btn-primary" style="padding:8px 18px;font-size:.84rem">✅ Duyệt & Kích hoạt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tool Edit Modal -->
+  <div id="toolEditModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center">
+    <div style="background:#0f0c08;border:1px solid rgba(245,158,11,0.35);border-radius:16px;padding:28px;width:400px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,0.8)">
+      <h3 style="margin:0 0 6px;color:#fff;font-size:1rem;">🛠 Sửa Quyền Tool</h3>
+      <p id="toolEditUserDesc" style="color:var(--text-muted);font-size:.84rem;margin:0 0 18px"></p>
+      <div style="margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer;margin-bottom:8px">
+          <input type="checkbox" id="editToolCheck_suno" value="suno-bulk-studio" style="width:16px;height:16px;accent-color:#f59e0b">
+          <span>
+            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎵 Suno Bulk Studio</span>
+          </span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer">
+          <input type="checkbox" id="editToolCheck_random" value="tool-random-nhac" style="width:16px;height:16px;accent-color:#f59e0b">
+          <span>
+            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎲 Tool Random Nhạc</span>
+          </span>
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="closeToolEditModal()" class="btn-ghost" style="padding:8px 16px;font-size:.84rem">Hủy</button>
+        <button onclick="submitToolEdit()" class="btn-primary" style="padding:8px 18px;font-size:.84rem">💾 Lưu</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ====================================================================== -->
   <!-- JAVASCRIPT XỬ LÝ TOÀN BỘ LOGIC PHÂN QUYỀN & DỮ LIỆU -->
   <!-- ====================================================================== -->
@@ -970,14 +1028,123 @@
       // LOGIC DÀNH CHO ADMIN
       // ======================================================================
 
-      window.switchAdminTab = function (tab) {
-        document.getElementById('tabBtnUsers').classList.toggle('active', tab === 'users');
-        document.getElementById('tabBtnMachines').classList.toggle('active', tab === 'machines');
-        document.getElementById('tabBtnTelemetry').classList.toggle('active', tab === 'telemetry');
+      // ── Toast Notification ──
+      window.showToast = function(msg, type = 'success') {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        const colors = { success: '#22c55e', error: '#f87171', info: '#38bdf8', warn: '#f59e0b' };
+        t.style.cssText = `pointer-events:auto;background:#0f0c08;border:1px solid ${colors[type]||colors.info};color:#fff;padding:12px 18px;border-radius:10px;font-size:.84rem;font-weight:600;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:flex;align-items:center;gap:10px;animation:toastIn .2s ease`;
+        const icons = { success:'✅', error:'❌', info:'ℹ️', warn:'⚠️' };
+        t.innerHTML = `<span>${icons[type]||'ℹ️'}</span><span>${msg}</span>`;
+        c.appendChild(t);
+        setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
+      };
 
-        document.getElementById('paneUsers').style.display = tab === 'users' ? 'block' : 'none';
-        document.getElementById('paneMachines').style.display = tab === 'machines' ? 'block' : 'none';
-        document.getElementById('paneTelemetry').style.display = tab === 'telemetry' ? 'block' : 'none';
+      window.switchAdminTab = function (tab) {
+        ['users','machines','telemetry','pending'].forEach(t => {
+          const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+          const pane = document.getElementById('pane' + t.charAt(0).toUpperCase() + t.slice(1));
+          if (btn) btn.classList.toggle('active', t === tab);
+          if (pane) pane.style.display = t === tab ? 'block' : 'none';
+        });
+        if (tab === 'pending') renderPendingTable();
+      };
+
+      // ── Pending Users ──
+      let pendingApproveId = null;
+      let toolEditUserId = null;
+
+      function renderPendingTable() {
+        const pending = rawUsersList.filter(u => u.status === 'pending');
+        const badge = document.getElementById('pendingBadge');
+        if (badge) { badge.textContent = pending.length; badge.style.display = pending.length ? 'inline' : 'none'; }
+        const tbody = document.getElementById('pendingTableBody');
+        if (!tbody) return;
+        if (!pending.length) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px">Không có tài khoản nào đang chờ duyệt.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = pending.map((u, i) => `
+          <tr>
+            <td>${i+1}</td>
+            <td><b style="color:#fff">${escapeHtml(u.fullName)}</b></td>
+            <td style="font-family:var(--font-mono);color:var(--amber-primary)">@${escapeHtml(u.username)}</td>
+            <td style="font-size:.8rem;color:var(--text-muted)">${u.createdAt || ''}</td>
+            <td style="text-align:center;display:flex;gap:6px;justify-content:center">
+              <button class="btn-action-sm btn-promote" onclick="openApproveModal('${u.id}','${escapeHtml(u.fullName)}','${escapeHtml(u.username)}')">✅ Duyệt</button>
+              <button class="btn-action-sm btn-block" onclick="rejectUser('${u.id}','${escapeHtml(u.fullName)}')">❌ Từ chối</button>
+            </td>
+          </tr>`).join('');
+      }
+
+      window.openApproveModal = function(id, fullName, username) {
+        pendingApproveId = id;
+        document.getElementById('approveUserDesc').textContent = `Duyệt tài khoản: ${fullName} (@${username})`;
+        document.getElementById('toolCheck_suno').checked = false;
+        document.getElementById('toolCheck_random').checked = false;
+        document.getElementById('approveModal').style.display = 'flex';
+      };
+      window.closeApproveModal = function() { document.getElementById('approveModal').style.display = 'none'; };
+
+      window.submitApprove = async function() {
+        const tools = [];
+        if (document.getElementById('toolCheck_suno').checked) tools.push('suno-bulk-studio');
+        if (document.getElementById('toolCheck_random').checked) tools.push('tool-random-nhac');
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/user/approve', {
+            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUserId: pendingApproveId, allowedTools: tools, role: 'Nhân viên' })
+          });
+          const data = await res.json();
+          closeApproveModal();
+          if (data.ok) {
+            showToast(data.message, 'success');
+            await loadAdminDashboard();
+            renderPendingTable();
+          } else { showToast(data.message || 'Lỗi duyệt tài khoản', 'error'); }
+        } catch(e) { showToast('Lỗi kết nối: ' + e.message, 'error'); }
+      };
+
+      window.rejectUser = async function(id, fullName) {
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/user/reject', {
+            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUserId: id })
+          });
+          const data = await res.json();
+          if (data.ok) { showToast(`Đã từ chối tài khoản [${fullName}]`, 'warn'); await loadAdminDashboard(); renderPendingTable(); }
+          else showToast(data.message || 'Lỗi', 'error');
+        } catch(e) { showToast('Lỗi kết nối', 'error'); }
+      };
+
+      // ── Tool Edit Modal ──
+      window.openToolEditModal = function(id, fullName, allowedTools) {
+        toolEditUserId = id;
+        document.getElementById('toolEditUserDesc').textContent = `Sửa quyền tool cho: ${fullName}`;
+        const tools = Array.isArray(allowedTools) ? allowedTools : [];
+        document.getElementById('editToolCheck_suno').checked = tools.includes('suno-bulk-studio');
+        document.getElementById('editToolCheck_random').checked = tools.includes('tool-random-nhac');
+        document.getElementById('toolEditModal').style.display = 'flex';
+      };
+      window.closeToolEditModal = function() { document.getElementById('toolEditModal').style.display = 'none'; };
+
+      window.submitToolEdit = async function() {
+        const tools = [];
+        if (document.getElementById('editToolCheck_suno').checked) tools.push('suno-bulk-studio');
+        if (document.getElementById('editToolCheck_random').checked) tools.push('tool-random-nhac');
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/user/tools', {
+            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ targetUserId: toolEditUserId, allowedTools: tools })
+          });
+          const data = await res.json();
+          closeToolEditModal();
+          if (data.ok) { showToast(data.message, 'success'); await loadAdminDashboard(); }
+          else showToast(data.message || 'Lỗi', 'error');
+        } catch(e) { showToast('Lỗi kết nối', 'error'); }
       };
 
       async function loadAdminDashboard() {
@@ -1090,30 +1257,28 @@
           // 1. Thao tác nâng / hạ quyền
           if (!isTargetRoot) {
             if (!isTargetAdmin) {
-              // Mọi Admin đều có quyền nâng Nhân viên lên Admin!
-              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">👑 Nâng lên Admin</button> `;
+              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">👑 Lên Admin</button> `;
             } else {
-              // HẠ QUYỀN ADMIN: CHỈ RIÊNG TÀI KHOẢN ROOT ADMIN MỚI ĐƯỢC PHÉP!
               if (isCurrentRoot) {
-                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">💼 Hạ xuống Nhân viên</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">💼 Hạ xuống</button> `;
               } else {
-                actionsHtml += `<span style="font-size: 0.74rem; color: var(--text-dim);" title="Chỉ Quản trị viên tối cao mới có quyền xóa quyền Admin">🔒 Admin</span> `;
+                actionsHtml += `<span style="font-size:0.74rem;color:var(--text-dim)" title="Chỉ Root Admin mới được hạ quyền Admin">🔒 Admin</span> `;
               }
             }
 
             // 2. Chặn / Mở khóa
             if (!isTargetAdmin) {
               if (isBlocked) {
-                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">🔓 Mở khóa</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">🔓 Mở</button> `;
               } else {
                 actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">🔒 Khóa</button> `;
               }
-
-              // 3. Kích hoạt Key
-              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')">🔑 Cấp Key</button>`;
+              // 3. Sửa tool permission
+              const toolsJson = JSON.stringify(u.allowedTools || []).replace(/'/g, "\\'");
+              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})">🛠 Tool</button>`;
             }
           } else {
-            actionsHtml = `<span style="font-size: 0.75rem; color: #fef08a; font-weight: 700;">⭐ Chủ hệ thống</span>`;
+            actionsHtml = `<span style="font-size:0.75rem;color:#fef08a;font-weight:700;">⭐ Chủ hệ thống</span>`;
           }
 
           return `
@@ -1133,57 +1298,43 @@
 
       // Đổi vai trò (Nâng lên Admin / Hạ xuống Nhân viên)
       window.changeRole = async function (targetUserId, newRole) {
-        const confirmMsg = newRole === 'Quản trị viên' 
-          ? 'Bạn có chắc chắn muốn nâng thành viên này lên làm QUẢN TRỊ VIÊN không?' 
-          : 'CẢNH BÁO: Bạn có chắc chắn muốn XÓA QUYỀN ADMIN của người này và chuyển thành Nhân viên không?';
-        if (!confirm(confirmMsg)) return;
-
         const token = localStorage.getItem(TOKEN_KEY);
         try {
           const res = await fetch('/api/admin/user/role', {
             method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}` 
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ targetUserId, newRole })
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            alert(data.message);
+            showToast(data.message, 'success');
             loadAdminDashboard();
           } else {
-            alert('Lỗi: ' + (data.message || 'Không thể thay đổi quyền.'));
+            showToast('Lỗi: ' + (data.message || 'Không thể thay đổi quyền.'), 'error');
           }
         } catch (e) {
-          alert('Lỗi kết nối: ' + e.message);
+          showToast('Lỗi kết nối: ' + e.message, 'error');
         }
       };
 
       // Chặn / Mở khóa tài khoản
       window.toggleBlockUser = async function (targetUserId, blocked) {
-        const actionText = blocked ? 'KHÓA TÀI KHOẢN' : 'MỞ KHÓA TÀI KHOẢN';
-        if (!confirm(`Bạn có chắc muốn ${actionText} thành viên này không?`)) return;
-
         const token = localStorage.getItem(TOKEN_KEY);
         try {
           const res = await fetch('/api/admin/user/block', {
             method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}` 
-            },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify({ targetUserId, blocked })
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            alert(data.message);
+            showToast(data.message, blocked ? 'warn' : 'success');
             loadAdminDashboard();
           } else {
-            alert('Lỗi: ' + data.message);
+            showToast('Lỗi: ' + data.message, 'error');
           }
         } catch (e) {
-          alert('Lỗi kết nối: ' + e.message);
+          showToast('Lỗi kết nối: ' + e.message, 'error');
         }
       };
 
@@ -1215,14 +1366,14 @@
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            alert(data.message);
+            showToast(data.message, 'success');
             closeLicenseModal();
             loadAdminDashboard();
           } else {
-            alert('Lỗi: ' + data.message);
+            showToast('Lỗi: ' + data.message, 'error');
           }
         } catch (e) {
-          alert('Lỗi kết nối: ' + e.message);
+          showToast('Lỗi kết nối: ' + e.message, 'error');
         }
       };
 
