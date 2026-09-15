@@ -214,10 +214,61 @@ button {
   .nav-link { padding: 6px 9px; font-size: 0.83rem; }
 }
 @media (max-width: 1050px) {
-  /* Ẩn link ít quan trọng nhất: Tính năng, Lịch sử cập nhật */
   .nav-hide-md { display: none !important; }
   .nav-link { padding: 5px 7px; font-size: 0.8rem; }
 }
+
+/* ── Tools Dropdown ── */
+.nav-dropdown-wrap {
+  position: relative;
+}
+.nav-dropdown-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+}
+.nav-dropdown-btn.open {
+  color: var(--amber-primary);
+  background: var(--amber-soft);
+  border: 1px solid var(--border-subtle);
+}
+.nav-dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #0d0b08;
+  border: 1px solid rgba(245,158,11,0.28);
+  border-radius: 14px;
+  padding: 6px;
+  min-width: 240px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.75), 0 0 0 1px rgba(245,158,11,0.06);
+  z-index: 9999;
+  backdrop-filter: blur(20px);
+  animation: ddFade .15s ease;
+}
+@keyframes ddFade { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.nav-drop-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: all .15s;
+}
+.nav-drop-item:hover, .nav-drop-item.active {
+  background: rgba(245,158,11,0.08);
+  color: #fff;
+}
+.nav-drop-item.active .ndi-title { color: var(--amber-primary); }
+.ndi-icon { font-size: 1.25rem; flex-shrink: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 8px; }
+.ndi-title { display: block; font-size: 0.86rem; font-weight: 700; color: #fff; }
+.ndi-sub { display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 1px; }
 
 
 .status-pill {
@@ -1153,12 +1204,36 @@ button {
 
       <nav>
         <ul class="nav-menu">
-          <li><a href="#featured" class="nav-link active">Suno Studio</a></li>
-          <li><a href="#random-nhac" class="nav-link" style="color: #a5b4fc; font-weight: 600;">🎲 Tool Random Nhạc</a></li>
+          <!-- Tools Dropdown -->
+          <li class="nav-dropdown-wrap" id="toolsDropWrap">
+            <button class="nav-link nav-dropdown-btn" id="toolsDropBtn" aria-expanded="false">
+              🛠 Tools
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;transition:transform .2s" id="toolsChevron">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <div class="nav-dropdown-menu" id="toolsDropMenu">
+              <a href="#featured" class="nav-drop-item active">
+                <span class="ndi-icon">🎵</span>
+                <span>
+                  <span class="ndi-title">Suno Bulk Studio</span>
+                  <span class="ndi-sub">Tạo & tải nhạc Suno hàng loạt</span>
+                </span>
+              </a>
+              <a href="#random-nhac" class="nav-drop-item">
+                <span class="ndi-icon">🎲</span>
+                <span>
+                  <span class="ndi-title">Tool Random Nhạc</span>
+                  <span class="ndi-sub">Trộn & ghép playlist ngẫu nhiên</span>
+                </span>
+              </a>
+              <!-- Thêm tool mới ở đây -->
+            </div>
+          </li>
           <li class="nav-hide-md"><a href="#features" class="nav-link">Tính năng</a></li>
           <li><a href="#packages" class="nav-link">Bản phát hành</a></li>
           <li class="nav-hide-md"><a href="#changelog" class="nav-link">Lịch sử cập nhật</a></li>
-          <li><a href="#contact" class="nav-link">Liên hệ</a></li>
+          <li><a href="/admin" id="navAdminLink" class="nav-link" style="color:var(--amber-primary);font-weight:700;display:none;">⚙️ Quản lý</a></li>
         </ul>
       </nav>
 
@@ -1230,8 +1305,26 @@ button {
   </header>
 
   <script>
-    // User dropdown navbar
     (function () {
+      // ── Tools dropdown ──
+      var tBtn = document.getElementById('toolsDropBtn');
+      var tMenu = document.getElementById('toolsDropMenu');
+      var tChev = document.getElementById('toolsChevron');
+      var tOpen = false;
+      if (tBtn) {
+        tBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          tOpen = !tOpen;
+          tMenu.style.display = tOpen ? 'block' : 'none';
+          tBtn.classList.toggle('open', tOpen);
+          if (tChev) tChev.style.transform = tOpen ? 'rotate(180deg)' : '';
+        });
+        document.addEventListener('click', function () {
+          if (tOpen) { tOpen = false; tMenu.style.display = 'none'; tBtn.classList.remove('open'); if (tChev) tChev.style.transform = ''; }
+        });
+      }
+
+      // ── User dropdown + Quản lý link ──
       var token = localStorage.getItem('fikat_session_token');
       if (!token) return;
       try {
@@ -1240,12 +1333,18 @@ button {
         var payload = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
         if (!payload.exp || Date.now() > payload.exp) { localStorage.removeItem('fikat_session_token'); return; }
 
+        // Hiện link Quản lý chỉ với Admin / Root Admin
+        if (payload.isRootAdmin || payload.role === 'Quản trị viên') {
+          var al = document.getElementById('navAdminLink');
+          if (al) al.style.display = 'inline-flex';
+        }
+
         var wrap = document.getElementById('userDropdownWrap');
         var btn = document.getElementById('userDropdownBtn');
         var menu = document.getElementById('userDropdownMenu');
         if (!wrap) return;
 
-        // Populate
+        // Điền thông tin user
         var letter = (payload.fullName || payload.username || 'F')[0].toUpperCase();
         document.getElementById('userAvatar').textContent = letter;
         document.getElementById('userNameShort').textContent = payload.username || '';
@@ -1263,16 +1362,16 @@ button {
 
         wrap.style.display = 'block';
 
-        // Toggle dropdown
-        var open = false;
+        // Toggle user dropdown
+        var uOpen = false;
         btn.addEventListener('click', function (e) {
           e.stopPropagation();
-          open = !open;
-          menu.style.display = open ? 'block' : 'none';
-          btn.style.background = open ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.10)';
+          uOpen = !uOpen;
+          menu.style.display = uOpen ? 'block' : 'none';
+          btn.style.background = uOpen ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.10)';
         });
         document.addEventListener('click', function () {
-          if (open) { open = false; menu.style.display = 'none'; btn.style.background = 'rgba(245,158,11,0.10)'; }
+          if (uOpen) { uOpen = false; menu.style.display = 'none'; btn.style.background = 'rgba(245,158,11,0.10)'; }
         });
 
         // Logout
