@@ -423,11 +423,22 @@ export default {
         const nowIso = new Date().toISOString();
         const vnTime = getVnTime();
 
+        // ── Tìm nhân viên sở hữu key này để gắn log vào tài khoản ──
+        const allUsers = await getAllUsers(env);
+        const ownerUser = allUsers.find(u => u.licenseKey && u.licenseKey === licenseKey);
+        const ownerUserId   = ownerUser ? ownerUser.id        : null;
+        const ownerUsername = ownerUser ? ownerUser.username  : null;
+        const ownerFullName = ownerUser ? ownerUser.fullName  : null;
+
         const processedItems = items.map((item, idx) => ({
           id: `${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 7)}`,
           hwid,
           licenseKey,
           role,
+          // ── Liên kết tài khoản nhân viên ──
+          userId: ownerUserId,
+          username: ownerUsername,
+          fullName: ownerFullName,
           clipId: item.clipId || "",
           title: item.title || "Chưa có tên bài",
           prompt: item.prompt || "",
@@ -548,13 +559,8 @@ export default {
           logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           logs = logs.slice(0, 500);
         } else {
-          // Nhân viên chỉ xem bài máy của mình
-          if (authUser.hwid) {
-            try {
-              const rawLogs = await env.DOWNLOAD_LOGS.get(`logs:${authUser.hwid}`);
-              if (rawLogs) logs = JSON.parse(rawLogs);
-            } catch (e) {}
-          }
+          // Nhân viên KHÔNG được xem lịch sử tải nhạc
+          logs = [];
         }
       } else {
         hwidList = Array.from(inMemoryHWIDs.values());
@@ -567,9 +573,31 @@ export default {
           logs.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
           logs = logs.slice(0, 500);
         } else {
-          logs = inMemoryLogs.get(authUser.hwid) || [];
+          // Nhân viên KHÔNG được xem lịch sử tải nhạc (in-memory)
+          logs = [];
         }
       }
+
+      // ── Làm giàu hwidList với thông tin nhân viên sở hữu key ──
+      const usersForEnrich = await getAllUsers(env);
+      hwidList = hwidList.map(h => {
+        const owner = usersForEnrich.find(u => u.licenseKey && u.licenseKey === h.licenseKey);
+        return {
+          ...h,
+          ownerUserId:   owner ? owner.id       : null,
+          ownerUsername: owner ? owner.username  : null,
+          ownerFullName: owner ? owner.fullName  : null,
+        };
+      });
+
+      // ── Làm giàu log cũ chưa có userId bằng cách tra licenseKey ──
+      logs = logs.map(l => {
+        if (!l.userId && l.licenseKey) {
+          const owner = usersForEnrich.find(u => u.licenseKey === l.licenseKey);
+          if (owner) return { ...l, userId: owner.id, username: owner.username, fullName: owner.fullName };
+        }
+        return l;
+      });
 
       // Thống kê
       const totalMachines = hwidList.length;
