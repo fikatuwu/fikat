@@ -10,3 +10,8 @@ binding = "ASSETS"
 [[kv_namespaces]]
 binding = "DOWNLOAD_LOGS"
 id = "25247767a45041daa05e8258357ce388"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "fikat-db"
+database_id = "31e8d3cd-6383-40f7-b140-5b5e74615be8"
