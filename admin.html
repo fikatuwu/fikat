@@ -1143,8 +1143,9 @@
           const dataUsers = await resUsers.json();
           if (dataUsers.ok) {
             rawUsersList = dataUsers.users || [];
-            document.getElementById('statUsers').textContent = rawUsersList.length;
+            document.getElementById('statUsers').textContent = rawUsersList.filter(u => u.status !== 'pending').length;
             renderUsersTable();
+            renderPendingTable(); // cập nhật badge + pending tab
           }
         } catch (e) {
           console.error(e);
@@ -1182,6 +1183,7 @@
         const tbody = document.getElementById('usersTableBody');
 
         const filtered = rawUsersList.filter(u => {
+          if (u.status === 'pending') return false; // pending users go to Chờ Duyệt tab
           if (roleFilter && u.role !== roleFilter) return false;
           if (keyword) {
             const matchName = (u.fullName || '').toLowerCase().includes(keyword);
@@ -1213,9 +1215,14 @@
           }
 
           // Trạng thái
-          const statusHtml = isBlocked 
-            ? `<span class="badge-status-blocked">🔴 Đã khóa</span>` 
-            : `<span class="badge-status-active">🟢 Hoạt động</span>`;
+          let statusHtml;
+          if (u.status === 'blocked') {
+            statusHtml = `<span class="badge-status-blocked">🔴 Đã khóa</span>`;
+          } else if (u.status === 'pending') {
+            statusHtml = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:rgba(251,191,36,0.12);border:1px solid #fbbf24;color:#fbbf24;font-size:0.78rem;font-weight:700;">⏳ Chờ duyệt</span>`;
+          } else {
+            statusHtml = `<span class="badge-status-active">🟢 Hoạt động</span>`;
+          }
 
           // Bản quyền
           let licenseHtml = `<span style="color: var(--text-dim); font-size: 0.8rem;">Chưa kích hoạt</span>`;
