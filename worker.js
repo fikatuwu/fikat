@@ -118,9 +118,10 @@ export default {
           salt,
           role,
           isRootAdmin,
-          status: "active", // active | blocked
+          status: isRootAdmin ? "active" : "pending", // pending = chờ Admin duyệt
+          allowedTools: isRootAdmin ? ["suno-bulk-studio", "tool-random-nhac"] : [], // Tools được phép
           licenseKey,
-          licensedUntil: isRootAdmin ? "2099-12-31T23:59:59.000Z" : null, // Mặc định chưa kích hoạt nếu là nhân viên
+          licensedUntil: isRootAdmin ? "2099-12-31T23:59:59.000Z" : null,
           hwid: "",
           createdAt: vnTime,
           updatedAt: vnTime,
@@ -129,16 +130,21 @@ export default {
         users.push(newUser);
         await saveAllUsers(env, users);
 
-        // Tạo Token phiên đăng nhập
-        const token = await createAuthToken(newUser);
+        if (isRootAdmin) {
+          const token = await createAuthToken(newUser);
+          return jsonRes({
+            ok: true,
+            message: "Đăng ký thành công! Bạn là Quản trị viên tối cao (Root Admin) của hệ thống.",
+            token,
+            user: sanitizeUser(newUser),
+          });
+        }
 
+        // Nhân viên mới → chờ duyệt, KHÔNG cấp token
         return jsonRes({
           ok: true,
-          message: isRootAdmin 
-            ? "Đăng ký thành công! Bạn là Quản trị viên tối cao (Root Admin) của hệ thống." 
-            : "Đăng ký tài khoản thành công!",
-          token,
-          user: sanitizeUser(newUser),
+          pending: true,
+          message: "Đăng ký thành công! Tài khoản của bạn đang chờ Quản trị viên phê duyệt. Vui lòng liên hệ Admin để được kích hoạt.",
         });
       } catch (err) {
         return jsonRes({ ok: false, message: "Lỗi đăng ký: " + err.message }, 500);
@@ -166,6 +172,14 @@ export default {
         const checkHash = await hashPassword(password, user.salt);
         if (checkHash !== user.passwordHash) {
           return jsonRes({ ok: false, message: "Mật khẩu không chính xác." }, 401);
+        }
+
+        // Kiểm tra tài khoản đang chờ duyệt
+        if (user.status === "pending") {
+          return jsonRes({ 
+            ok: false, 
+            message: "Tài khoản của bạn đang chờ Quản trị viên phê duyệt. Vui lòng chờ hoặc liên hệ Admin!" 
+          }, 403);
         }
 
         // Kiểm tra tài khoản có bị khóa không
@@ -386,6 +400,81 @@ export default {
           licensedUntil: targetUser.licensedUntil,
           user: sanitizeUser(targetUser),
         });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
+    // 2.5 POST /api/admin/user/approve (Duyệt tài khoản chờ & gán tools)
+    if (pathname === "/api/admin/user/approve" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Admin mới được duyệt tài khoản." }, 403);
+        }
+        const body = await request.json();
+        const targetId = body.targetUserId;
+        const tools = Array.isArray(body.allowedTools) ? body.allowedTools : [];
+        const role = body.role === "Quản trị viên" ? "Quản trị viên" : "Nhân viên";
+
+        const users = await getAllUsers(env);
+        const target = users.find(u => u.id === targetId);
+        if (!target) return jsonRes({ ok: false, message: "Không tìm thấy tài khoản." }, 404);
+        if (target.status !== "pending") return jsonRes({ ok: false, message: "Tài khoản này không ở trạng thái chờ duyệt." }, 400);
+
+        target.status = "active";
+        target.role = role;
+        target.allowedTools = tools;
+        target.updatedAt = getVnTime();
+
+        await saveAllUsers(env, users);
+        return jsonRes({ ok: true, message: `Đã duyệt tài khoản [${target.fullName}] với ${tools.length} tool!`, user: sanitizeUser(target) });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
+    // 2.6 POST /api/admin/user/reject (Từ chối & xóa tài khoản chờ)
+    if (pathname === "/api/admin/user/reject" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Admin mới được từ chối tài khoản." }, 403);
+        }
+        const body = await request.json();
+        const targetId = body.targetUserId;
+
+        let users = await getAllUsers(env);
+        const target = users.find(u => u.id === targetId);
+        if (!target) return jsonRes({ ok: false, message: "Không tìm thấy tài khoản." }, 404);
+
+        users = users.filter(u => u.id !== targetId);
+        await saveAllUsers(env, users);
+        return jsonRes({ ok: true, message: `Đã từ chối và xóa tài khoản [${target.fullName}].` });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
+    // 2.7 POST /api/admin/user/tools (Cập nhật Tools được phép của user)
+    if (pathname === "/api/admin/user/tools" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Admin mới được sửa quyền tool." }, 403);
+        }
+        const body = await request.json();
+        const targetId = body.targetUserId;
+        const tools = Array.isArray(body.allowedTools) ? body.allowedTools : [];
+
+        const users = await getAllUsers(env);
+        const target = users.find(u => u.id === targetId);
+        if (!target) return jsonRes({ ok: false, message: "Không tìm thấy tài khoản." }, 404);
+
+        target.allowedTools = tools;
+        target.updatedAt = getVnTime();
+        await saveAllUsers(env, users);
+        return jsonRes({ ok: true, message: `Đã cập nhật quyền tool cho [${target.fullName}]!`, user: sanitizeUser(target) });
       } catch (e) {
         return jsonRes({ ok: false, message: e.message }, 500);
       }

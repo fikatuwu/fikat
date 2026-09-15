@@ -1,4 +1,4 @@
-﻿name = "restless-sun-f9c3"
+name = "restless-sun-f9c3"
 main = "worker.js"
 compatibility_date = "2024-09-23"
 
@@ -6,3 +6,7 @@ compatibility_date = "2024-09-23"
 directory = "."
 exclude = ["node_modules/**", "worker.js", "wrangler.toml", ".git/**", "package*.json", "bun.lockb"]
 binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "DOWNLOAD_LOGS"
+id = "25247767a45041daa05e8258357ce388"

@@ -510,6 +510,10 @@
       
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
+        <button class="nav-tab-btn" id="tabBtnPending" onclick="switchAdminTab('pending')" style="position:relative">
+          <span>🔔 Chờ Duyệt</span>
+          <span id="pendingBadge" style="display:none;position:absolute;top:4px;right:4px;background:#f87171;color:#fff;border-radius:99px;font-size:.65rem;font-weight:800;padding:1px 5px;line-height:1.4">0</span>
+        </button>
         <button class="nav-tab-btn active" id="tabBtnUsers" onclick="switchAdminTab('users')">
           <span>👥 Quản Trị Tài Khoản & Phân Quyền</span>
         </button>
@@ -542,6 +546,28 @@
           <div class="stat-card-label">📅 LƯỢT TẢI HÔM NAY</div>
           <div id="statToday" class="stat-card-num" style="color: #f43f5e;">0</div>
           <div style="font-size: 0.78rem; color: var(--text-dim);">Trong 24 giờ qua</div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TAB 0: CHỜ DUYỆT -->
+      <!-- ================================================================== -->
+      <section id="panePending" style="display:none">
+        <div class="filter-panel">
+          <div style="font-size:.9rem;color:#fff;font-weight:700">🔔 Tài Khoản Đăng Ký Chờ Phê Duyệt</div>
+          <div style="font-size:.82rem;color:var(--text-muted)">Xem xét và duyệt từng tài khoản, đồng thời phân quyền tool ngay khi duyệt.</div>
+        </div>
+        <div class="table-wrapper">
+          <table class="admin-table">
+            <thead><tr>
+              <th style="width:36px">#</th>
+              <th>Họ Và Tên</th>
+              <th>Tài Khoản</th>
+              <th>Ngày Đăng Ký</th>
+              <th style="text-align:center">Hành Động</th>
+            </tr></thead>
+            <tbody id="pendingTableBody"><tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:30px">Không có tài khoản nào đang chờ duyệt.</td></tr></tbody>
+          </table>
         </div>
       </section>
 
