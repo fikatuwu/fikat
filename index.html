@@ -1213,21 +1213,24 @@ button {
               </svg>
             </button>
             <div class="nav-dropdown-menu" id="toolsDropMenu">
-              <a href="#featured" class="nav-drop-item active">
+              <a href="#featured" class="nav-drop-item active" data-tool="suno-bulk-studio">
                 <span class="ndi-icon">🎵</span>
                 <span>
                   <span class="ndi-title">Suno Bulk Studio</span>
                   <span class="ndi-sub">Tạo & tải nhạc Suno hàng loạt</span>
                 </span>
               </a>
-              <a href="#random-nhac" class="nav-drop-item">
+              <a href="#random-nhac" class="nav-drop-item" data-tool="tool-random-nhac">
                 <span class="ndi-icon">🎲</span>
                 <span>
                   <span class="ndi-title">Tool Random Nhạc</span>
                   <span class="ndi-sub">Trộn & ghép playlist ngẫu nhiên</span>
                 </span>
               </a>
-              <!-- Thêm tool mới ở đây -->
+              <div id="toolsEmptyNotice" style="display:none;padding:14px 16px;color:var(--text-muted);font-size:0.82rem;text-align:center;line-height:1.5;">
+                🔒 Bạn chưa được cấp quyền tải tool nào.<br>
+                <span style="color:var(--text-dim);font-size:0.75rem;">Vui lòng liên hệ Admin để được cấp tool.</span>
+              </div>
             </div>
           </li>
           <li class="nav-hide-md"><a href="#features" class="nav-link">Tính năng</a></li>
@@ -1361,6 +1364,60 @@ button {
         }
 
         wrap.style.display = 'block';
+
+        // ── Phân quyền hiển thị & tải Tool ──
+        function applyToolPermissions(allowedTools, isAdmin) {
+          var tools = Array.isArray(allowedTools) ? allowedTools : [];
+          var hasSuno = isAdmin || tools.indexOf('suno-bulk-studio') !== -1;
+          var hasRandom = isAdmin || tools.indexOf('tool-random-nhac') !== -1;
+
+          // 1. Dropdown items
+          var itemSuno = document.querySelector('.nav-drop-item[data-tool="suno-bulk-studio"]');
+          var itemRandom = document.querySelector('.nav-drop-item[data-tool="tool-random-nhac"]');
+          var emptyNotice = document.getElementById('toolsEmptyNotice');
+
+          if (itemSuno) itemSuno.style.display = hasSuno ? 'flex' : 'none';
+          if (itemRandom) itemRandom.style.display = hasRandom ? 'flex' : 'none';
+          if (emptyNotice) emptyNotice.style.display = (!hasSuno && !hasRandom) ? 'block' : 'none';
+
+          // 2. Hàm khóa nút tải
+          function lockBtn(el, toolName) {
+            if (!el) return;
+            el.removeAttribute('download');
+            el.href = 'javascript:void(0)';
+            el.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;">🔒 Chưa được cấp quyền tải</span>';
+            el.style.cssText = 'pointer-events:auto;background:rgba(255,255,255,0.06)!important;border:1px solid rgba(255,255,255,0.15)!important;color:#9e8e7c!important;cursor:not-allowed!important;box-shadow:none!important;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;';
+            el.onclick = function (e) {
+              e.preventDefault();
+              alert('Tài khoản của bạn chưa được cấp quyền tải "' + toolName + '". Vui lòng liên hệ Quản trị viên để được cấp tool!');
+            };
+          }
+
+          // 3. Khóa Suno Bulk Studio nếu không được cấp
+          if (!hasSuno) {
+            lockBtn(document.getElementById('heroDownloadBtn'), 'Suno Bulk Studio');
+            lockBtn(document.getElementById('cardDownloadBtn'), 'Suno Bulk Studio');
+            lockBtn(document.getElementById('pkgDownloadBtn_suno'), 'Suno Bulk Studio');
+          }
+
+          // 4. Khóa Tool Random Nhạc nếu không được cấp
+          if (!hasRandom) {
+            lockBtn(document.getElementById('pkgDownloadBtn_random'), 'Tool Random Nhạc & Ghép Video');
+          }
+        }
+
+        var isAdm = Boolean(payload.isRootAdmin || payload.role === 'Quản trị viên');
+        applyToolPermissions(payload.allowedTools || [], isAdm);
+
+        // Fetch /api/auth/me để cập nhật quyền mới nhất theo thời gian thực
+        fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + token } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d && d.ok && d.user) {
+              var uAdm = Boolean(d.user.isRootAdmin || d.user.role === 'Quản trị viên');
+              applyToolPermissions(d.user.allowedTools || [], uAdm);
+            }
+          }).catch(function () {});
 
         // Toggle user dropdown
         var uOpen = false;
@@ -1730,7 +1787,7 @@ button {
       <!-- Dynamic Projects Grid (Rendered by app.js & Static Fallback) -->
       <div id="projectsGrid" class="projects-grid" style="max-width: 960px; margin: 0 auto;">
         <!-- Card 1: Suno Bulk Studio -->
-        <div class="project-card featured-card">
+        <div class="project-card featured-card" id="pkgCard_suno">
           <div>
             <div class="card-top">
               <span class="project-badge">Bản mới nhất</span>
@@ -1748,12 +1805,12 @@ button {
           </div>
           <div class="card-footer">
             <span style="font-size: 0.8rem; color: var(--text-dim);">AI Music &amp; Automation</span>
-            <a href="https://github.com/fikatuwu/fikat/releases/download/v3.1/Suno_Bulk_Downloader.zip" class="card-link" download>Tải về ⬇</a>
+            <a id="pkgDownloadBtn_suno" href="https://github.com/fikatuwu/fikat/releases/download/v3.1/Suno_Bulk_Downloader.zip" class="card-link" download>Tải về ⬇</a>
           </div>
         </div>
 
         <!-- Card 2: Tool Random Nhạc & Ghép Video -->
-        <div class="project-card featured-card" style="border-color: rgba(99, 102, 241, 0.45); background: linear-gradient(180deg, rgba(24, 20, 38, 0.85) 0%, rgba(14, 12, 22, 0.85) 100%);">
+        <div class="project-card featured-card" id="pkgCard_random" style="border-color: rgba(99, 102, 241, 0.45); background: linear-gradient(180deg, rgba(24, 20, 38, 0.85) 0%, rgba(14, 12, 22, 0.85) 100%);">
           <div>
             <div class="card-top">
               <span class="project-badge" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3);">Mới ra mắt</span>
@@ -1770,7 +1827,7 @@ button {
           </div>
           <div class="card-footer">
             <span style="font-size: 0.8rem; color: var(--text-dim);">Media Automation &amp; Audio</span>
-            <a href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="card-link" style="color: #a5b4fc;" download>Tải về ⬇</a>
+            <a id="pkgDownloadBtn_random" href="https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip" class="card-link" style="color: #a5b4fc;" download>Tải về ⬇</a>
           </div>
         </div>
       </div>

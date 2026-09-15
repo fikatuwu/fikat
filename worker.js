@@ -719,6 +719,7 @@ async function createAuthToken(user) {
     fullName: user.fullName,
     role: user.role,
     isRootAdmin: Boolean(user.isRootAdmin),
+    allowedTools: user.allowedTools || [],
     exp: Date.now() + 7 * 24 * 3600 * 1000,
   };
   const base64Payload = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
