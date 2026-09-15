@@ -2,20 +2,25 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.0",
-  "releaseDate": "2026-09-14",
+  "currentVersion": "3.1",
+  "releaseDate": "2026-09-15",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.0/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.1/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
     "requirements": "Windows 10 / 11 64-bit, Microsoft Edge WebView2"
   },
   "keyFeatures": [
+    {
+      "icon": "🪙",
+      "title": "Quản lý & Hiển thị Số Dư Credit Suno Trực Quan",
+      "desc": "Tích hợp nút hiển thị số dư Credit Suno theo thời gian thực ngay trên thanh công cụ. Bấm vào để xem phân tích hạn mức gói, ước tính số bài hát có thể tạo và số lượt bóc tách stem khả dụng."
+    },
     {
       "icon": "✂️",
       "title": "Bóc tách Stem Nhạc Cụ Chuyên Nghiệp (12 Stems)",
@@ -54,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.1",
+      "date": "15/09/2026",
+      "tag": "Bản phát hành 3.1",
+      "badge": "latest",
+      "highlights": [
+        "🪙 Tích hợp nút hiển thị số dư Credit Suno trực quan ngay trên thanh công cụ (tự động đồng bộ và làm mới theo chu kỳ)",
+        "📊 Bấm vào nút Credit để xem chi tiết hạn mức gói, ước tính số bài hát có thể tạo và số lượt bóc tách stem khả dụng",
+        "🔒 Cơ chế bảo mật: Tự động ẩn nút Credit khi đăng xuất tài khoản để bảo vệ thông tin riêng tư",
+        "⚡ Tối ưu cơ chế đồng bộ token CookieManager & PostMessage Bridge giúp truy xuất Credit chuẩn xác 100%"
+      ]
+    },
+    {
       "version": "3.0",
       "date": "14/09/2026",
       "tag": "Đại bản phát hành 3.0",
-      "badge": "latest",
+      "badge": "feature",
       "highlights": [
         "Cơ chế Dừng tức thì (Instant Cancellation): Ngắt và hủy ngay lập tức mọi tiến trình quét, tải và tách nhạc khi ấn nút Dừng",
         "Trình quản lý phiên & Đa tài khoản (Session Manager): Ngăn ngừa triệt để lỗi đơ, xung đột và crash khi chuyển đổi tài khoản",

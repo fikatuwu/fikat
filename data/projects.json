@@ -1,19 +1,20 @@
-﻿[
+[
   {
     "id": "suno-bulk-studio",
     "name": "Suno Bulk Studio",
     "category": "ai-music",
     "categoryLabel": "AI Music & Automation",
-    "version": "3.0",
-    "updatedAt": "14/09/2026",
+    "version": "3.1",
+    "updatedAt": "15/09/2026",
     "status": "active",
     "featured": true,
     "shortDesc": "Phần mềm chuyên dụng tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.",
     "techStack": [".NET 8.0 LTS", "WPF", "WebView2", "FFmpeg", "Native JS Injector"],
     "badge": "Bản mới nhất",
-    "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.0/Suno_Bulk_Downloader.zip",
+    "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.1/Suno_Bulk_Downloader.zip",
     "hasLiveUpdates": true,
     "highlights": [
+      "🪙 Quản lý & Hiển thị số dư Credit Suno trực quan theo thời gian thực",
       "⚡ Dừng tức thì (Instant Stop Cancellation) không cần chờ",
       "🛡️ Quản lý phiên & Đa tài khoản (Session Manager, chống crash/xung đột)",
       "Bóc tách Stems nhạc cụ chuyên nghiệp (12 stems, Vocal/Beat, MIDI & gom ZIP)",
