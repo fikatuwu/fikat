@@ -768,29 +768,16 @@
 
   <!-- Approve Modal -->
   <div id="approveModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center">
-    <div style="background:#0f0c08;border:1px solid rgba(245,158,11,0.35);border-radius:16px;padding:28px;width:400px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,0.8)">
-      <h3 style="margin:0 0 6px;color:#fff;font-size:1rem;">✅ Duyệt Tài Khoản</h3>
-      <p id="approveUserDesc" style="color:var(--text-muted);font-size:.84rem;margin:0 0 18px"></p>
-      <div style="margin-bottom:16px">
-        <div style="font-size:.82rem;font-weight:700;color:#fff;margin-bottom:10px">🛠 Cấp quyền tải Tool:</div>
-        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer;margin-bottom:8px">
-          <input type="checkbox" id="toolCheck_suno" value="suno-bulk-studio" style="width:16px;height:16px;accent-color:#f59e0b">
-          <span>
-            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎵 Suno Bulk Studio</span>
-            <span style="display:block;font-size:.74rem;color:var(--text-muted)">Tạo & tải nhạc Suno hàng loạt</span>
-          </span>
-        </label>
-        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer">
-          <input type="checkbox" id="toolCheck_random" value="tool-random-nhac" style="width:16px;height:16px;accent-color:#f59e0b">
-          <span>
-            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎲 Tool Random Nhạc</span>
-            <span style="display:block;font-size:.74rem;color:var(--text-muted)">Trộn & ghép playlist ngẫu nhiên</span>
-          </span>
-        </label>
+    <div style="background:#0f0c08;border:1px solid rgba(34,197,94,0.35);border-radius:16px;padding:28px;width:380px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,0.8)">
+      <h3 style="margin:0 0 8px;color:#fff;font-size:1.05rem;">✅ Duyệt Truy Cập Web</h3>
+      <p id="approveUserDesc" style="color:var(--text-muted);font-size:.84rem;margin:0 0 16px;line-height:1.5"></p>
+      <div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:12px 14px;margin-bottom:18px;font-size:.82rem;color:#4ade80;">
+        ✔ Tài khoản sẽ được phép đăng nhập vào hệ thống web.<br>
+        <span style="color:var(--text-muted);font-size:.78rem;margin-top:4px;display:block;">Sau khi duyệt, dùng nút 🛠 Tool để phân quyền tool cụ thể.</span>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button onclick="closeApproveModal()" class="btn-ghost" style="padding:8px 16px;font-size:.84rem">Hủy</button>
-        <button onclick="submitApprove()" class="btn-primary" style="padding:8px 18px;font-size:.84rem">✅ Duyệt & Kích hoạt</button>
+        <button onclick="submitApprove()" style="padding:8px 20px;font-size:.84rem;background:#22c55e;color:#000;font-weight:700;border:none;border-radius:9999px;cursor:pointer;">✅ Duyệt</button>
       </div>
     </div>
   </div>
@@ -1087,19 +1074,16 @@
       window.closeApproveModal = function() { document.getElementById('approveModal').style.display = 'none'; };
 
       window.submitApprove = async function() {
-        const tools = [];
-        if (document.getElementById('toolCheck_suno').checked) tools.push('suno-bulk-studio');
-        if (document.getElementById('toolCheck_random').checked) tools.push('tool-random-nhac');
         const token = localStorage.getItem(TOKEN_KEY);
         try {
           const res = await fetch('/api/admin/user/approve', {
             method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ targetUserId: pendingApproveId, allowedTools: tools, role: 'Nhân viên' })
+            body: JSON.stringify({ targetUserId: pendingApproveId, allowedTools: [], role: 'Nhân viên' })
           });
           const data = await res.json();
           closeApproveModal();
           if (data.ok) {
-            showToast(data.message, 'success');
+            showToast('✅ Đã duyệt! Dùng nút 🛠 Tool để phân quyền tool.', 'success');
             await loadAdminDashboard();
             renderPendingTable();
           } else { showToast(data.message || 'Lỗi duyệt tài khoản', 'error'); }
