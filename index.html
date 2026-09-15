@@ -123,8 +123,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: nowrap;
+  overflow: hidden;
 }
 
 .logo-brand {
@@ -199,10 +200,22 @@ button {
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
 }
+
+/* Ẩn "Online • Realtime" trên màn hình nhỏ hơn 1280px */
+@media (max-width: 1280px) {
+  .status-pill { display: none !important; }
+  #checkUpdateBtn .update-text { display: none; }
+  #checkUpdateBtn { padding: 9px 11px; min-width: unset; }
+  .nav-link { padding: 6px 10px; font-size: 0.84rem; }
+}
+@media (max-width: 1100px) {
+  .nav-link:not(.active):not([href="#random-nhac"]) { padding: 6px 7px; font-size: 0.8rem; }
+}
+
 
 .status-pill {
   display: inline-flex;
@@ -1152,10 +1165,10 @@ button {
           <span>Online • Realtime</span>
         </div>
         <button id="checkUpdateBtn" class="btn-ghost" title="Kiểm tra phiên bản mới theo thời gian thực">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
-          Kiểm tra cập nhật
+          <span class="update-text">Kiểm tra cập nhật</span>
         </button>
 
         <!-- User Dropdown -->
