@@ -123,9 +123,8 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: nowrap;
-  overflow: hidden;
 }
 
 .logo-brand {
@@ -205,15 +204,19 @@ button {
   white-space: nowrap;
 }
 
-/* Ẩn "Online • Realtime" trên màn hình nhỏ hơn 1280px */
-@media (max-width: 1280px) {
+/* Responsive nav — ẩn dần các phần thừa thay vì overflow hidden */
+@media (max-width: 1380px) {
   .status-pill { display: none !important; }
-  #checkUpdateBtn .update-text { display: none; }
-  #checkUpdateBtn { padding: 9px 11px; min-width: unset; }
-  .nav-link { padding: 6px 10px; font-size: 0.84rem; }
 }
-@media (max-width: 1100px) {
-  .nav-link:not(.active):not([href="#random-nhac"]) { padding: 6px 7px; font-size: 0.8rem; }
+@media (max-width: 1200px) {
+  #checkUpdateBtn .update-text { display: none; }
+  #checkUpdateBtn { padding: 9px 11px; gap: 0; }
+  .nav-link { padding: 6px 9px; font-size: 0.83rem; }
+}
+@media (max-width: 1050px) {
+  /* Ẩn link ít quan trọng nhất: Tính năng, Lịch sử cập nhật */
+  .nav-hide-md { display: none !important; }
+  .nav-link { padding: 5px 7px; font-size: 0.8rem; }
 }
 
 
@@ -1152,9 +1155,9 @@ button {
         <ul class="nav-menu">
           <li><a href="#featured" class="nav-link active">Suno Studio</a></li>
           <li><a href="#random-nhac" class="nav-link" style="color: #a5b4fc; font-weight: 600;">🎲 Tool Random Nhạc</a></li>
-          <li><a href="#features" class="nav-link">Tính năng</a></li>
+          <li class="nav-hide-md"><a href="#features" class="nav-link">Tính năng</a></li>
           <li><a href="#packages" class="nav-link">Bản phát hành</a></li>
-          <li><a href="#changelog" class="nav-link">Lịch sử cập nhật</a></li>
+          <li class="nav-hide-md"><a href="#changelog" class="nav-link">Lịch sử cập nhật</a></li>
           <li><a href="#contact" class="nav-link">Liên hệ</a></li>
         </ul>
       </nav>
