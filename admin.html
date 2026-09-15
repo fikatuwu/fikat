@@ -3,26 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suno Bulk Studio — Admin Dashboard Lịch Sử Tải</title>
+  <title>Suno Studio — Hệ Thống Quản Trị & Phân Quyền</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    /* Admin Specific Custom Styles */
-    .admin-container {
-      max-width: 1380px;
-      margin: 0 auto;
-      padding: 30px 20px 80px;
+    :root {
+      --bg-primary: #080604;
+      --bg-surface: #0f0c08;
+      --bg-card: rgba(18, 14, 9, 0.85);
+      --border-subtle: rgba(245, 158, 11, 0.18);
+      --border-active: rgba(245, 158, 11, 0.55);
+      --amber-primary: #f59e0b;
+      --amber-deep: #d97706;
+      --amber-glow: rgba(245, 158, 11, 0.35);
+      --text-main: #f5eee4;
+      --text-muted: #9e8e7c;
+      --text-dim: #6d5d4d;
+      --blue-accent: #38bdf8;
+      --green-accent: #22c55e;
+      --red-accent: #f43f5e;
     }
+
+    body {
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .admin-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+
+    /* Header */
     .admin-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 24px;
+      padding-bottom: 20px;
       border-bottom: 1px solid var(--border-subtle);
-      margin-bottom: 28px;
+      margin-bottom: 24px;
       flex-wrap: wrap;
       gap: 16px;
     }
@@ -31,38 +57,99 @@
       align-items: center;
       gap: 14px;
     }
-    .admin-badge {
+    .badge-role {
       display: inline-flex;
       align-items: center;
       gap: 6px;
       padding: 4px 10px;
-      background: rgba(245, 158, 11, 0.15);
-      border: 1px solid var(--amber-primary);
       border-radius: var(--radius-pill);
       font-size: 0.76rem;
       font-weight: 700;
-      color: var(--amber-primary);
+      letter-spacing: 0.04em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
     }
-    .admin-actions {
+    .badge-root {
+      background: rgba(234, 179, 8, 0.2);
+      border: 1px solid #eab308;
+      color: #fef08a;
+      box-shadow: 0 0 12px rgba(234, 179, 8, 0.3);
+    }
+    .badge-admin {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid var(--amber-primary);
+      color: var(--amber-primary);
+    }
+    .badge-staff {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+    }
+    .badge-status-active {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid #22c55e;
+      color: #4ade80;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+    .badge-status-blocked {
+      background: rgba(244, 63, 94, 0.18);
+      border: 1px solid #f43f5e;
+      color: #fb7185;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .nav-tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
     }
+    .nav-tab-btn:hover {
+      color: #fff;
+      background: rgba(245, 158, 11, 0.08);
+    }
+    .nav-tab-btn.active {
+      color: var(--amber-primary);
+      background: rgba(245, 158, 11, 0.15);
+      border-bottom: 2px solid var(--amber-primary);
+    }
+
+    /* Stats Grid */
     .stat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-bottom: 28px;
+      gap: 16px;
+      margin-bottom: 24px;
     }
     .stat-card-admin {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 20px 24px;
+      padding: 18px 22px;
       box-shadow: var(--shadow-card);
-      backdrop-filter: blur(12px);
       position: relative;
       overflow: hidden;
     }
@@ -74,30 +161,68 @@
       right: 0;
       height: 2px;
       background: linear-gradient(90deg, var(--amber-primary), transparent);
-      opacity: 0.6;
     }
     .stat-card-num {
-      font-size: 2.2rem;
+      font-size: 2rem;
       font-weight: 800;
       font-family: var(--font-mono);
       color: #fff;
-      line-height: 1.1;
-      margin: 8px 0 4px;
+      margin: 6px 0 2px;
     }
     .stat-card-label {
-      font-size: 0.84rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
-      font-weight: 500;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
+
+    /* Tables */
+    .table-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      overflow-x: auto;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 30px;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.86rem;
+    }
+    .admin-table th {
+      background: rgba(245, 158, 11, 0.08);
+      color: var(--amber-primary);
+      font-weight: 700;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .admin-table td {
+      padding: 13px 16px;
+      border-bottom: 1px solid rgba(245, 158, 11, 0.08);
+      color: var(--text-main);
+      vertical-align: middle;
+    }
+    .admin-table tr:hover td {
+      background: rgba(245, 158, 11, 0.03);
+    }
+
+    /* Filter Panel */
     .filter-panel {
       background: var(--bg-card);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md);
-      padding: 18px 20px;
-      margin-bottom: 24px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
       display: flex;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
       justify-content: space-between;
     }
@@ -108,53 +233,82 @@
       align-items: center;
     }
     .admin-input, .admin-select {
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.5);
       border: 1px solid var(--border-subtle);
       border-radius: var(--radius-sm);
       color: #fff;
-      padding: 9px 14px;
+      padding: 8px 14px;
       font-family: var(--font-sans);
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       outline: none;
-      transition: var(--transition);
+      transition: all 0.2s ease;
     }
     .admin-input:focus, .admin-select:focus {
       border-color: var(--amber-primary);
       box-shadow: 0 0 10px var(--amber-glow);
     }
-    .table-wrapper {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      overflow-x: auto;
-      box-shadow: var(--shadow-card);
+
+    /* Buttons */
+    .btn-action-sm {
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.18s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
     }
-    .admin-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.88rem;
+    .btn-promote {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
     }
-    .admin-table th {
-      background: rgba(245, 158, 11, 0.08);
-      color: var(--amber-primary);
-      font-weight: 700;
-      padding: 14px 16px;
-      border-bottom: 1px solid var(--border-subtle);
-      white-space: nowrap;
-      font-size: 0.82rem;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+    .btn-promote:hover {
+      background: var(--amber-primary);
+      color: #000;
     }
-    .admin-table td {
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(245, 158, 11, 0.08);
-      color: var(--text-main);
-      vertical-align: middle;
+    .btn-demote {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fb7185;
     }
-    .admin-table tr:hover td {
-      background: rgba(245, 158, 11, 0.04);
+    .btn-demote:hover {
+      background: var(--red-accent);
+      color: #fff;
     }
+    .btn-block {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+    .btn-block:hover {
+      background: #ef4444;
+      color: #fff;
+    }
+    .btn-unblock {
+      background: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.4);
+      color: #4ade80;
+    }
+    .btn-unblock:hover {
+      background: #22c55e;
+      color: #000;
+    }
+    .btn-license {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: rgba(56, 189, 248, 0.4);
+      color: #38bdf8;
+    }
+    .btn-license:hover {
+      background: #38bdf8;
+      color: #000;
+    }
+
+    /* Tags */
     .tag-format {
       display: inline-block;
       padding: 3px 8px;
@@ -162,423 +316,985 @@
       font-size: 0.74rem;
       font-weight: 700;
       font-family: var(--font-mono);
-      text-transform: uppercase;
     }
     .tag-mp3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .tag-wav { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
     .tag-stem { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-    .tag-midi { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
-    .prompt-cell {
-      max-width: 320px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-    .prompt-cell:hover {
-      color: #fff;
-    }
-    .hwid-badge {
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: #cbd5e1;
-      background: rgba(255, 255, 255, 0.06);
-      padding: 3px 6px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .hwid-badge:hover {
-      background: rgba(245, 158, 11, 0.2);
-      color: var(--amber-primary);
-    }
-    /* Auth Modal */
-    #authModal {
+
+    /* Auth Modal Screen */
+    #authOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(8, 6, 4, 0.92);
-      backdrop-filter: blur(16px);
+      background: rgba(8, 6, 4, 0.94);
+      backdrop-filter: blur(18px);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 9999;
     }
-    .auth-box {
+    .auth-card {
       background: var(--bg-surface);
       border: 1px solid var(--amber-primary);
       box-shadow: 0 0 50px rgba(245, 158, 11, 0.25);
       border-radius: var(--radius-lg);
-      padding: 40px;
-      max-width: 420px;
+      padding: 36px 40px;
+      max-width: 440px;
       width: 90%;
-      text-align: center;
+      position: relative;
     }
-    .telegram-guide-box {
-      background: rgba(14, 165, 233, 0.08);
-      border: 1px solid rgba(14, 165, 233, 0.25);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
+    .auth-tab-switch {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
       margin-bottom: 24px;
+      padding: 4px;
+    }
+    .auth-tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-tab-btn.active {
+      background: var(--amber-primary);
+      color: #000;
+      font-weight: 700;
+    }
+    .auth-input-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .auth-label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .auth-msg {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.84rem;
       display: none;
+    }
+    .auth-msg.error {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid #f43f5e;
+      color: #fb7185;
+    }
+    .auth-msg.success {
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid #22c55e;
+      color: #4ade80;
+    }
+
+    /* Staff Personal Portal */
+    .staff-portal-card {
+      background: linear-gradient(135deg, rgba(18, 14, 9, 0.95), rgba(30, 22, 14, 0.8));
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--shadow-card);
     }
   </style>
 </head>
 <body>
 
-  <!-- Auth Lock Screen -->
-  <div id="authModal">
-    <div class="auth-box">
-      <div style="font-size: 3rem; margin-bottom: 12px;">🛡️</div>
-      <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin-bottom: 8px;">Xác Thực Admin</h2>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 24px;">Vui lòng nhập mã PIN quản trị để truy cập dữ liệu lịch sử tải của hệ thống.</p>
-      
-      <form id="authForm" onsubmit="event.preventDefault(); handleAuth();">
-        <input type="password" id="pinInput" class="admin-input" style="width: 100%; text-align: center; font-size: 1.2rem; letter-spacing: 0.2em; margin-bottom: 16px;" placeholder="••••••••" autofocus required>
-        <button type="submit" id="btnSubmitPin" class="btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
-          <span>Đăng nhập Dashboard</span>
+  <!-- ====================================================================== -->
+  <!-- AUTH MODAL (ĐĂNG NHẬP / ĐĂNG KÝ) -->
+  <!-- ====================================================================== -->
+  <div id="authOverlay">
+    <div class="auth-card">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="assets/cat.png" alt="Fikat Cloud" style="width: 52px; height: 52px; object-fit: contain; margin-bottom: 10px;">
+        <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0 0 4px;">Suno Bulk Studio</h2>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">Trung tâm Quản trị & Kích hoạt bản quyền</p>
+      </div>
+
+      <!-- Tab Switch: Đăng nhập / Đăng ký -->
+      <div class="auth-tab-switch">
+        <button id="tabBtnLogin" class="auth-tab-btn active" onclick="switchAuthTab('login')">Đăng Nhập</button>
+        <button id="tabBtnRegister" class="auth-tab-btn" onclick="switchAuthTab('register')">Đăng Ký Tài Khoản</button>
+      </div>
+
+      <!-- Form Đăng Nhập -->
+      <form id="formLogin" onsubmit="event.preventDefault(); doLogin();">
+        <div class="auth-input-group">
+          <label class="auth-label">Tài khoản (Username):</label>
+          <input type="text" id="loginUsername" class="admin-input" style="width: 100%;" placeholder="Nhập tài khoản của bạn" required autofocus>
+        </div>
+        <div class="auth-input-group">
+          <label class="auth-label">Mật khẩu:</label>
+          <input type="password" id="loginPassword" class="admin-input" style="width: 100%;" placeholder="••••••••" required>
+        </div>
+        <button type="submit" id="btnSubmitLogin" class="btn-primary" style="width: 100%; justify-content: center; padding: 11px; margin-top: 8px;">
+          <span>Đăng Nhập Ngay</span>
         </button>
       </form>
-      <div id="authError" style="color: #ef4444; font-size: 0.85rem; margin-top: 14px; display: none;">Mã PIN không đúng. Vui lòng thử lại!</div>
+
+      <!-- Form Đăng Ký -->
+      <form id="formRegister" style="display: none;" onsubmit="event.preventDefault(); doRegister();">
+        <div class="auth-input-group">
+          <label class="auth-label">Họ và tên:</label>
+          <input type="text" id="regFullName" class="admin-input" style="width: 100%;" placeholder="Ví dụ: Nguyễn Hữu Phi" required>
+        </div>
+        <div class="auth-input-group">
+          <label class="auth-label">Tên tài khoản:</label>
+          <input type="text" id="regUsername" class="admin-input" style="width: 100%;" placeholder="Chữ thường, không dấu (vd: fikat)" required>
+        </div>
+        <div class="auth-input-group">
+          <label class="auth-label">Mật khẩu:</label>
+          <input type="password" id="regPassword" class="admin-input" style="width: 100%;" placeholder="Tối thiểu 6 ký tự" required minlength="6">
+        </div>
+        <div class="auth-input-group">
+          <label class="auth-label">Nhập lại mật khẩu:</label>
+          <input type="password" id="regConfirmPassword" class="admin-input" style="width: 100%;" placeholder="••••••••" required minlength="6">
+        </div>
+        <p style="font-size: 0.76rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 12px;">
+          ⭐ <i>Ghi chú: Tài khoản đăng ký đầu tiên trên hệ thống sẽ tự động trở thành <b>Quản trị viên tối cao (Root Admin)</b>.</i>
+        </p>
+        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 11px;">
+          <span>Tạo Tài Khoản Mới</span>
+        </button>
+      </form>
+
+      <div id="authAlert" class="auth-msg"></div>
     </div>
   </div>
 
-  <!-- Main Admin Layout -->
-  <div class="admin-container">
+  <!-- ====================================================================== -->
+  <!-- MAIN APP CONTAINER (HIỂN THỊ SAU KHI ĐĂNG NHẬP) -->
+  <!-- ====================================================================== -->
+  <div class="admin-container" id="mainApp" style="display: none;">
     
-    <!-- Top Header -->
+    <!-- Top Header Bar -->
     <header class="admin-header">
       <div class="admin-title-wrap">
         <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none;">
-          <img src="assets/cat.png" alt="Fikat" style="width: 38px; height: 38px; object-fit: contain;">
+          <img src="assets/cat.png" alt="Fikat" style="width: 42px; height: 42px; object-fit: contain;">
         </a>
         <div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <h1 style="font-size: 1.5rem; font-weight: 800; color: #fff;">Suno Studio — Admin Hub</h1>
-            <span class="admin-badge">Realtime Telemetry</span>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <h1 style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0;">Suno Studio — Quản Trị & Phân Quyền</h1>
+            <span id="userRoleBadge" class="badge-role badge-admin">👑 QUẢN TRỊ VIÊN</span>
           </div>
-          <p style="font-size: 0.84rem; color: var(--text-muted); margin-top: 2px;">Giám sát & Quản lý lịch sử tải nhạc theo từng Mã máy (HWID) và License Key</p>
+          <p style="font-size: 0.84rem; color: var(--text-muted); margin: 4px 0 0;">
+            Đang đăng nhập: <b id="userFullNameText" style="color: #fff;">...</b> (<span id="userUsernameText" style="color: var(--amber-primary); font-family: var(--font-mono);">...</span>)
+          </p>
         </div>
       </div>
 
-      <div class="admin-actions">
-        <button id="btnToggleTelegram" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;">
-          <span>✈️ Cấu hình Telegram</span>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <button id="btnRefresh" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="refreshCurrentView()">
+          <span>🔄 Làm mới</span>
         </button>
-        <button id="btnRefresh" class="btn-primary" style="padding: 8px 16px; font-size: 0.84rem;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-          </svg>
-          <span>Làm mới</span>
-        </button>
-        <button id="btnLogout" class="btn-ghost" style="padding: 8px 12px; font-size: 0.84rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);">
-          <span>Đăng xuất</span>
+        <button id="btnLogout" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);" onclick="doLogout()">
+          <span>🚪 Đăng xuất</span>
         </button>
       </div>
     </header>
 
-    <!-- Telegram Setup Box (Collapsible) -->
-    <div id="telegramGuide" class="telegram-guide-box">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-        <h3 style="color: #38bdf8; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-          <span>✈️ Hướng dẫn nhận thông báo Telegram khi khách tải nhạc</span>
-        </h3>
-        <button onclick="document.getElementById('telegramGuide').style.display='none'" style="background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.2rem;">&times;</button>
-      </div>
-      <p style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 12px;">Chỉ cần 2 bước trong 1 phút để điện thoại bạn tự động ting ting mỗi khi có máy tải nhạc:</p>
-      <ol style="font-size: 0.84rem; color: var(--text-main); margin-left: 20px; line-height: 1.8;">
-        <li>Mở Telegram, chat với <code>@BotFather</code> gửi <code>/newbot</code> để tạo bot và lấy <b>Bot Token</b>.</li>
-        <li>Chat với <code>@userinfobot</code> để lấy <b>Chat ID</b> của bạn.</li>
-        <li>Mở file <code>worker.js</code> trên Cloudflare hoặc điền vào biến <code>TELEGRAM_BOT_TOKEN</code> và <code>TELEGRAM_CHAT_ID</code>. Xong!</li>
-      </ol>
+    <!-- ==================================================================== -->
+    <!-- GIAO DIỆN DÀNH RIÊNG CHO QUẢN TRỊ VIÊN (ADMIN DASHBOARD) -->
+    <!-- ==================================================================== -->
+    <div id="adminView" style="display: none;">
+      
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs">
+        <button class="nav-tab-btn active" id="tabBtnUsers" onclick="switchAdminTab('users')">
+          <span>👥 Quản Trị Tài Khoản & Phân Quyền</span>
+        </button>
+        <button class="nav-tab-btn" id="tabBtnMachines" onclick="switchAdminTab('machines')">
+          <span>💻 Danh Sách Máy (HWID)</span>
+        </button>
+        <button class="nav-tab-btn" id="tabBtnTelemetry" onclick="switchAdminTab('telemetry')">
+          <span>🎵 Lịch Sử Tải Nhạc Realtime</span>
+        </button>
+      </nav>
+
+      <!-- Stat Cards -->
+      <section class="stat-grid">
+        <div class="stat-card-admin">
+          <div class="stat-card-label">👥 TỔNG TÀI KHOẢN</div>
+          <div id="statUsers" class="stat-card-num" style="color: #38bdf8;">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-dim);">Admin & Nhân viên trong hệ thống</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="stat-card-label">💻 MÁY TÍNH KẾT NỐI (HWID)</div>
+          <div id="statMachines" class="stat-card-num" style="color: var(--amber-primary);">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-dim);">Thiết bị đã chạy Suno Studio</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="stat-card-label">🎵 TỔNG BÀI ĐÃ TẢI</div>
+          <div id="statDownloads" class="stat-card-num" style="color: #4ade80;">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-dim);">MP3, WAV & Tách Stems</div>
+        </div>
+        <div class="stat-card-admin">
+          <div class="stat-card-label">📅 LƯỢT TẢI HÔM NAY</div>
+          <div id="statToday" class="stat-card-num" style="color: #f43f5e;">0</div>
+          <div style="font-size: 0.78rem; color: var(--text-dim);">Trong 24 giờ qua</div>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TAB 1: QUẢN TRỊ TÀI KHOẢN & PHÂN QUYỀN -->
+      <!-- ================================================================== -->
+      <section id="paneUsers">
+        <div class="filter-panel">
+          <div class="filter-group">
+            <input type="text" id="searchUserKeyword" class="admin-input" placeholder="Tìm họ tên, tài khoản, vai trò..." style="width: 280px;" oninput="renderUsersTable()">
+            <select id="filterUserRole" class="admin-select" onchange="renderUsersTable()">
+              <option value="">-- Tất cả vai trò --</option>
+              <option value="Quản trị viên">👑 Quản trị viên</option>
+              <option value="Nhân viên">💼 Nhân viên</option>
+            </select>
+          </div>
+          <div style="font-size: 0.84rem; color: var(--text-muted);">
+            🛡️ <i>Quy tắc: Admin được nâng Nhân viên lên Admin & khóa/kích hoạt key. Chỉ riêng Root Admin được xóa quyền Admin.</i>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;">#</th>
+                <th style="width: 170px;">Họ Và Tên</th>
+                <th style="width: 130px;">Tài Khoản</th>
+                <th style="width: 160px;">Vai Trò</th>
+                <th style="width: 110px;">Trạng Thái</th>
+                <th style="width: 200px;">Bản Quyền / Key</th>
+                <th style="width: 140px;">Ngày Tạo</th>
+                <th style="text-align: center;">Thao Tác Phân Quyền & Key</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Đang tải danh sách tài khoản...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TAB 2: QUẢN LÝ MÁY TÍNH (HWID) -->
+      <!-- ================================================================== -->
+      <section id="paneMachines" style="display: none;">
+        <div class="filter-panel">
+          <div class="filter-group">
+            <input type="text" id="searchMachineKeyword" class="admin-input" placeholder="Tìm HWID, tên máy, key..." style="width: 280px;" oninput="renderMachinesTable()">
+          </div>
+          <div style="font-size: 0.84rem; color: var(--text-muted);">
+            💻 Giám sát tất cả máy tính đang sử dụng bản Online
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;">#</th>
+                <th style="width: 200px;">Mã Máy (HWID)</th>
+                <th style="width: 160px;">Tên / License Key</th>
+                <th style="width: 120px;">Vai Trò</th>
+                <th style="width: 110px; text-align: center;">Tổng Bài</th>
+                <th style="width: 160px;">Lần Cuối Tải</th>
+                <th style="text-align: center; width: 140px;">Lịch Sử</th>
+              </tr>
+            </thead>
+            <tbody id="machinesTableBody">
+              <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Đang tải danh sách máy...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TAB 3: LỊCH SỬ TẢI NHẠC REALTIME -->
+      <!-- ================================================================== -->
+      <section id="paneTelemetry" style="display: none;">
+        <div class="filter-panel">
+          <div class="filter-group">
+            <select id="filterHwid" class="admin-select" style="min-width: 200px;" onchange="filterAndRenderLogs()">
+              <option value="">-- Tất cả máy (HWID) --</option>
+            </select>
+            <select id="filterFormat" class="admin-select" onchange="filterAndRenderLogs()">
+              <option value="">-- Tất cả định dạng --</option>
+              <option value="MP3">MP3</option>
+              <option value="WAV">WAV</option>
+              <option value="Stem">Stems</option>
+            </select>
+            <input type="text" id="searchLogKeyword" class="admin-input" placeholder="Tìm tên bài, prompt, key..." style="width: 240px;" oninput="filterAndRenderLogs()">
+          </div>
+          <button class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="exportCsv()">
+            <span>📥 Xuất file CSV</span>
+          </button>
+        </div>
+
+        <div class="table-wrapper">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;">#</th>
+                <th style="width: 150px;">Thời Gian</th>
+                <th style="width: 160px;">Mã Máy (HWID)</th>
+                <th style="width: 130px;">Key / Khách</th>
+                <th>Tên Bài Hát & Tags</th>
+                <th style="width: 280px;">Prompt</th>
+                <th style="width: 90px;">Định Dạng</th>
+                <th style="width: 80px; text-align: center;">Nghe</th>
+              </tr>
+            </thead>
+            <tbody id="logsTableBody">
+              <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Đang tải lịch sử...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
 
-    <!-- Stat Summary Cards -->
-    <section class="stat-grid">
-      <div class="stat-card-admin">
-        <div class="stat-card-label">💻 TỔNG MÁY HOẠT ĐỘNG (HWID)</div>
-        <div id="statMachines" class="stat-card-num">0</div>
-        <div style="font-size: 0.78rem; color: var(--text-dim);">Máy tính đã dùng bản Online</div>
-      </div>
-      <div class="stat-card-admin">
-        <div class="stat-card-label">🎵 TỔNG SỐ BÀI ĐÃ TẢI</div>
-        <div id="statDownloads" class="stat-card-num" style="color: var(--amber-primary);">0</div>
-        <div style="font-size: 0.78rem; color: var(--text-dim);">Toàn bộ MP3, WAV và Stems</div>
-      </div>
-      <div class="stat-card-admin">
-        <div class="stat-card-label">✂️ LƯỢT BÓC TÁCH STEMS</div>
-        <div id="statStems" class="stat-card-num" style="color: #38bdf8;">0</div>
-        <div style="font-size: 0.78rem; color: var(--text-dim);">Vocal, Beat & 12 tracks</div>
-      </div>
-      <div class="stat-card-admin">
-        <div class="stat-card-label">📅 LƯỢT TẢI HÔM NAY</div>
-        <div id="statToday" class="stat-card-num" style="color: #4ade80;">0</div>
-        <div style="font-size: 0.78rem; color: var(--text-dim);">Trong 24 giờ qua</div>
-      </div>
-    </section>
+    <!-- ==================================================================== -->
+    <!-- GIAO DIỆN DÀNH CHO NHÂN VIÊN (STAFF PORTAL) -->
+    <!-- ==================================================================== -->
+    <div id="staffView" style="display: none;">
+      
+      <!-- Welcome Card -->
+      <div class="staff-portal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 6px;">
+              Xin chào, <span id="staffFullName" style="color: var(--amber-primary);">...</span> 👋
+            </h2>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
+              Chào mừng bạn đến với Cổng thông tin Nhân viên — Suno Bulk Studio.
+            </p>
+          </div>
+          <span class="badge-role badge-staff">💼 TÀI KHOẢN NHÂN VIÊN</span>
+        </div>
 
-    <!-- Filter & Control Panel -->
-    <section class="filter-panel">
-      <div class="filter-group">
-        <select id="filterHwid" class="admin-select" style="min-width: 220px;">
-          <option value="">-- Tất cả máy (HWID) --</option>
-        </select>
+        <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 20px 0;">
 
-        <select id="filterFormat" class="admin-select">
-          <option value="">-- Tất cả định dạng --</option>
-          <option value="MP3">Chỉ file MP3</option>
-          <option value="WAV">Chỉ file WAV</option>
-          <option value="Stem">Tách Stems</option>
-          <option value="MIDI">File MIDI</option>
-        </select>
+        <!-- License Info -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px;">
+          <div style="background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">TRẠNG THÁI BẢN QUYỀN:</div>
+            <div id="staffLicenseStatus" style="font-size: 1.1rem; font-weight: 700; color: #4ade80;">Đang kiểm tra...</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">THỜI HẠN SỬ DỤNG:</div>
+            <div id="staffLicenseExpiry" style="font-size: 1.1rem; font-weight: 700; color: #fff;">—</div>
+          </div>
+          <div style="background: rgba(0,0,0,0.35); padding: 16px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">KEY KÍCH HOẠT PHẦN MỀM:</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <code id="staffLicenseKey" style="font-size: 1rem; color: var(--amber-primary); font-weight: 700;">—</code>
+              <button class="btn-action-sm btn-license" onclick="copyStaffKey()">Sao chép</button>
+            </div>
+          </div>
+        </div>
 
-        <input type="text" id="searchKeyword" class="admin-input" placeholder="Tìm tên bài, prompt, key..." style="width: 260px;">
+        <div style="margin-top: 20px; font-size: 0.84rem; color: #cbd5e1; line-height: 1.6; background: rgba(56, 189, 248, 0.08); padding: 14px 18px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.25);">
+          💡 <b>Cách sử dụng Key:</b> Mở ứng dụng <b>Suno Bulk Downloader</b> trên máy tính của bạn &rarr; Bấm vào <b>Kích hoạt bản quyền</b> &rarr; Nhập mã Key trên để mở khóa tính năng tải hàng loạt và tách Stems!
+        </div>
       </div>
 
-      <div class="filter-group">
-        <button id="btnExportCsv" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;">
-          <span>📥 Xuất file CSV</span>
-        </button>
+      <!-- Staff Personal Download History -->
+      <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+        <span>🎵 Lịch Sử Bài Nhạc Bạn Đã Tải</span>
+      </h3>
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th style="width: 45px;">#</th>
+              <th style="width: 160px;">Thời Gian</th>
+              <th>Tên Bài Hát & Tags</th>
+              <th style="width: 300px;">Prompt</th>
+              <th style="width: 100px;">Định Dạng</th>
+              <th style="width: 90px; text-align: center;">Nghe</th>
+            </tr>
+          </thead>
+          <tbody id="staffLogsTableBody">
+            <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Chưa có lịch sử bài hát nào.</td></tr>
+          </tbody>
+        </table>
       </div>
-    </section>
 
-    <!-- Main Data Table -->
-    <section class="table-wrapper">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th style="width: 50px;">#</th>
-            <th style="width: 155px;">Thời Gian (VN)</th>
-            <th style="width: 170px;">Mã Máy (HWID)</th>
-            <th style="width: 130px;">Key / Khách Hàng</th>
-            <th>Tên Bài Hát & Thể Loại</th>
-            <th style="width: 300px;">Prompt Tạo Nhạc</th>
-            <th style="width: 110px;">Định Dạng</th>
-            <th style="width: 110px; text-align: center;">Thao Tác</th>
-          </tr>
-        </thead>
-        <tbody id="logsTableBody">
-          <tr>
-            <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 40px;">
-              Đang tải dữ liệu lịch sử...
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+    </div>
 
   </div>
 
+  <!-- Modal Kích Hoạt Bản Quyền -->
+  <div id="licenseModal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: none; align-items: center; justify-content: center; z-index: 99999;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--amber-primary); border-radius: 14px; padding: 28px; width: 90%; max-width: 420px; box-shadow: 0 0 40px var(--amber-glow);">
+      <h3 style="margin: 0 0 8px; color: #fff; font-size: 1.25rem;">🔑 Kích Hoạt Bản Quyền</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 18px;" id="licenseModalUserText">Cấp quyền cho thành viên</p>
+      
+      <div class="auth-input-group">
+        <label class="auth-label">Thời hạn bản quyền:</label>
+        <select id="selectLicenseDays" class="admin-select" style="width: 100%;">
+          <option value="30">30 Ngày (1 Tháng)</option>
+          <option value="90">90 Ngày (3 Tháng)</option>
+          <option value="180">180 Ngày (6 Tháng)</option>
+          <option value="365">365 Ngày (1 Năm)</option>
+          <option value="9999">⭐ Vĩnh Viễn (Lifetime VIP)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button class="btn-ghost" style="padding: 8px 14px;" onclick="closeLicenseModal()">Hủy</button>
+        <button class="btn-primary" style="padding: 8px 18px;" onclick="confirmActivateLicense()">Xác Nhận Kích Hoạt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================== -->
+  <!-- JAVASCRIPT XỬ LÝ TOÀN BỘ LOGIC PHÂN QUYỀN & DỮ LIỆU -->
+  <!-- ====================================================================== -->
   <script>
     (function () {
       'use strict';
 
-      const STORAGE_AUTH_KEY = 'fikat_admin_pin_session';
-      let currentAdminPin = localStorage.getItem(STORAGE_AUTH_KEY) || '';
-      let rawLogsData = [];
-      let hwidMap = [];
+      const TOKEN_KEY = 'fikat_session_token';
+      let currentUser = null;
+      let rawUsersList = [];
+      let rawLogsList = [];
+      let rawMachinesList = [];
+      let activeLicenseTargetUserId = null;
 
       // DOM Elements
-      const authModal = document.getElementById('authModal');
-      const pinInput = document.getElementById('pinInput');
-      const authError = document.getElementById('authError');
-      const btnRefresh = document.getElementById('btnRefresh');
-      const btnLogout = document.getElementById('btnLogout');
-      const btnToggleTelegram = document.getElementById('btnToggleTelegram');
-      const telegramGuide = document.getElementById('telegramGuide');
-      const filterHwid = document.getElementById('filterHwid');
-      const filterFormat = document.getElementById('filterFormat');
-      const searchKeyword = document.getElementById('searchKeyword');
-      const btnExportCsv = document.getElementById('btnExportCsv');
-      const logsTableBody = document.getElementById('logsTableBody');
-
-      const statMachines = document.getElementById('statMachines');
-      const statDownloads = document.getElementById('statDownloads');
-      const statStems = document.getElementById('statStems');
-      const statToday = document.getElementById('statToday');
+      const authOverlay = document.getElementById('authOverlay');
+      const authAlert = document.getElementById('authAlert');
+      const mainApp = document.getElementById('mainApp');
+      const adminView = document.getElementById('adminView');
+      const staffView = document.getElementById('staffView');
+      const userRoleBadge = document.getElementById('userRoleBadge');
+      const userFullNameText = document.getElementById('userFullNameText');
+      const userUsernameText = document.getElementById('userUsernameText');
 
       // Initialize
-      document.addEventListener('DOMContentLoaded', () => {
-        if (currentAdminPin) {
-          verifyAndLoadData(currentAdminPin);
+      document.addEventListener('DOMContentLoaded', async () => {
+        const savedToken = localStorage.getItem(TOKEN_KEY);
+        if (savedToken) {
+          await verifyTokenAndLoad(savedToken);
         } else {
-          authModal.style.display = 'flex';
-          pinInput.focus();
+          showAuthScreen();
         }
-
-        setupEvents();
       });
 
-      function setupEvents() {
-        btnRefresh.addEventListener('click', () => loadAdminData());
-        btnLogout.addEventListener('click', () => {
-          localStorage.removeItem(STORAGE_AUTH_KEY);
-          currentAdminPin = '';
-          authModal.style.display = 'flex';
-          pinInput.value = '';
-          authError.style.display = 'none';
-        });
+      // Switch Tab Login / Register
+      window.switchAuthTab = function (tab) {
+        document.getElementById('tabBtnLogin').classList.toggle('active', tab === 'login');
+        document.getElementById('tabBtnRegister').classList.toggle('active', tab === 'register');
+        document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+        document.getElementById('formRegister').style.display = tab === 'register' ? 'block' : 'none';
+        authAlert.style.display = 'none';
+      };
 
-        btnToggleTelegram.addEventListener('click', () => {
-          telegramGuide.style.display = telegramGuide.style.display === 'block' ? 'none' : 'block';
-        });
-
-        filterHwid.addEventListener('change', () => filterAndRender());
-        filterFormat.addEventListener('change', () => filterAndRender());
-        searchKeyword.addEventListener('input', () => filterAndRender());
-        btnExportCsv.addEventListener('click', () => exportCsv());
+      function showAuthMsg(msg, isError = true) {
+        authAlert.textContent = msg;
+        authAlert.className = isError ? 'auth-msg error' : 'auth-msg success';
+        authAlert.style.display = 'block';
       }
 
-      window.handleAuth = async function () {
-        const pin = pinInput.value.trim();
-        if (!pin) return;
+      function showAuthScreen() {
+        authOverlay.style.display = 'flex';
+        mainApp.style.display = 'none';
+      }
 
-        authError.style.display = 'none';
+      // Đăng nhập
+      window.doLogin = async function () {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!username || !password) return;
+
+        const btn = document.getElementById('btnSubmitLogin');
+        btn.disabled = true;
+        btn.textContent = 'Đang đăng nhập...';
+
         try {
-          const res = await fetch('/api/admin/auth', {
+          const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin })
+            body: JSON.stringify({ username, password })
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            currentAdminPin = pin;
-            localStorage.setItem(STORAGE_AUTH_KEY, pin);
-            authModal.style.display = 'none';
-            loadAdminData();
+            localStorage.setItem(TOKEN_KEY, data.token);
+            currentUser = data.user;
+            authOverlay.style.display = 'none';
+            setupUserSession();
           } else {
-            authError.style.display = 'block';
-            authError.textContent = data.message || 'Mã PIN không đúng.';
+            showAuthMsg(data.message || 'Đăng nhập không thành công!');
           }
         } catch (e) {
-          authError.style.display = 'block';
-          authError.textContent = 'Lỗi kết nối máy chủ.';
+          showAuthMsg('Lỗi kết nối máy chủ: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Đăng Nhập Ngay';
         }
       };
 
-      async function verifyAndLoadData(pin) {
+      // Đăng ký
+      window.doRegister = async function () {
+        const fullName = document.getElementById('regFullName').value.trim();
+        const username = document.getElementById('regUsername').value.trim().toLowerCase();
+        const password = document.getElementById('regPassword').value.trim();
+        const confirmPassword = document.getElementById('regConfirmPassword').value.trim();
+
+        if (password !== confirmPassword) {
+          showAuthMsg('Mật khẩu nhập lại không khớp!');
+          return;
+        }
+
+        const btn = document.getElementById('btnSubmitRegister');
+        btn.disabled = true;
+        btn.textContent = 'Đang khởi tạo tài khoản...';
+
         try {
-          const res = await fetch('/api/admin/auth', {
+          const res = await fetch('/api/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin })
+            body: JSON.stringify({ fullName, username, password })
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            authModal.style.display = 'none';
-            loadAdminData();
+            localStorage.setItem(TOKEN_KEY, data.token);
+            currentUser = data.user;
+            showAuthMsg(data.message, false);
+            setTimeout(() => {
+              authOverlay.style.display = 'none';
+              setupUserSession();
+            }, 1000);
           } else {
-            authModal.style.display = 'flex';
+            showAuthMsg(data.message || 'Đăng ký thất bại!');
           }
         } catch (e) {
-          authModal.style.display = 'flex';
+          showAuthMsg('Lỗi kết nối máy chủ: ' + e.message);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = 'Tạo Tài Khoản Mới';
+        }
+      };
+
+      // Kiểm tra token phiên cũ
+      async function verifyTokenAndLoad(token) {
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            currentUser = data.user;
+            authOverlay.style.display = 'none';
+            setupUserSession();
+          } else {
+            localStorage.removeItem(TOKEN_KEY);
+            showAuthScreen();
+          }
+        } catch (e) {
+          showAuthScreen();
         }
       }
 
-      async function loadAdminData() {
-        btnRefresh.disabled = true;
-        btnRefresh.innerHTML = '🔄 Đang tải...';
+      // Đăng xuất
+      window.doLogout = function () {
+        localStorage.removeItem(TOKEN_KEY);
+        currentUser = null;
+        showAuthScreen();
+      };
 
+      // Thiết lập Dashboard sau khi đã đăng nhập
+      function setupUserSession() {
+        if (!currentUser) return;
+        mainApp.style.display = 'block';
+
+        userFullNameText.textContent = currentUser.fullName || currentUser.username;
+        userUsernameText.textContent = `@${currentUser.username}`;
+
+        const isRoot = Boolean(currentUser.isRootAdmin);
+        const isAdmin = currentUser.role === 'Quản trị viên';
+
+        if (isRoot) {
+          userRoleBadge.className = 'badge-role badge-root';
+          userRoleBadge.textContent = '👑 CHỦ SỞ HỮU (ROOT)';
+        } else if (isAdmin) {
+          userRoleBadge.className = 'badge-role badge-admin';
+          userRoleBadge.textContent = '👑 QUẢN TRỊ VIÊN';
+        } else {
+          userRoleBadge.className = 'badge-role badge-staff';
+          userRoleBadge.textContent = '💼 NHÂN VIÊN';
+        }
+
+        if (isAdmin) {
+          adminView.style.display = 'block';
+          staffView.style.display = 'none';
+          loadAdminDashboard();
+        } else {
+          adminView.style.display = 'none';
+          staffView.style.display = 'block';
+          loadStaffDashboard();
+        }
+      }
+
+      // ======================================================================
+      // LOGIC DÀNH CHO ADMIN
+      // ======================================================================
+
+      window.switchAdminTab = function (tab) {
+        document.getElementById('tabBtnUsers').classList.toggle('active', tab === 'users');
+        document.getElementById('tabBtnMachines').classList.toggle('active', tab === 'machines');
+        document.getElementById('tabBtnTelemetry').classList.toggle('active', tab === 'telemetry');
+
+        document.getElementById('paneUsers').style.display = tab === 'users' ? 'block' : 'none';
+        document.getElementById('paneMachines').style.display = tab === 'machines' ? 'block' : 'none';
+        document.getElementById('paneTelemetry').style.display = tab === 'telemetry' ? 'block' : 'none';
+      };
+
+      async function loadAdminDashboard() {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (!token) return;
+
+        // 1. Tải danh sách người dùng
         try {
-          const selectedHwid = filterHwid.value;
-          const url = selectedHwid 
-            ? `/api/admin/data?hwid=${encodeURIComponent(selectedHwid)}` 
-            : '/api/admin/data';
-
-          const res = await fetch(url, {
-            headers: { 'X-Admin-Pin': currentAdminPin }
+          const resUsers = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${token}` }
           });
-
-          if (res.status === 401) {
-            authModal.style.display = 'flex';
-            return;
+          const dataUsers = await resUsers.json();
+          if (dataUsers.ok) {
+            rawUsersList = dataUsers.users || [];
+            document.getElementById('statUsers').textContent = rawUsersList.length;
+            renderUsersTable();
           }
+        } catch (e) {
+          console.error(e);
+        }
 
-          const data = await res.json();
+        // 2. Tải thống kê, HWIDs và Lịch sử tải
+        try {
+          const resData = await fetch('/api/admin/data', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await resData.json();
           if (data.ok) {
-            rawLogsData = data.logs || [];
-            hwidMap = data.hwidList || [];
+            rawLogsList = data.logs || [];
+            rawMachinesList = data.hwidList || [];
 
-            // Update stats
             if (data.stats) {
-              statMachines.textContent = (data.stats.totalMachines || 0).toLocaleString();
-              statDownloads.textContent = (data.stats.totalDownloads || 0).toLocaleString();
-              statStems.textContent = (data.stats.totalStems || 0).toLocaleString();
-              statToday.textContent = (data.stats.todayDownloads || 0).toLocaleString();
+              document.getElementById('statMachines').textContent = (data.stats.totalMachines || 0).toLocaleString();
+              document.getElementById('statDownloads').textContent = (data.stats.totalDownloads || 0).toLocaleString();
+              document.getElementById('statToday').textContent = (data.stats.todayDownloads || 0).toLocaleString();
             }
 
-            updateHwidDropdown(hwidMap, selectedHwid);
-            filterAndRender();
+            renderMachinesTable();
+            updateTelemetryDropdowns();
+            filterAndRenderLogs();
           }
-        } catch (err) {
-          console.error('Fetch error:', err);
-          logsTableBody.innerHTML = `
-            <tr>
-              <td colspan="8" style="text-align: center; color: #ef4444; padding: 30px;">
-                Không thể tải dữ liệu từ máy chủ. Vui lòng kiểm tra lại kết nối.
-              </td>
-            </tr>
-          `;
-        } finally {
-          btnRefresh.disabled = false;
-          btnRefresh.innerHTML = `
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-            </svg>
-            <span>Làm mới</span>
-          `;
+        } catch (e) {
+          console.error(e);
         }
       }
 
-      function updateHwidDropdown(list, selectedValue) {
-        const currentVal = selectedValue || filterHwid.value;
-        filterHwid.innerHTML = '<option value="">-- Tất cả máy (HWID) --</option>';
+      // Render Bảng Người Dùng & Phân Quyền
+      window.renderUsersTable = function () {
+        const keyword = (document.getElementById('searchUserKeyword').value || '').trim().toLowerCase();
+        const roleFilter = document.getElementById('filterUserRole').value;
+        const tbody = document.getElementById('usersTableBody');
 
-        list.forEach(h => {
-          const opt = document.createElement('option');
-          opt.value = h.hwid;
-          const shortHwid = h.hwid.length > 14 ? h.hwid.substring(0, 10) + '...' : h.hwid;
-          const count = h.totalDownloads ? `(${h.totalDownloads} bài)` : '';
-          const name = h.licenseKey ? `[${h.licenseKey}]` : '';
-          opt.textContent = `${shortHwid} ${name} ${count}`;
-          if (h.hwid === currentVal) opt.selected = true;
-          filterHwid.appendChild(opt);
-        });
-      }
-
-      function filterAndRender() {
-        const hwidVal = filterHwid.value.trim();
-        const formatVal = filterFormat.value.trim().toLowerCase();
-        const keyword = searchKeyword.value.trim().toLowerCase();
-
-        const filtered = rawLogsData.filter(item => {
-          if (hwidVal && item.hwid !== hwidVal) return false;
-          if (formatVal && !(item.actionType || '').toLowerCase().includes(formatVal)) return false;
+        const filtered = rawUsersList.filter(u => {
+          if (roleFilter && u.role !== roleFilter) return false;
           if (keyword) {
-            const titleMatch = (item.title || '').toLowerCase().includes(keyword);
-            const promptMatch = (item.prompt || '').toLowerCase().includes(keyword);
-            const keyMatch = (item.licenseKey || '').toLowerCase().includes(keyword);
-            const hwidMatch = (item.hwid || '').toLowerCase().includes(keyword);
-            if (!titleMatch && !promptMatch && !keyMatch && !hwidMatch) return false;
+            const matchName = (u.fullName || '').toLowerCase().includes(keyword);
+            const matchUser = (u.username || '').toLowerCase().includes(keyword);
+            const matchKey = (u.licenseKey || '').toLowerCase().includes(keyword);
+            if (!matchName && !matchUser && !matchKey) return false;
           }
           return true;
         });
 
-        renderTable(filtered);
-      }
-
-      function renderTable(items) {
-        if (!items || items.length === 0) {
-          logsTableBody.innerHTML = `
-            <tr>
-              <td colspan="8" style="text-align: center; color: var(--text-dim); padding: 40px;">
-                Không có dữ liệu bài hát nào phù hợp với bộ lọc.
-              </td>
-            </tr>
-          `;
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Không có người dùng nào phù hợp.</td></tr>`;
           return;
         }
 
-        logsTableBody.innerHTML = items.map((item, index) => {
+        const isCurrentRoot = Boolean(currentUser.isRootAdmin);
+
+        tbody.innerHTML = filtered.map((u, idx) => {
+          const isTargetRoot = Boolean(u.isRootAdmin);
+          const isTargetAdmin = u.role === 'Quản trị viên';
+          const isBlocked = u.status === 'blocked';
+
+          // Badge vai trò
+          let roleHtml = `<span class="badge-role badge-staff">💼 Nhân viên</span>`;
+          if (isTargetRoot) {
+            roleHtml = `<span class="badge-role badge-root">👑 Quản trị tối cao</span>`;
+          } else if (isTargetAdmin) {
+            roleHtml = `<span class="badge-role badge-admin">👑 Quản trị viên</span>`;
+          }
+
+          // Trạng thái
+          const statusHtml = isBlocked 
+            ? `<span class="badge-status-blocked">🔴 Đã khóa</span>` 
+            : `<span class="badge-status-active">🟢 Hoạt động</span>`;
+
+          // Bản quyền
+          let licenseHtml = `<span style="color: var(--text-dim); font-size: 0.8rem;">Chưa kích hoạt</span>`;
+          if (u.licensedUntil) {
+            const expDate = new Date(u.licensedUntil);
+            const isLifetime = expDate.getFullYear() >= 2090;
+            if (isLifetime) {
+              licenseHtml = `<b style="color: #fbbf24;">⭐ Vĩnh viễn (VIP)</b>`;
+            } else if (expDate > new Date()) {
+              const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
+              licenseHtml = `<span style="color: #4ade80;">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
+            } else {
+              licenseHtml = `<span style="color: #f43f5e;">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
+            }
+          }
+          if (u.licenseKey) {
+            licenseHtml += `<div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); margin-top: 2px;">Key: ${escapeHtml(u.licenseKey)}</div>`;
+          }
+
+          // Thao tác phân quyền & key
+          let actionsHtml = '';
+
+          // 1. Thao tác nâng / hạ quyền
+          if (!isTargetRoot) {
+            if (!isTargetAdmin) {
+              // Mọi Admin đều có quyền nâng Nhân viên lên Admin!
+              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">👑 Nâng lên Admin</button> `;
+            } else {
+              // HẠ QUYỀN ADMIN: CHỈ RIÊNG TÀI KHOẢN ROOT ADMIN MỚI ĐƯỢC PHÉP!
+              if (isCurrentRoot) {
+                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">💼 Hạ xuống Nhân viên</button> `;
+              } else {
+                actionsHtml += `<span style="font-size: 0.74rem; color: var(--text-dim);" title="Chỉ Quản trị viên tối cao mới có quyền xóa quyền Admin">🔒 Admin</span> `;
+              }
+            }
+
+            // 2. Chặn / Mở khóa
+            if (!isTargetAdmin) {
+              if (isBlocked) {
+                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">🔓 Mở khóa</button> `;
+              } else {
+                actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">🔒 Khóa</button> `;
+              }
+
+              // 3. Kích hoạt Key
+              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')">🔑 Cấp Key</button>`;
+            }
+          } else {
+            actionsHtml = `<span style="font-size: 0.75rem; color: #fef08a; font-weight: 700;">⭐ Chủ hệ thống</span>`;
+          }
+
+          return `
+            <tr>
+              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
+              <td style="font-weight: 700; color: #fff;">${escapeHtml(u.fullName || '—')}</td>
+              <td style="font-family: var(--font-mono); color: var(--amber-primary); font-size: 0.84rem;">@${escapeHtml(u.username)}</td>
+              <td>${roleHtml}</td>
+              <td>${statusHtml}</td>
+              <td>${licenseHtml}</td>
+              <td style="color: var(--text-dim); font-size: 0.78rem;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
+              <td style="text-align: center; white-space: nowrap;">${actionsHtml}</td>
+            </tr>
+          `;
+        }).join('');
+      };
+
+      // Đổi vai trò (Nâng lên Admin / Hạ xuống Nhân viên)
+      window.changeRole = async function (targetUserId, newRole) {
+        const confirmMsg = newRole === 'Quản trị viên' 
+          ? 'Bạn có chắc chắn muốn nâng thành viên này lên làm QUẢN TRỊ VIÊN không?' 
+          : 'CẢNH BÁO: Bạn có chắc chắn muốn XÓA QUYỀN ADMIN của người này và chuyển thành Nhân viên không?';
+        if (!confirm(confirmMsg)) return;
+
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/user/role', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ targetUserId, newRole })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            alert(data.message);
+            loadAdminDashboard();
+          } else {
+            alert('Lỗi: ' + (data.message || 'Không thể thay đổi quyền.'));
+          }
+        } catch (e) {
+          alert('Lỗi kết nối: ' + e.message);
+        }
+      };
+
+      // Chặn / Mở khóa tài khoản
+      window.toggleBlockUser = async function (targetUserId, blocked) {
+        const actionText = blocked ? 'KHÓA TÀI KHOẢN' : 'MỞ KHÓA TÀI KHOẢN';
+        if (!confirm(`Bạn có chắc muốn ${actionText} thành viên này không?`)) return;
+
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/user/block', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ targetUserId, blocked })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            alert(data.message);
+            loadAdminDashboard();
+          } else {
+            alert('Lỗi: ' + data.message);
+          }
+        } catch (e) {
+          alert('Lỗi kết nối: ' + e.message);
+        }
+      };
+
+      // Modal Kích hoạt Key
+      window.openLicenseModal = function (userId, name) {
+        activeLicenseTargetUserId = userId;
+        document.getElementById('licenseModalUserText').textContent = `Thành viên: ${name}`;
+        document.getElementById('licenseModal').style.display = 'flex';
+      };
+
+      window.closeLicenseModal = function () {
+        document.getElementById('licenseModal').style.display = 'none';
+        activeLicenseTargetUserId = null;
+      };
+
+      window.confirmActivateLicense = async function () {
+        if (!activeLicenseTargetUserId) return;
+        const days = document.getElementById('selectLicenseDays').value;
+        const token = localStorage.getItem(TOKEN_KEY);
+
+        try {
+          const res = await fetch('/api/admin/user/license', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}` 
+            },
+            body: JSON.stringify({ targetUserId: activeLicenseTargetUserId, days })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            alert(data.message);
+            closeLicenseModal();
+            loadAdminDashboard();
+          } else {
+            alert('Lỗi: ' + data.message);
+          }
+        } catch (e) {
+          alert('Lỗi kết nối: ' + e.message);
+        }
+      };
+
+      // Render Bảng Máy HWID
+      window.renderMachinesTable = function () {
+        const keyword = (document.getElementById('searchMachineKeyword').value || '').trim().toLowerCase();
+        const tbody = document.getElementById('machinesTableBody');
+
+        const filtered = rawMachinesList.filter(m => {
+          if (keyword) {
+            const matchHwid = (m.hwid || '').toLowerCase().includes(keyword);
+            const matchKey = (m.licenseKey || '').toLowerCase().includes(keyword);
+            if (!matchHwid && !matchKey) return false;
+          }
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 30px;">Không có máy tính nào phù hợp.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map((m, idx) => {
+          const shortHwid = m.hwid && m.hwid.length > 16 
+            ? m.hwid.substring(0, 8) + '...' + m.hwid.substring(m.hwid.length - 6) 
+            : (m.hwid || '—');
+
+          const roleBadge = m.role === 'Admin'
+            ? `<span class="badge-role badge-admin">👑 ADMIN</span>`
+            : `<span class="badge-role badge-staff">💼 NHÂN VIÊN</span>`;
+
+          return `
+            <tr>
+              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
+              <td><span class="hwid-badge" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">${escapeHtml(shortHwid)}</span></td>
+              <td style="color: var(--amber-primary); font-weight: 600;">${escapeHtml(m.licenseKey || 'Free')}</td>
+              <td>${roleBadge}</td>
+              <td style="text-align: center; font-weight: 700; color: #fff;">${m.totalDownloads || 0}</td>
+              <td style="color: var(--text-dim); font-size: 0.8rem;">${escapeHtml((m.lastSeen || '').substring(0, 19))}</td>
+              <td style="text-align: center;">
+                <button class="btn-action-sm btn-license" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">Xem bài tải 🎵</button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      };
+
+      // Telemetry Logs Dropdown & Render
+      function updateTelemetryDropdowns() {
+        const select = document.getElementById('filterHwid');
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- Tất cả máy (HWID) --</option>';
+        rawMachinesList.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.hwid;
+          const short = m.hwid.length > 14 ? m.hwid.substring(0, 10) + '...' : m.hwid;
+          opt.textContent = `${short} [${m.licenseKey || 'Free'}]`;
+          if (m.hwid === currentVal) opt.selected = true;
+          select.appendChild(opt);
+        });
+      }
+
+      window.filterLogsByHwid = function (hwid) {
+        switchAdminTab('telemetry');
+        document.getElementById('filterHwid').value = hwid;
+        filterAndRenderLogs();
+      };
+
+      window.filterAndRenderLogs = function () {
+        const hwidVal = document.getElementById('filterHwid').value.trim();
+        const formatVal = document.getElementById('filterFormat').value.trim().toLowerCase();
+        const keyword = (document.getElementById('searchLogKeyword').value || '').trim().toLowerCase();
+        const tbody = document.getElementById('logsTableBody');
+
+        const filtered = rawLogsList.filter(item => {
+          if (hwidVal && item.hwid !== hwidVal) return false;
+          if (formatVal && !(item.actionType || '').toLowerCase().includes(formatVal)) return false;
+          if (keyword) {
+            const matchTitle = (item.title || '').toLowerCase().includes(keyword);
+            const matchPrompt = (item.prompt || '').toLowerCase().includes(keyword);
+            const matchKey = (item.licenseKey || '').toLowerCase().includes(keyword);
+            if (!matchTitle && !matchPrompt && !matchKey) return false;
+          }
+          return true;
+        });
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Không có bản ghi tải nào phù hợp.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map((item, idx) => {
           const shortHwid = item.hwid && item.hwid.length > 14 
             ? item.hwid.substring(0, 8) + '...' + item.hwid.substring(item.hwid.length - 4)
             : (item.hwid || 'N/A');
@@ -587,63 +1303,42 @@
           let formatClass = 'tag-mp3';
           if (action.includes('WAV')) formatClass = 'tag-wav';
           else if (action.includes('STEM')) formatClass = 'tag-stem';
-          else if (action.includes('MIDI')) formatClass = 'tag-midi';
 
-          const sunoLink = item.clipId 
-            ? `https://suno.com/song/${item.clipId}`
-            : '#';
+          const sunoLink = item.clipId ? `https://suno.com/song/${item.clipId}` : '#';
 
           return `
             <tr>
-              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${index + 1}</td>
+              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
               <td style="font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; white-space: nowrap;">
                 ${escapeHtml(item.timeVn || (item.timestamp || '').substring(0, 19).replace('T', ' '))}
               </td>
+              <td><span class="hwid-badge" onclick="filterLogsByHwid('${escapeHtml(item.hwid)}')">${escapeHtml(shortHwid)}</span></td>
+              <td style="font-size: 0.84rem; color: #f59e0b; font-weight: 600;">${escapeHtml(item.licenseKey || 'Free')}</td>
               <td>
-                <span class="hwid-badge" title="Bấm để lọc theo máy này" onclick="filterByHwid('${escapeHtml(item.hwid)}')">
-                  ${escapeHtml(shortHwid)}
-                </span>
-              </td>
-              <td style="font-size: 0.84rem; color: #f59e0b; font-weight: 600;">
-                ${escapeHtml(item.licenseKey || 'Free')}
-              </td>
-              <td>
-                <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">${escapeHtml(item.title || 'Không rõ')}</div>
+                <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title || 'Không rõ')}</div>
                 <div style="font-size: 0.76rem; color: var(--text-dim);">${escapeHtml(item.tags || '')}</div>
               </td>
               <td>
-                <div class="prompt-cell" title="${escapeHtml(item.prompt || '')}" onclick="alert('PROMPT CHI TIẾT:\\n\\n' + this.getAttribute('title'))">
+                <div style="max-width: 280px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted); cursor: pointer;" title="${escapeHtml(item.prompt || '')}" onclick="alert('PROMPT CHI TIẾT:\\n\\n' + this.getAttribute('title'))">
                   ${escapeHtml(item.prompt || '—')}
                 </div>
               </td>
-              <td>
-                <span class="tag-format ${formatClass}">${escapeHtml(action)}</span>
-              </td>
-              <td style="text-align: center; white-space: nowrap;">
-                ${item.clipId ? `
-                  <a href="${sunoLink}" target="_blank" rel="noopener noreferrer" class="btn-ghost" style="padding: 4px 8px; font-size: 0.74rem;" title="Mở trên Suno">
-                    Nghe 🎧
-                  </a>
-                ` : '—'}
+              <td><span class="tag-format ${formatClass}">${escapeHtml(action)}</span></td>
+              <td style="text-align: center;">
+                ${item.clipId ? `<a href="${sunoLink}" target="_blank" rel="noopener" class="btn-ghost" style="padding: 3px 8px; font-size: 0.75rem;">🎧</a>` : '—'}
               </td>
             </tr>
           `;
         }).join('');
-      }
-
-      window.filterByHwid = function (hwid) {
-        filterHwid.value = hwid;
-        loadAdminData();
       };
 
-      function exportCsv() {
-        if (!rawLogsData || rawLogsData.length === 0) {
+      window.exportCsv = function () {
+        if (!rawLogsList || rawLogsList.length === 0) {
           alert('Không có dữ liệu để xuất CSV.');
           return;
         }
-
         const headers = ['STT', 'Thời Gian', 'Mã Máy (HWID)', 'License Key', 'Tên Bài Hát', 'Thể Loại', 'Prompt', 'Định Dạng', 'Clip ID'];
-        const rows = rawLogsData.map((item, idx) => [
+        const rows = rawLogsList.map((item, idx) => [
           idx + 1,
           `"${(item.timeVn || item.timestamp || '').replace(/"/g, '""')}"`,
           `"${(item.hwid || '').replace(/"/g, '""')}"`,
@@ -654,17 +1349,120 @@
           `"${(item.actionType || '').replace(/"/g, '""')}"`,
           `"${(item.clipId || '').replace(/"/g, '""')}"`
         ]);
-
         const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `Suno_Download_Logs_${new Date().toISOString().substring(0, 10)}.csv`);
+        link.setAttribute('download', `Suno_LichSu_${new Date().toISOString().substring(0, 10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+      };
+
+      // ======================================================================
+      // LOGIC DÀNH CHO NHÂN VIÊN
+      // ======================================================================
+      async function loadStaffDashboard() {
+        if (!currentUser) return;
+        document.getElementById('staffFullName').textContent = currentUser.fullName || currentUser.username;
+
+        const licenseStatusEl = document.getElementById('staffLicenseStatus');
+        const licenseExpiryEl = document.getElementById('staffLicenseExpiry');
+        const licenseKeyEl = document.getElementById('staffLicenseKey');
+
+        if (currentUser.licensedUntil) {
+          const expDate = new Date(currentUser.licensedUntil);
+          const isLifetime = expDate.getFullYear() >= 2090;
+          if (isLifetime) {
+            licenseStatusEl.innerHTML = '⭐ ĐÃ KÍCH HOẠT (VĨNH VIỄN)';
+            licenseStatusEl.style.color = '#fbbf24';
+            licenseExpiryEl.textContent = 'Vĩnh viễn (Lifetime VIP)';
+          } else if (expDate > new Date()) {
+            const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
+            licenseStatusEl.innerHTML = '🟢 ĐÃ KÍCH HOẠT HỢP LỆ';
+            licenseStatusEl.style.color = '#4ade80';
+            licenseExpiryEl.textContent = `${currentUser.licensedUntil.substring(0, 10)} (Còn ${diffDays} ngày)`;
+          } else {
+            licenseStatusEl.innerHTML = '🔴 ĐÃ HẾT HẠN';
+            licenseStatusEl.style.color = '#f43f5e';
+            licenseExpiryEl.textContent = `Hết hạn vào ${currentUser.licensedUntil.substring(0, 10)}`;
+          }
+        } else {
+          licenseStatusEl.innerHTML = '⚠️ CHƯA KÍCH HOẠT';
+          licenseStatusEl.style.color = '#f59e0b';
+          licenseExpiryEl.textContent = 'Vui lòng liên hệ Quản trị viên để cấp bản quyền';
+        }
+
+        licenseKeyEl.textContent = currentUser.licenseKey || 'Chưa có Key';
+
+        // Tải lịch sử tải của máy nhân viên
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/data', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.ok) {
+            renderStaffLogs(data.logs || []);
+          }
+        } catch (e) {}
       }
+
+      function renderStaffLogs(logs) {
+        const tbody = document.getElementById('staffLogsTableBody');
+        if (!logs || logs.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Bạn chưa tải bài hát nào qua ứng dụng Suno Bulk Studio.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = logs.map((item, idx) => {
+          const action = (item.actionType || 'MP3').toUpperCase();
+          let formatClass = 'tag-mp3';
+          if (action.includes('WAV')) formatClass = 'tag-wav';
+          else if (action.includes('STEM')) formatClass = 'tag-stem';
+
+          const sunoLink = item.clipId ? `https://suno.com/song/${item.clipId}` : '#';
+
+          return `
+            <tr>
+              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
+              <td style="font-family: var(--font-mono); font-size: 0.8rem; color: #cbd5e1; white-space: nowrap;">
+                ${escapeHtml(item.timeVn || (item.timestamp || '').substring(0, 19).replace('T', ' '))}
+              </td>
+              <td>
+                <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title || 'Không rõ')}</div>
+                <div style="font-size: 0.76rem; color: var(--text-dim);">${escapeHtml(item.tags || '')}</div>
+              </td>
+              <td>
+                <div style="max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-muted);" title="${escapeHtml(item.prompt || '')}">
+                  ${escapeHtml(item.prompt || '—')}
+                </div>
+              </td>
+              <td><span class="tag-format ${formatClass}">${escapeHtml(action)}</span></td>
+              <td style="text-align: center;">
+                ${item.clipId ? `<a href="${sunoLink}" target="_blank" rel="noopener" class="btn-ghost" style="padding: 3px 8px; font-size: 0.75rem;">🎧</a>` : '—'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      window.copyStaffKey = function () {
+        const key = document.getElementById('staffLicenseKey').textContent;
+        if (!key || key === 'Chưa có Key' || key === '—') return;
+        navigator.clipboard.writeText(key).then(() => {
+          alert(`Đã sao chép Key bản quyền của bạn: ${key}`);
+        });
+      };
+
+      window.refreshCurrentView = function () {
+        if (currentUser && currentUser.role === 'Quản trị viên') {
+          loadAdminDashboard();
+        } else {
+          loadStaffDashboard();
+        }
+      };
 
       function escapeHtml(str) {
         if (!str) return '';
