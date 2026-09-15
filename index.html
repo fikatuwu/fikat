@@ -1102,6 +1102,31 @@ button {
 </head>
 <body>
 
+  <!-- AUTH GUARD: Kiểm tra đăng nhập ngay khi load trang -->
+  <script>
+    (function () {
+      var token = localStorage.getItem('fikat_session_token');
+      if (!token) {
+        // Chưa đăng nhập → chuyển sang trang đăng nhập
+        window.location.replace('/admin');
+      } else {
+        // Xác minh token còn hạn không (parse nhanh phần payload)
+        try {
+          var parts = token.split('.');
+          if (parts.length !== 2) throw new Error('invalid');
+          var payload = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
+          if (!payload.exp || Date.now() > payload.exp) {
+            localStorage.removeItem('fikat_session_token');
+            window.location.replace('/admin');
+          }
+        } catch (e) {
+          localStorage.removeItem('fikat_session_token');
+          window.location.replace('/admin');
+        }
+      }
+    })();
+  </script>
+
   <!-- ════════════════════════ TOP NAVBAR ════════════════════════ -->
   <header class="navbar">
     <div class="container nav-wrap">
@@ -1132,12 +1157,45 @@ button {
           </svg>
           Kiểm tra cập nhật
         </button>
-        <a href="/admin" class="btn-ghost" style="color: var(--amber-primary); border-color: rgba(245, 158, 11, 0.4); text-decoration: none;" title="Trang Quản Trị & Đăng Nhập">
-          👑 Quản trị / Login
+        <!-- User Info & Logout -->
+        <span id="navUserInfo" style="font-size: 0.82rem; color: var(--amber-primary); font-weight: 600; display: none;"></span>
+        <a href="/admin" class="btn-ghost" style="color: var(--amber-primary); border-color: rgba(245, 158, 11, 0.35); text-decoration: none; padding: 8px 14px; font-size: 0.84rem;" title="Vào trang Quản trị">
+          👑 Quản trị
         </a>
+        <button id="navLogoutBtn" class="btn-ghost" style="color: #f43f5e; border-color: rgba(244,63,94,0.3); padding: 8px 14px; font-size: 0.84rem; display: none;" title="Đăng xuất">
+          🚪 Đăng xuất
+        </button>
       </div>
     </div>
   </header>
+
+  <script>
+    // Hiển thị thông tin user & logout button trên navbar
+    (function () {
+      var token = localStorage.getItem('fikat_session_token');
+      if (!token) return;
+      try {
+        var parts = token.split('.');
+        var payload = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
+        var navInfo = document.getElementById('navUserInfo');
+        var navLogout = document.getElementById('navLogoutBtn');
+        if (navInfo) {
+          var roleIcon = payload.isRootAdmin ? '👑' : (payload.role === 'Quản trị viên' ? '👑' : '💼');
+          navInfo.textContent = roleIcon + ' ' + (payload.username || '');
+          navInfo.style.display = 'inline';
+        }
+        if (navLogout) {
+          navLogout.style.display = 'inline-flex';
+          navLogout.addEventListener('click', function () {
+            if (confirm('Bạn có chắc muốn đăng xuất không?')) {
+              localStorage.removeItem('fikat_session_token');
+              window.location.replace('/admin');
+            }
+          });
+        }
+      } catch (e) {}
+    })();
+  </script>
 
   <!-- ════════════════════════ HERO SPOTLIGHT ════════════════════════ -->
   <section id="featured" class="hero-section">

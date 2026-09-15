@@ -832,7 +832,12 @@
             localStorage.setItem(TOKEN_KEY, data.token);
             currentUser = data.user;
             authOverlay.style.display = 'none';
-            setupUserSession();
+            // Admin ở lại trang quản trị, Nhân viên về trang chính
+            if (data.user && data.user.role === 'Quản trị viên') {
+              setupUserSession();
+            } else {
+              window.location.replace('/');
+            }
           } else {
             showAuthMsg(data.message || 'Đăng nhập không thành công!');
           }
@@ -873,7 +878,11 @@
             showAuthMsg(data.message, false);
             setTimeout(() => {
               authOverlay.style.display = 'none';
-              setupUserSession();
+              if (data.user && data.user.role === 'Quản trị viên') {
+                setupUserSession();
+              } else {
+                window.location.replace('/');
+              }
             }, 1000);
           } else {
             showAuthMsg(data.message || 'Đăng ký thất bại!');
@@ -896,7 +905,12 @@
           if (res.ok && data.ok) {
             currentUser = data.user;
             authOverlay.style.display = 'none';
-            setupUserSession();
+            // Nhân viên đăng nhập → tự redirect về trang chính
+            if (data.user && data.user.role !== 'Quản trị viên') {
+              window.location.replace('/');
+            } else {
+              setupUserSession();
+            }
           } else {
             localStorage.removeItem(TOKEN_KEY);
             showAuthScreen();

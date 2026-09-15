@@ -52,7 +52,14 @@ export default {
       new Response(JSON.stringify(data), { status, headers: corsHeaders });
 
     // ------------------------------------------------------------------------
-    // Route: /admin -> Phục vụ admin.html
+    // Route: / và /index.html -> Luôn phục vụ trang chủ (không cần đăng nhập)
+    // ------------------------------------------------------------------------
+    if (pathname === "/" || pathname === "/index.html") {
+      return await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
+    }
+
+    // ------------------------------------------------------------------------
+    // Route: /admin -> Phục vụ admin.html (cần đăng nhập)
     // ------------------------------------------------------------------------
     if (pathname === "/admin" || pathname === "/admin/") {
       return await env.ASSETS.fetch(new Request(new URL("/admin.html", request.url), request));
