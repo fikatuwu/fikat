@@ -1285,8 +1285,8 @@ button {
               <div id="ddUsername" style="font-size:0.74rem; color:var(--amber-primary); font-family:monospace; margin-top:2px;"></div>
               <div id="ddRole" style="font-size:0.7rem; margin-top:5px;"></div>
             </div>
-            <a href="/admin" style="
-              display:flex; align-items:center; gap:8px;
+            <a href="/admin" id="dropdownAdminLink" style="
+              display:none; align-items:center; gap:8px;
               padding:8px 12px; border-radius:7px; text-decoration:none;
               color:var(--text-muted); font-size:0.83rem; font-weight:600;
               transition:all 0.15s;
@@ -1336,11 +1336,12 @@ button {
         var payload = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
         if (!payload.exp || Date.now() > payload.exp) { localStorage.removeItem('fikat_session_token'); return; }
 
-        // Hiện link Quản lý chỉ với Admin / Root Admin
-        if (payload.isRootAdmin || payload.role === 'Quản trị viên') {
-          var al = document.getElementById('navAdminLink');
-          if (al) al.style.display = 'inline-flex';
-        }
+        // Hiện link Quản lý CHỈ VỚI Admin / Root Admin (Ẩn hoàn toàn với Nhân viên)
+        var isAdminUser = Boolean(payload.isRootAdmin || payload.role === 'Quản trị viên');
+        var al = document.getElementById('navAdminLink');
+        if (al) al.style.display = isAdminUser ? 'inline-flex' : 'none';
+        var dda = document.getElementById('dropdownAdminLink');
+        if (dda) dda.style.display = isAdminUser ? 'flex' : 'none';
 
         var wrap = document.getElementById('userDropdownWrap');
         var btn = document.getElementById('userDropdownBtn');
@@ -1419,6 +1420,10 @@ button {
             if (d && d.ok && d.user) {
               var uAdm = Boolean(d.user.isRootAdmin || d.user.role === 'Quản trị viên');
               applyToolPermissions(d.user.allowedTools || [], uAdm);
+              var navAdm = document.getElementById('navAdminLink');
+              if (navAdm) navAdm.style.display = uAdm ? 'inline-flex' : 'none';
+              var ddAdm = document.getElementById('dropdownAdminLink');
+              if (ddAdm) ddAdm.style.display = uAdm ? 'flex' : 'none';
             }
           }).catch(function () {});
 
