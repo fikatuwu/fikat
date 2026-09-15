@@ -492,6 +492,34 @@ export default {
       }
     }
 
+    // 2.8 POST /api/admin/user/delete
+    if (pathname === "/api/admin/user/delete" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Quản trị viên mới có quyền xóa tài khoản." }, 403);
+        }
+        const body = await request.json();
+        const targetUserId = body.targetUserId;
+
+        const target = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(targetUserId).first();
+        if (!target) return jsonRes({ ok: false, message: "Không tìm thấy tài khoản." }, 404);
+
+        if (target.isRootAdmin) {
+          return jsonRes({ ok: false, message: "Không thể xóa tài khoản Quản trị viên tối cao!" }, 403);
+        }
+
+        if (target.role === "Quản trị viên" && !authUser.isRootAdmin) {
+          return jsonRes({ ok: false, message: "Chỉ Root Admin mới có quyền xóa tài khoản Quản trị viên khác!" }, 403);
+        }
+
+        await env.DB.prepare("DELETE FROM users WHERE id = ?").bind(targetUserId).run();
+        return jsonRes({ ok: true, message: `Đã xóa vĩnh viễn tài khoản [${target.fullName}].` });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
     // ========================================================================
     // PHẦN 3: TELEMETRY & GIÁM SÁT LỊCH SỬ TẢI NHẠC
     // ========================================================================
