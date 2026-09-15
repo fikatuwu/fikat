@@ -9,6 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    if (localStorage.getItem('fikat_session_token')) {
+      document.documentElement.classList.add('has-token');
+    }
+  </script>
   <style>
     :root {
       --bg-primary: #080604;
@@ -333,6 +338,9 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
+    }
+    html.has-token #authOverlay {
+      display: none !important;
     }
     .auth-card {
       background: var(--bg-surface);
@@ -779,7 +787,7 @@
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end">
         <button onclick="closeApproveModal()" class="btn-ghost" style="padding:8px 16px;font-size:.84rem">Hủy</button>
-        <button onclick="submitApprove()" style="padding:8px 20px;font-size:.84rem;background:#22c55e;color:#000;font-weight:700;border:none;border-radius:9999px;cursor:pointer;">✅ Duyệt</button>
+        <button id="btnSubmitApprove" onclick="submitApprove()" style="padding:8px 20px;font-size:.84rem;background:#22c55e;color:#000;font-weight:700;border:none;border-radius:9999px;cursor:pointer;">✅ Duyệt</button>
       </div>
     </div>
   </div>
@@ -860,6 +868,7 @@
       }
 
       function showAuthScreen() {
+        document.documentElement.classList.remove('has-token');
         authOverlay.style.display = 'flex';
         mainApp.style.display = 'none';
       }
@@ -1068,28 +1077,40 @@
 
       window.openApproveModal = function(id, fullName, username) {
         pendingApproveId = id;
-        document.getElementById('approveUserDesc').textContent = `Duyệt tài khoản: ${fullName} (@${username})`;
-        document.getElementById('toolCheck_suno').checked = false;
-        document.getElementById('toolCheck_random').checked = false;
-        document.getElementById('approveModal').style.display = 'flex';
+        const desc = document.getElementById('approveUserDesc');
+        if (desc) desc.textContent = `Duyệt tài khoản: ${fullName} (@${username})`;
+        const modal = document.getElementById('approveModal');
+        if (modal) modal.style.display = 'flex';
       };
-      window.closeApproveModal = function() { document.getElementById('approveModal').style.display = 'none'; };
+      window.closeApproveModal = function() { 
+        const modal = document.getElementById('approveModal');
+        if (modal) modal.style.display = 'none'; 
+      };
 
       window.submitApprove = async function() {
         const token = localStorage.getItem(TOKEN_KEY);
+        const btn = document.getElementById('btnSubmitApprove');
+        if (btn) { btn.disabled = true; btn.textContent = 'Đang duyệt...'; }
         try {
           const res = await fetch('/api/admin/user/approve', {
-            method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            method: 'POST', 
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({ targetUserId: pendingApproveId, allowedTools: [], role: 'Nhân viên' })
           });
           const data = await res.json();
           closeApproveModal();
           if (data.ok) {
-            showToast('✅ Đã duyệt! Dùng nút 🛠 Tool để phân quyền tool.', 'success');
+            showToast(data.message || '✅ Đã duyệt tài khoản thành công!', 'success');
             await loadAdminDashboard();
             renderPendingTable();
-          } else { showToast(data.message || 'Lỗi duyệt tài khoản', 'error'); }
-        } catch(e) { showToast('Lỗi kết nối: ' + e.message, 'error'); }
+          } else { 
+            showToast(data.message || 'Lỗi duyệt tài khoản', 'error'); 
+          }
+        } catch(e) { 
+          showToast('Lỗi kết nối: ' + e.message, 'error'); 
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = '✅ Duyệt'; }
+        }
       };
 
       window.rejectUser = async function(id, fullName) {
