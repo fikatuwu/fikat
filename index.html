@@ -1157,42 +1157,115 @@ button {
           </svg>
           Kiểm tra cập nhật
         </button>
-        <!-- User Info & Logout -->
-        <span id="navUserInfo" style="font-size: 0.82rem; color: var(--amber-primary); font-weight: 600; display: none;"></span>
-        <a href="/admin" class="btn-ghost" style="color: var(--amber-primary); border-color: rgba(245, 158, 11, 0.35); text-decoration: none; padding: 8px 14px; font-size: 0.84rem;" title="Vào trang Quản trị">
-          👑 Quản trị
-        </a>
-        <button id="navLogoutBtn" class="btn-ghost" style="color: #f43f5e; border-color: rgba(244,63,94,0.3); padding: 8px 14px; font-size: 0.84rem; display: none;" title="Đăng xuất">
-          🚪 Đăng xuất
-        </button>
+
+        <!-- User Dropdown -->
+        <div id="userDropdownWrap" style="position:relative; display:none;">
+          <button id="userDropdownBtn" style="
+            display:flex; align-items:center; gap:8px;
+            background:rgba(245,158,11,0.10); border:1px solid rgba(245,158,11,0.35);
+            border-radius:9999px; padding:5px 12px 5px 5px;
+            cursor:pointer; transition:all 0.18s; color:#fff; font-family:inherit;
+          " title="Tài khoản của bạn">
+            <span id="userAvatar" style="
+              width:28px; height:28px; border-radius:50%;
+              background:linear-gradient(135deg,#f59e0b,#d97706);
+              display:flex; align-items:center; justify-content:center;
+              font-size:0.78rem; font-weight:800; color:#000; flex-shrink:0;
+            ">F</span>
+            <span id="userNameShort" style="font-size:0.82rem; font-weight:700; color:var(--amber-primary);">fikat</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--text-muted)">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </button>
+
+          <!-- Dropdown panel -->
+          <div id="userDropdownMenu" style="
+            position:absolute; top:calc(100% + 8px); right:0;
+            background:#0f0c08; border:1px solid rgba(245,158,11,0.3);
+            border-radius:12px; padding:6px; min-width:200px;
+            box-shadow:0 16px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(245,158,11,0.06);
+            display:none; z-index:9999; backdrop-filter:blur(20px);
+          ">
+            <div style="padding:10px 12px 10px; border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:4px;">
+              <div id="ddFullName" style="font-size:0.86rem; font-weight:700; color:#fff;"></div>
+              <div id="ddUsername" style="font-size:0.74rem; color:var(--amber-primary); font-family:monospace; margin-top:2px;"></div>
+              <div id="ddRole" style="font-size:0.7rem; margin-top:5px;"></div>
+            </div>
+            <a href="/admin" style="
+              display:flex; align-items:center; gap:8px;
+              padding:8px 12px; border-radius:7px; text-decoration:none;
+              color:var(--text-muted); font-size:0.83rem; font-weight:600;
+              transition:all 0.15s;
+            " onmouseover="this.style.background='rgba(245,158,11,0.10)';this.style.color='#fff'" onmouseout="this.style.background='';this.style.color='var(--text-muted)'">
+              👑 Vào trang Quản trị
+            </a>
+            <button id="dropdownLogoutBtn" style="
+              width:100%; display:flex; align-items:center; gap:8px;
+              padding:8px 12px; border-radius:7px; background:none;
+              border:none; color:#f87171; font-size:0.83rem; font-weight:600;
+              cursor:pointer; transition:all 0.15s; font-family:inherit; text-align:left;
+            " onmouseover="this.style.background='rgba(248,113,113,0.10)'" onmouseout="this.style.background=''">
+              🚪 Đăng xuất
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
 
   <script>
-    // Hiển thị thông tin user & logout button trên navbar
+    // User dropdown navbar
     (function () {
       var token = localStorage.getItem('fikat_session_token');
       if (!token) return;
       try {
         var parts = token.split('.');
+        if (parts.length !== 2) return;
         var payload = JSON.parse(decodeURIComponent(escape(atob(parts[0]))));
-        var navInfo = document.getElementById('navUserInfo');
-        var navLogout = document.getElementById('navLogoutBtn');
-        if (navInfo) {
-          var roleIcon = payload.isRootAdmin ? '👑' : (payload.role === 'Quản trị viên' ? '👑' : '💼');
-          navInfo.textContent = roleIcon + ' ' + (payload.username || '');
-          navInfo.style.display = 'inline';
+        if (!payload.exp || Date.now() > payload.exp) { localStorage.removeItem('fikat_session_token'); return; }
+
+        var wrap = document.getElementById('userDropdownWrap');
+        var btn = document.getElementById('userDropdownBtn');
+        var menu = document.getElementById('userDropdownMenu');
+        if (!wrap) return;
+
+        // Populate
+        var letter = (payload.fullName || payload.username || 'F')[0].toUpperCase();
+        document.getElementById('userAvatar').textContent = letter;
+        document.getElementById('userNameShort').textContent = payload.username || '';
+        document.getElementById('ddFullName').textContent = payload.fullName || payload.username || '';
+        document.getElementById('ddUsername').textContent = '@' + (payload.username || '');
+
+        var roleEl = document.getElementById('ddRole');
+        if (payload.isRootAdmin) {
+          roleEl.innerHTML = '<span style="background:rgba(234,179,8,0.15);border:1px solid #eab308;color:#fef08a;padding:2px 8px;border-radius:99px;font-weight:700;">⭐ Root Admin</span>';
+        } else if (payload.role === 'Quản trị viên') {
+          roleEl.innerHTML = '<span style="background:rgba(245,158,11,0.13);border:1px solid #f59e0b;color:#f59e0b;padding:2px 8px;border-radius:99px;font-weight:700;">👑 Quản trị viên</span>';
+        } else {
+          roleEl.innerHTML = '<span style="background:rgba(56,189,248,0.12);border:1px solid #38bdf8;color:#38bdf8;padding:2px 8px;border-radius:99px;font-weight:700;">💼 Nhân viên</span>';
         }
-        if (navLogout) {
-          navLogout.style.display = 'inline-flex';
-          navLogout.addEventListener('click', function () {
-            if (confirm('Bạn có chắc muốn đăng xuất không?')) {
-              localStorage.removeItem('fikat_session_token');
-              window.location.replace('/admin');
-            }
-          });
-        }
+
+        wrap.style.display = 'block';
+
+        // Toggle dropdown
+        var open = false;
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          open = !open;
+          menu.style.display = open ? 'block' : 'none';
+          btn.style.background = open ? 'rgba(245,158,11,0.18)' : 'rgba(245,158,11,0.10)';
+        });
+        document.addEventListener('click', function () {
+          if (open) { open = false; menu.style.display = 'none'; btn.style.background = 'rgba(245,158,11,0.10)'; }
+        });
+
+        // Logout
+        document.getElementById('dropdownLogoutBtn').addEventListener('click', function () {
+          if (confirm('Bạn có chắc muốn đăng xuất không?')) {
+            localStorage.removeItem('fikat_session_token');
+            window.location.replace('/admin');
+          }
+        });
       } catch (e) {}
     })();
   </script>
