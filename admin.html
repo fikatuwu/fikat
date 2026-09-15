@@ -496,7 +496,7 @@
         <div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
             <h1 style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0;">Suno Studio — Quản Trị & Phân Quyền</h1>
-            <span id="userRoleBadge" class="badge-role badge-admin">👑 QUẢN TRỊ VIÊN</span>
+            <span id="userRoleBadge" class="badge-role badge-admin">QUẢN TRỊ VIÊN</span>
           </div>
           <p style="font-size: 0.84rem; color: var(--text-muted); margin: 4px 0 0;">
             Đang đăng nhập: <b id="userFullNameText" style="color: #fff;">...</b> (<span id="userUsernameText" style="color: var(--amber-primary); font-family: var(--font-mono);">...</span>)
@@ -506,10 +506,10 @@
 
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
         <button id="btnRefresh" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="refreshCurrentView()">
-          <span>🔄 Làm mới</span>
+          <span>Làm mới</span>
         </button>
         <button id="btnLogout" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem; color: #f43f5e; border-color: rgba(244, 63, 94, 0.3);" onclick="doLogout()">
-          <span>🚪 Đăng xuất</span>
+          <span>Đăng xuất</span>
         </button>
       </div>
     </header>
@@ -522,39 +522,39 @@
       <!-- Navigation Tabs -->
       <nav class="nav-tabs">
         <button class="nav-tab-btn" id="tabBtnPending" onclick="switchAdminTab('pending')" style="position:relative">
-          <span>🔔 Chờ Duyệt</span>
+          <span>Chờ Duyệt</span>
           <span id="pendingBadge" style="display:none;position:absolute;top:4px;right:4px;background:#f87171;color:#fff;border-radius:99px;font-size:.65rem;font-weight:800;padding:1px 5px;line-height:1.4">0</span>
         </button>
         <button class="nav-tab-btn active" id="tabBtnUsers" onclick="switchAdminTab('users')">
-          <span>👥 Quản Trị Tài Khoản & Phân Quyền</span>
+          <span>Quản Trị Tài Khoản & Phân Quyền</span>
         </button>
         <button class="nav-tab-btn" id="tabBtnMachines" onclick="switchAdminTab('machines')">
-          <span>💻 Danh Sách Máy (HWID)</span>
+          <span>Danh Sách Máy (HWID)</span>
         </button>
         <button class="nav-tab-btn" id="tabBtnTelemetry" onclick="switchAdminTab('telemetry')">
-          <span>🎵 Lịch Sử Tải Nhạc Realtime</span>
+          <span>Lịch Sử Tải Nhạc Realtime</span>
         </button>
       </nav>
 
       <!-- Stat Cards -->
       <section class="stat-grid">
         <div class="stat-card-admin">
-          <div class="stat-card-label">👥 TỔNG TÀI KHOẢN</div>
+          <div class="stat-card-label">TỔNG TÀI KHOẢN</div>
           <div id="statUsers" class="stat-card-num" style="color: #38bdf8;">0</div>
           <div style="font-size: 0.78rem; color: var(--text-dim);">Admin & Nhân viên trong hệ thống</div>
         </div>
         <div class="stat-card-admin">
-          <div class="stat-card-label">💻 MÁY TÍNH KẾT NỐI (HWID)</div>
+          <div class="stat-card-label">MÁY TÍNH KẾT NỐI (HWID)</div>
           <div id="statMachines" class="stat-card-num" style="color: var(--amber-primary);">0</div>
           <div style="font-size: 0.78rem; color: var(--text-dim);">Thiết bị đã chạy Suno Studio</div>
         </div>
         <div class="stat-card-admin">
-          <div class="stat-card-label">🎵 TỔNG BÀI ĐÃ TẢI</div>
+          <div class="stat-card-label">TỔNG BÀI ĐÃ TẢI</div>
           <div id="statDownloads" class="stat-card-num" style="color: #4ade80;">0</div>
           <div style="font-size: 0.78rem; color: var(--text-dim);">MP3, WAV & Tách Stems</div>
         </div>
         <div class="stat-card-admin">
-          <div class="stat-card-label">📅 LƯỢT TẢI HÔM NAY</div>
+          <div class="stat-card-label">LƯỢT TẢI HÔM NAY</div>
           <div id="statToday" class="stat-card-num" style="color: #f43f5e;">0</div>
           <div style="font-size: 0.78rem; color: var(--text-dim);">Trong 24 giờ qua</div>
         </div>
@@ -565,7 +565,7 @@
       <!-- ================================================================== -->
       <section id="panePending" style="display:none">
         <div class="filter-panel">
-          <div style="font-size:.9rem;color:#fff;font-weight:700">🔔 Tài Khoản Đăng Ký Chờ Phê Duyệt</div>
+          <div style="font-size:.9rem;color:#fff;font-weight:700">Tài Khoản Đăng Ký Chờ Phê Duyệt</div>
           <div style="font-size:.82rem;color:var(--text-muted)">Xem xét và duyệt từng tài khoản, đồng thời phân quyền tool ngay khi duyệt.</div>
         </div>
         <div class="table-wrapper">
@@ -591,12 +591,12 @@
             <input type="text" id="searchUserKeyword" class="admin-input" placeholder="Tìm họ tên, tài khoản, vai trò..." style="width: 280px;" oninput="renderUsersTable()">
             <select id="filterUserRole" class="admin-select" onchange="renderUsersTable()">
               <option value="">-- Tất cả vai trò --</option>
-              <option value="Quản trị viên">👑 Quản trị viên</option>
-              <option value="Nhân viên">💼 Nhân viên</option>
+              <option value="Quản trị viên">Quản trị viên</option>
+              <option value="Nhân viên">Nhân viên</option>
             </select>
           </div>
           <div style="font-size: 0.84rem; color: var(--text-muted);">
-            🛡️ <i>Quy tắc: Admin được nâng Nhân viên lên Admin & khóa/kích hoạt key. Chỉ riêng Root Admin được xóa quyền Admin.</i>
+            <i>Quy tắc: Admin được nâng Nhân viên lên Admin &amp; khóa/kích hoạt key.</i>
           </div>
         </div>
 
@@ -611,7 +611,7 @@
                 <th style="width: 110px;">Trạng Thái</th>
                 <th style="width: 200px;">Bản Quyền / Key</th>
                 <th style="width: 140px;">Ngày Tạo</th>
-                <th style="text-align: center;">Thao Tác Phân Quyền & Key</th>
+                <th style="text-align: center;">Thao Tác Phân Quyền &amp; Key</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -630,7 +630,7 @@
             <input type="text" id="searchMachineKeyword" class="admin-input" placeholder="Tìm HWID, tên máy, key..." style="width: 280px;" oninput="renderMachinesTable()">
           </div>
           <div style="font-size: 0.84rem; color: var(--text-muted);">
-            💻 Giám sát tất cả máy tính đang sử dụng bản Online
+            Giám sát tất cả máy tính đang sử dụng bản Online
           </div>
         </div>
 
@@ -672,7 +672,7 @@
             <input type="text" id="searchLogKeyword" class="admin-input" placeholder="Tìm tên bài, prompt, key..." style="width: 240px;" oninput="filterAndRenderLogs()">
           </div>
           <button class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="exportCsv()">
-            <span>📥 Xuất file CSV</span>
+            <span>Xuất file CSV</span>
           </button>
         </div>
 
@@ -1001,15 +1001,12 @@
         const isRoot = Boolean(currentUser.isRootAdmin);
         const isAdmin = currentUser.role === 'Quản trị viên';
 
-        if (isRoot) {
-          userRoleBadge.className = 'badge-role badge-root';
-          userRoleBadge.textContent = '👑 CHỦ SỞ HỮU (ROOT)';
-        } else if (isAdmin) {
+        if (isRoot || isAdmin) {
           userRoleBadge.className = 'badge-role badge-admin';
-          userRoleBadge.textContent = '👑 QUẢN TRỊ VIÊN';
+          userRoleBadge.textContent = 'QUẢN TRỊ VIÊN';
         } else {
           userRoleBadge.className = 'badge-role badge-staff';
-          userRoleBadge.textContent = '💼 NHÂN VIÊN';
+          userRoleBadge.textContent = 'NHÂN VIÊN';
         }
 
         if (isAdmin) {
@@ -1231,21 +1228,19 @@
           const isBlocked = u.status === 'blocked';
 
           // Badge vai trò
-          let roleHtml = `<span class="badge-role badge-staff">💼 Nhân viên</span>`;
-          if (isTargetRoot) {
-            roleHtml = `<span class="badge-role badge-root">👑 Quản trị tối cao</span>`;
-          } else if (isTargetAdmin) {
-            roleHtml = `<span class="badge-role badge-admin">👑 Quản trị viên</span>`;
+          let roleHtml = `<span class="badge-role badge-staff">Nhân viên</span>`;
+          if (isTargetRoot || isTargetAdmin) {
+            roleHtml = `<span class="badge-role badge-admin">Quản trị viên</span>`;
           }
 
           // Trạng thái
           let statusHtml;
           if (u.status === 'blocked') {
-            statusHtml = `<span class="badge-status-blocked">🔴 Đã khóa</span>`;
+            statusHtml = `<span class="badge-status-blocked">Đã khóa</span>`;
           } else if (u.status === 'pending') {
-            statusHtml = `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;background:rgba(251,191,36,0.12);border:1px solid #fbbf24;color:#fbbf24;font-size:0.78rem;font-weight:700;">⏳ Chờ duyệt</span>`;
+            statusHtml = `<span style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;background:rgba(251,191,36,0.12);border:1px solid #fbbf24;color:#fbbf24;font-size:0.78rem;font-weight:700;">Chờ duyệt</span>`;
           } else {
-            statusHtml = `<span class="badge-status-active">🟢 Hoạt động</span>`;
+            statusHtml = `<span class="badge-status-active">Hoạt động</span>`;
           }
 
           // Bản quyền
@@ -1254,7 +1249,7 @@
             const expDate = new Date(u.licensedUntil);
             const isLifetime = expDate.getFullYear() >= 2090;
             if (isLifetime) {
-              licenseHtml = `<b style="color: #fbbf24;">⭐ Vĩnh viễn (VIP)</b>`;
+              licenseHtml = `<b style="color: #fbbf24;">Vĩnh viễn (VIP)</b>`;
             } else if (expDate > new Date()) {
               const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
               licenseHtml = `<span style="color: #4ade80;">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
@@ -1272,28 +1267,27 @@
           // 1. Thao tác nâng / hạ quyền
           if (!isTargetRoot) {
             if (!isTargetAdmin) {
-              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">👑 Lên Admin</button> `;
+              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">Lên Admin</button> `;
             } else {
               if (isCurrentRoot) {
-                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">💼 Hạ xuống</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">Hạ xuống</button> `;
               } else {
-                actionsHtml += `<span style="font-size:0.74rem;color:var(--text-dim)" title="Chỉ Root Admin mới được hạ quyền Admin">🔒 Admin</span> `;
+                actionsHtml += `<span style="font-size:0.74rem;color:var(--text-dim)">Admin</span> `;
               }
             }
 
             // 2. Chặn / Mở khóa
             if (!isTargetAdmin) {
               if (isBlocked) {
-                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">🔓 Mở</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">Mở khóa</button> `;
               } else {
-                actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">🔒 Khóa</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">Khóa</button> `;
               }
               // 3. Sửa tool permission
-              const toolsJson = JSON.stringify(u.allowedTools || []).replace(/'/g, "\\'");
-              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})">🛠 Tool</button>`;
+              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})">Tool</button>`;
             }
           } else {
-            actionsHtml = `<span style="font-size:0.75rem;color:#fef08a;font-weight:700;">⭐ Chủ hệ thống</span>`;
+            actionsHtml = `<span style="font-size:0.75rem;color:var(--text-dim);font-weight:600;">—</span>`;
           }
 
           return `
@@ -1417,8 +1411,8 @@
             : (m.hwid || '—');
 
           const roleBadge = m.role === 'Admin'
-            ? `<span class="badge-role badge-admin">👑 ADMIN</span>`
-            : `<span class="badge-role badge-staff">💼 NHÂN VIÊN</span>`;
+            ? `<span class="badge-role badge-admin">Admin</span>`
+            : `<span class="badge-role badge-staff">Nhân viên</span>`;
 
           return `
             <tr>
@@ -1429,7 +1423,7 @@
               <td style="text-align: center; font-weight: 700; color: #fff;">${m.totalDownloads || 0}</td>
               <td style="color: var(--text-dim); font-size: 0.8rem;">${escapeHtml((m.lastSeen || '').substring(0, 19))}</td>
               <td style="text-align: center;">
-                <button class="btn-action-sm btn-license" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">Xem bài tải 🎵</button>
+                <button class="btn-action-sm btn-license" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">Xem bài tải</button>
               </td>
             </tr>
           `;

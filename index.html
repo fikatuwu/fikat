@@ -1207,7 +1207,7 @@ button {
           <!-- Tools Dropdown -->
           <li class="nav-dropdown-wrap" id="toolsDropWrap">
             <button class="nav-link nav-dropdown-btn" id="toolsDropBtn" aria-expanded="false">
-              🛠 Tools
+              Tools
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;transition:transform .2s" id="toolsChevron">
                 <path d="M6 9l6 6 6-6"/>
               </svg>
@@ -1236,7 +1236,7 @@ button {
           <li class="nav-hide-md"><a href="#features" class="nav-link">Tính năng</a></li>
           <li><a href="#packages" class="nav-link">Bản phát hành</a></li>
           <li class="nav-hide-md"><a href="#changelog" class="nav-link">Lịch sử cập nhật</a></li>
-          <li><a href="/admin" id="navAdminLink" class="nav-link" style="color:var(--amber-primary);font-weight:700;display:none;">⚙️ Quản lý</a></li>
+          <li><a href="/admin" id="navAdminLink" class="nav-link" style="color:var(--amber-primary);font-weight:700;display:none;">Quản lý</a></li>
         </ul>
       </nav>
 
@@ -1356,12 +1356,10 @@ button {
         document.getElementById('ddUsername').textContent = '@' + (payload.username || '');
 
         var roleEl = document.getElementById('ddRole');
-        if (payload.isRootAdmin) {
-          roleEl.innerHTML = '<span style="background:rgba(234,179,8,0.15);border:1px solid #eab308;color:#fef08a;padding:2px 8px;border-radius:99px;font-weight:700;">⭐ Root Admin</span>';
-        } else if (payload.role === 'Quản trị viên') {
-          roleEl.innerHTML = '<span style="background:rgba(245,158,11,0.13);border:1px solid #f59e0b;color:#f59e0b;padding:2px 8px;border-radius:99px;font-weight:700;">👑 Quản trị viên</span>';
+        if (payload.isRootAdmin || payload.role === 'Quản trị viên') {
+          roleEl.innerHTML = '<span style="background:rgba(245,158,11,0.13);border:1px solid #f59e0b;color:#f59e0b;padding:2px 8px;border-radius:99px;font-weight:700;">Quản trị viên</span>';
         } else {
-          roleEl.innerHTML = '<span style="background:rgba(56,189,248,0.12);border:1px solid #38bdf8;color:#38bdf8;padding:2px 8px;border-radius:99px;font-weight:700;">💼 Nhân viên</span>';
+          roleEl.innerHTML = '<span style="background:rgba(56,189,248,0.12);border:1px solid #38bdf8;color:#38bdf8;padding:2px 8px;border-radius:99px;font-weight:700;">Nhân viên</span>';
         }
 
         wrap.style.display = 'block';
