@@ -258,17 +258,23 @@
 
     /* Buttons */
     .btn-action-sm {
-      padding: 5px 10px;
+      height: 28px;
+      line-height: 26px;
+      padding: 0 9px;
       border-radius: 6px;
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid transparent;
       transition: all 0.18s ease;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 4px;
       text-decoration: none;
+      box-sizing: border-box;
+      vertical-align: middle;
+      white-space: nowrap;
     }
     .btn-promote {
       background: rgba(245, 158, 11, 0.15);
@@ -307,13 +313,41 @@
       color: #000;
     }
     .btn-license {
-      background: rgba(56, 189, 248, 0.15);
-      border-color: rgba(56, 189, 248, 0.4);
-      color: #38bdf8;
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #c084fc;
     }
     .btn-license:hover {
+      background: #a855f7;
+      color: #fff;
+    }
+    .btn-tool {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+    }
+    .btn-tool:hover {
       background: #38bdf8;
       color: #000;
+    }
+    .btn-history {
+      background: rgba(56, 189, 248, 0.08);
+      border-color: rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+    }
+    .btn-history:hover {
+      background: #38bdf8;
+      color: #000;
+    }
+    .btn-del-account {
+      background: rgba(244, 63, 94, 0.12);
+      border-color: rgba(244, 63, 94, 0.35);
+      color: #f43f5e;
+      padding: 0 8px;
+    }
+    .btn-del-account:hover {
+      background: rgba(244, 63, 94, 0.3);
+      color: #fff;
     }
 
     /* Tags */
@@ -1311,37 +1345,37 @@
           // 1. Thao tác nâng / hạ quyền
           if (!isTargetRoot) {
             if (!isTargetAdmin) {
-              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên')">Lên Admin</button> `;
+              actionsHtml += `<button class="btn-action-sm btn-promote" onclick="changeRole('${u.id}', 'Quản trị viên', '${escapeHtml(u.fullName)}')">QTV</button>`;
             } else {
               if (isCurrentRoot) {
-                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên')">Hạ xuống</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-demote" onclick="changeRole('${u.id}', 'Nhân viên', '${escapeHtml(u.fullName)}')">Hạ quyền</button>`;
               } else {
-                actionsHtml += `<span style="font-size:0.74rem;color:var(--text-dim)">Admin</span> `;
+                actionsHtml += `<span class="btn-action-sm" style="border-color:transparent;color:var(--text-dim);cursor:default;">Admin</span>`;
               }
             }
 
             // 2. Chặn / Mở khóa
             if (!isTargetAdmin) {
               if (isBlocked) {
-                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">Mở khóa</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-unblock" onclick="toggleBlockUser('${u.id}', false)">Mở khóa</button>`;
               } else {
-                actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">Khóa</button> `;
+                actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">Khóa</button>`;
               }
               // 3. Kích hoạt / Cấp Key
-              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}','${escapeHtml(u.fullName)}')" title="Cấp thời hạn bản quyền cho Key của nhân viên này">🔑 Cấp Key</button> `;
+              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}','${escapeHtml(u.fullName)}')" title="Cấp thời hạn bản quyền cho Key của nhân viên này">🔑 Cấp Key</button>`;
               // 4. Sửa tool permission
-              actionsHtml += `<button class="btn-action-sm" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.35);color:#38bdf8;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:0.75rem;" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})" title="Phân quyền tool">🛠️ Tool</button> `;
+              actionsHtml += `<button class="btn-action-sm btn-tool" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})" title="Phân quyền tool">🛠️ Tool</button>`;
             }
 
             // 5. Xem lịch sử Suno
-            actionsHtml += `<button class="btn-action-sm btn-ghost" onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" title="Xem bài hát đã tải trên Suno của người này" style="color:#38bdf8;border-color:rgba(56,189,248,0.35);padding:4px 8px;font-size:0.75rem;margin-right:2px;">🎵 Lịch sử</button> `;
+            actionsHtml += `<button class="btn-action-sm btn-history" onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" title="Xem bài hát đã tải trên Suno của người này">🎵 Lịch sử</button>`;
 
-            // 5. Xóa vĩnh viễn tài khoản (icon thùng rác)
+            // 6. Xóa vĩnh viễn tài khoản (icon thùng rác)
             if (!isTargetAdmin) {
-              actionsHtml += `<button class="btn-action-sm" onclick="deleteUserAccount('${u.id}','${escapeHtml(u.fullName)}')" title="Xóa tài khoản" style="background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.35);color:#f43f5e;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:0.8rem;line-height:1;transition:all .15s" onmouseover="this.style.background='rgba(244,63,94,0.25)'" onmouseout="this.style.background='rgba(244,63,94,0.12)'">🗑️</button>`;
+              actionsHtml += `<button class="btn-action-sm btn-del-account" onclick="deleteUserAccount('${u.id}','${escapeHtml(u.fullName)}')" title="Xóa tài khoản">🗑️</button>`;
             }
           } else {
-            actionsHtml = `<button class="btn-action-sm btn-ghost" onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" title="Xem bài hát đã tải trên Suno của người này" style="color:#38bdf8;border-color:rgba(56,189,248,0.35);padding:4px 8px;font-size:0.75rem;">🎵 Lịch sử</button>`;
+            actionsHtml = `<button class="btn-action-sm btn-history" onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" title="Xem bài hát đã tải trên Suno của người này">🎵 Lịch sử</button>`;
           }
 
           return `
@@ -1367,7 +1401,7 @@
               <td>${statusHtml}</td>
               <td>${licenseHtml}</td>
               <td style="color: var(--text-dim); font-size: 0.78rem;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
-              <td style="text-align: center; white-space: nowrap;">${actionsHtml}</td>
+              <td style="text-align: center; white-space: nowrap;"><div style="display: inline-flex; align-items: center; justify-content: center; gap: 5px;">${actionsHtml}</div></td>
             </tr>
           `;
         }).join('');
@@ -1397,8 +1431,15 @@
         }
       };
 
-      // Đổi vai trò (Nâng lên Admin / Hạ xuống Nhân viên)
-      window.changeRole = async function (targetUserId, newRole) {
+      // Đổi vai trò (Nâng lên QTV / Hạ xuống Nhân viên)
+      window.changeRole = async function (targetUserId, newRole, fullName) {
+        if (newRole === 'Quản trị viên') {
+          const ok = confirm(`Bạn có chắc chắn muốn nâng cấp tài khoản [${fullName || 'này'}] lên Quản trị viên (QTV) không?\n\nQuản trị viên sẽ có toàn quyền quản trị nhân viên và duyệt key bản quyền.`);
+          if (!ok) return;
+        } else if (newRole === 'Nhân viên') {
+          const ok = confirm(`Bạn có chắc chắn muốn hạ quyền tài khoản [${fullName || 'này'}] xuống Nhân viên không?`);
+          if (!ok) return;
+        }
         const token = localStorage.getItem(TOKEN_KEY);
         try {
           const res = await fetch('/api/admin/user/role', {
