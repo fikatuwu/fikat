@@ -4,7 +4,10 @@
  */
 
 function getApiBase() {
-  return '/api/livestream';
+  if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+    return 'http://127.0.0.1:8787/api/livestream';
+  }
+  return 'https://live.fikat.cloud/api/livestream';
 }
 
 const API_BASE = getApiBase();

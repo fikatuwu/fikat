@@ -168,15 +168,6 @@ export default {
       });
     }
 
-    // ── HaloLi Livestream Backend Proxy ─────────────────────────────────────
-    if (pathname.startsWith("/api/livestream")) {
-      const backendUrl = new URL(request.url);
-      backendUrl.hostname = "live.fikat.cloud";
-      backendUrl.port = "";
-      backendUrl.protocol = "https:";
-      return fetch(new Request(backendUrl.toString(), request));
-    }
-
     // ── Version Info API ──────────────────────────────────────────────────────
     if (pathname === "/api/version" && request.method === "GET") {
       return jsonRes({
