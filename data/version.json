@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.3",
+  "currentVersion": "3.4",
   "releaseDate": "2026-09-16",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.3/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.4/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -59,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.4",
+      "date": "16/09/2026",
+      "tag": "Bản phát hành chính thức 3.4",
+      "badge": "latest",
+      "highlights": [
+        "🚀 Cơ chế tự động làm mới phiên bảo mật (Auto Token Refresh): Tự động trích xuất token Clerk JWT mới nhất, giải quyết triệt để lỗi 422 'Token validation failed'",
+        "⚡ Thuật toán kích hoạt nút Tạo nhạc thế hệ mới: Nhận diện thông minh mọi thành phần giao diện tạo nhạc mới của Suno, đồng bộ chính xác prompt vào React state",
+        "🔄 Cơ chế tự phục hồi thông minh (Self-Healing Session): Tự động tải lại ngầm và gửi lại bài mượt mà 100% khi phát hiện phiên bị stale, không làm gián đoạn tiến trình",
+        "🛠️ Nâng cấp nút làm mới 🔄 trên thanh công cụ: Reload lại WebView2 và tái đồng bộ phiên đăng nhập chỉ với 1 click"
+      ]
+    },
+    {
       "version": "3.3",
       "date": "16/09/2026",
-      "tag": "Bản phát hành chính thức 3.3",
-      "badge": "latest",
+      "tag": "Bản phát hành 3.3",
+      "badge": "patch",
       "highlights": [
         "Ẩn hoàn toàn tab Web Suno trên giao diện ứng dụng, mang lại trải nghiệm phần mềm độc lập, gọn gàng và chuyên nghiệp",
         "Khóa cố định phiên tài khoản: Khi đã kết nối Suno, nhấn vào tên tài khoản sẽ không làm nhảy tab Web hay mở popup trình duyệt",
