@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Suno Studio — Hệ Thống Quản Trị & Phân Quyền</title>
+  <title>HaloTo — Hệ Thống Quản Trị & Phân Quyền</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,6 +30,11 @@
       --blue-accent: #38bdf8;
       --green-accent: #22c55e;
       --red-accent: #f43f5e;
+    }
+
+    html {
+      overflow-y: scroll;
+      scrollbar-gutter: stable;
     }
 
     body {
@@ -127,6 +132,8 @@
     .nav-tab-btn {
       background: none;
       border: none;
+      border-bottom: 2px solid transparent;
+      box-sizing: border-box;
       color: var(--text-muted);
       font-size: 0.92rem;
       font-weight: 600;
@@ -136,7 +143,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s ease;
+      transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
       white-space: nowrap;
     }
     .nav-tab-btn:hover {
@@ -147,6 +154,13 @@
       color: var(--amber-primary);
       background: rgba(245, 158, 11, 0.15);
       border-bottom: 2px solid var(--amber-primary);
+    }
+
+    #panePending,
+    #paneUsers,
+    #paneMachines,
+    #paneTelemetry {
+      min-height: 520px;
     }
 
     /* Stats Grid */
@@ -466,7 +480,7 @@
     <div class="auth-card">
       <div style="text-align: center; margin-bottom: 20px;">
         <img src="assets/cat.png" alt="Fikat Cloud" style="width: 52px; height: 52px; object-fit: contain; margin-bottom: 10px;">
-        <h2 style="font-size: 1.4rem; font-weight: 800; color: #fff; margin: 0 0 4px;">Suno Bulk Studio</h2>
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: #fff; margin: 0 0 4px; letter-spacing: -0.01em;">Halo<span style="color: var(--amber-primary); font-weight: 900;">To</span></h2>
         <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">Trung tâm Quản trị & Kích hoạt bản quyền</p>
       </div>
 
@@ -534,7 +548,7 @@
         </a>
         <div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <h1 style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0;">Suno Studio — Quản Trị & Phân Quyền</h1>
+            <h1 style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 0;">Halo<span style="color: var(--amber-primary); font-weight: 900;">To</span> — Quản Trị & Phân Quyền</h1>
             <span id="userRoleBadge" class="badge-role badge-admin">QUẢN TRỊ VIÊN</span>
           </div>
           <p style="font-size: 0.84rem; color: var(--text-muted); margin: 4px 0 0;">
@@ -585,7 +599,7 @@
         <div class="stat-card-admin">
           <div class="stat-card-label">MÁY TÍNH KẾT NỐI (HWID)</div>
           <div id="statMachines" class="stat-card-num" style="color: var(--amber-primary);">0</div>
-          <div style="font-size: 0.78rem; color: var(--text-dim);">Thiết bị đã chạy Suno Studio</div>
+          <div style="font-size: 0.78rem; color: var(--text-dim);">Thiết bị đã chạy Halo<b style="color: var(--amber-primary); font-weight: 800;">To</b></div>
         </div>
         <div class="stat-card-admin">
           <div class="stat-card-label">TỔNG BÀI ĐÃ TẢI</div>
@@ -772,7 +786,7 @@
               Xin chào, <span id="staffFullName" style="color: var(--amber-primary);">...</span> 👋
             </h2>
             <p style="font-size: 0.88rem; color: var(--text-muted); margin: 0;">
-              Chào mừng bạn đến với Cổng thông tin Nhân viên — Suno Bulk Studio.
+              Chào mừng bạn đến với Cổng thông tin Nhân viên — Halo<b style="color: var(--amber-primary); font-weight: 800;">To</b>.
             </p>
           </div>
           <span class="badge-role badge-staff">💼 TÀI KHOẢN NHÂN VIÊN</span>
@@ -1994,7 +2008,7 @@
       function renderStaffLogs(logs) {
         const tbody = document.getElementById('staffLogsTableBody');
         if (!logs || logs.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Bạn chưa tải bài hát nào qua ứng dụng Suno Bulk Studio.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 30px;">Bạn chưa tải bài hát nào qua ứng dụng HaloTo.</td></tr>`;
           return;
         }
 
