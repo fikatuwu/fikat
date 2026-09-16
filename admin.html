@@ -1203,10 +1203,16 @@
       };
 
       // ── Tool Edit Modal ──
-      window.openToolEditModal = function(id, fullName, allowedTools) {
+      window.openToolEditModal = function(id) {
         toolEditUserId = id;
+        const user = (rawUsersList || []).find(u => u.id === id);
+        const fullName = user ? user.fullName : '';
         document.getElementById('toolEditUserDesc').textContent = `Sửa quyền tool cho: ${fullName}`;
-        const tools = Array.isArray(allowedTools) ? allowedTools : [];
+        let tools = user ? user.allowedTools : [];
+        if (typeof tools === 'string') {
+          try { tools = JSON.parse(tools); } catch(e) { tools = []; }
+        }
+        if (!Array.isArray(tools)) tools = [];
         document.getElementById('editToolCheck_suno').checked = tools.includes('suno-bulk-studio');
         document.getElementById('editToolCheck_random').checked = tools.includes('tool-random-nhac');
         document.getElementById('toolEditModal').style.display = 'flex';
@@ -1364,7 +1370,7 @@
               // 3. Kích hoạt / Cấp Key
               actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}','${escapeHtml(u.fullName)}')" title="Cấp thời hạn bản quyền cho Key của nhân viên này">🔑 Cấp Key</button>`;
               // 4. Sửa tool permission
-              actionsHtml += `<button class="btn-action-sm btn-tool" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})" title="Phân quyền tool">🛠️ Tool</button>`;
+              actionsHtml += `<button class="btn-action-sm btn-tool" onclick="openToolEditModal('${u.id}')" title="Phân quyền tool">🛠️ Tool</button>`;
             }
 
             // 5. Xem lịch sử Suno
