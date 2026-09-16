@@ -639,13 +639,13 @@
             <thead>
               <tr>
                 <th style="width: 45px;">#</th>
-                <th style="width: 170px;">Họ Và Tên</th>
-                <th style="width: 130px;">Tài Khoản</th>
-                <th style="width: 160px;">Vai Trò</th>
-                <th style="width: 110px;">Trạng Thái</th>
-                <th style="width: 200px;">Bản Quyền / Key</th>
-                <th style="width: 140px;">Ngày Tạo</th>
-                <th style="text-align: center;">Thao Tác Phân Quyền &amp; Key</th>
+                <th style="white-space: nowrap; min-width: 160px;">Họ Và Tên</th>
+                <th style="white-space: nowrap; min-width: 120px;">Tài Khoản</th>
+                <th style="white-space: nowrap; min-width: 130px;">Vai Trò</th>
+                <th style="white-space: nowrap; min-width: 110px;">Trạng Thái</th>
+                <th style="white-space: nowrap; min-width: 280px;">Bản Quyền / Key</th>
+                <th style="white-space: nowrap; min-width: 130px;">Ngày Tạo</th>
+                <th style="text-align: center; white-space: nowrap; min-width: 260px;">Thao Tác Phân Quyền &amp; Key</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -1328,22 +1328,24 @@
           }
 
           // Bản quyền
-          let licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: var(--text-dim); font-size: 0.8rem; cursor: pointer; text-decoration: underline dotted;" title="Bấm để cấp thời hạn cho Key">Chưa kích hoạt 🔑</span>`;
+          let licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: var(--text-dim); font-size: 0.8rem; cursor: pointer; text-decoration: underline dotted; white-space: nowrap;" title="Bấm để cấp thời hạn cho Key">Chưa kích hoạt 🔑</span>`;
           if (u.licensedUntil) {
             const expDate = new Date(u.licensedUntil);
             const isLifetime = expDate.getFullYear() >= 2090;
             if (isLifetime) {
-              licenseHtml = `<b onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #fbbf24; cursor: pointer;" title="Bấm để thay đổi hạn dùng">Vĩnh viễn (VIP)</b>`;
+              licenseStatus = `<b onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #fbbf24; cursor: pointer; white-space: nowrap;" title="Bấm để thay đổi hạn dùng">Vĩnh viễn (VIP)</b>`;
             } else if (expDate > new Date()) {
               const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
-              licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #4ade80; cursor: pointer;" title="Bấm để gia hạn">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
+              licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #4ade80; cursor: pointer; white-space: nowrap;" title="Bấm để gia hạn">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
             } else {
-              licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #f43f5e; cursor: pointer;" title="Bấm để gia hạn">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
+              licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #f43f5e; cursor: pointer; white-space: nowrap;" title="Bấm để gia hạn">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
             }
           }
+          let licenseHtml = `<div style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">${licenseStatus}`;
           if (u.licenseKey) {
-            licenseHtml += `<div style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); margin-top: 2px;">Key: ${escapeHtml(u.licenseKey)}</div>`;
+            licenseHtml += `<span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 4px; white-space: nowrap;">Key: ${escapeHtml(u.licenseKey)}</span>`;
           }
+          licenseHtml += `</div>`;
 
           // Thao tác phân quyền & key
           let actionsHtml = '';
@@ -1387,26 +1389,26 @@
           return `
             <tr>
               <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
-              <td style="font-weight: 700; color: #fff;">
+              <td style="font-weight: 700; color: #fff; white-space: nowrap;">
                 <span onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" 
                       title="Nhấn để xem toàn bộ bài hát đã tải của ${escapeHtml(u.fullName)}" 
-                      style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: color .15s;" 
+                      style="cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: color .15s; white-space: nowrap;" 
                       onmouseover="this.style.color='#38bdf8'" 
                       onmouseout="this.style.color='#fff'">
                   ${escapeHtml(u.fullName || '—')} <span style="font-size: 0.72rem; color: #38bdf8; opacity: 0.85;">🔍</span>
                 </span>
               </td>
-              <td style="font-family: var(--font-mono); color: var(--amber-primary); font-size: 0.84rem;">
+              <td style="font-family: var(--font-mono); color: var(--amber-primary); font-size: 0.84rem; white-space: nowrap;">
                 <span onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" 
                       title="Nhấn để xem lịch sử tải của @${escapeHtml(u.username)}" 
-                      style="cursor: pointer; text-decoration: underline dotted var(--amber-primary);">
+                      style="cursor: pointer; text-decoration: underline dotted var(--amber-primary); white-space: nowrap;">
                   @${escapeHtml(u.username)}
                 </span>
               </td>
-              <td>${roleHtml}</td>
-              <td>${statusHtml}</td>
-              <td>${licenseHtml}</td>
-              <td style="color: var(--text-dim); font-size: 0.78rem;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
+              <td style="white-space: nowrap;">${roleHtml}</td>
+              <td style="white-space: nowrap;">${statusHtml}</td>
+              <td style="white-space: nowrap;">${licenseHtml}</td>
+              <td style="color: var(--text-dim); font-size: 0.78rem; white-space: nowrap;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
               <td style="text-align: center; white-space: nowrap;"><div style="display: inline-flex; align-items: center; justify-content: center; gap: 5px;">${actionsHtml}</div></td>
             </tr>
           `;
