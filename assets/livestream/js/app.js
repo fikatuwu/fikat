@@ -4,12 +4,7 @@
  */
 
 function getApiBase() {
-  const customHost = localStorage.getItem('fikat_livestream_endpoint');
-  if (customHost) return customHost.replace(/\/+$/, '') + '/api/livestream';
-  if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-    return '/api/livestream';
-  }
-  return 'http://127.0.0.1:8787/api/livestream';
+  return '/api/livestream';
 }
 
 const API_BASE = getApiBase();
