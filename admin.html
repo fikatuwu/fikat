@@ -41,9 +41,11 @@
     }
 
     .admin-container {
-      max-width: 1400px;
+      max-width: 100%;
+      width: 100%;
+      box-sizing: border-box;
       margin: 0 auto;
-      padding: 24px 20px 80px;
+      padding: 16px 20px 80px;
     }
 
     /* Header */
@@ -198,24 +200,25 @@
       width: 100%;
       border-collapse: collapse;
       text-align: left;
-      font-size: 0.86rem;
+      font-size: 0.83rem;
     }
     .admin-table th {
       background: rgba(245, 158, 11, 0.08);
       color: var(--amber-primary);
       font-weight: 700;
-      padding: 14px 16px;
+      padding: 10px 8px;
       border-bottom: 1px solid var(--border-subtle);
       white-space: nowrap;
-      font-size: 0.8rem;
+      font-size: 0.76rem;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
     }
     .admin-table td {
-      padding: 13px 16px;
+      padding: 9px 8px;
       border-bottom: 1px solid rgba(245, 158, 11, 0.08);
       color: var(--text-main);
       vertical-align: middle;
+      font-size: 0.82rem;
     }
     .admin-table tr:hover td {
       background: rgba(245, 158, 11, 0.03);
@@ -258,11 +261,11 @@
 
     /* Buttons */
     .btn-action-sm {
-      height: 28px;
-      line-height: 26px;
-      padding: 0 9px;
-      border-radius: 6px;
-      font-size: 0.76rem;
+      height: 25px;
+      line-height: 23px;
+      padding: 0 6px;
+      border-radius: 5px;
+      font-size: 0.72rem;
       font-weight: 600;
       cursor: pointer;
       border: 1px solid transparent;
@@ -270,7 +273,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 4px;
+      gap: 3px;
       text-decoration: none;
       box-sizing: border-box;
       vertical-align: middle;
@@ -638,14 +641,14 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width: 45px;">#</th>
-                <th style="white-space: nowrap; min-width: 160px;">Họ Và Tên</th>
-                <th style="white-space: nowrap; min-width: 120px;">Tài Khoản</th>
-                <th style="white-space: nowrap; min-width: 130px;">Vai Trò</th>
-                <th style="white-space: nowrap; min-width: 110px;">Trạng Thái</th>
-                <th style="white-space: nowrap; min-width: 280px;">Bản Quyền / Key</th>
-                <th style="white-space: nowrap; min-width: 130px;">Ngày Tạo</th>
-                <th style="text-align: center; white-space: nowrap; min-width: 260px;">Thao Tác Phân Quyền &amp; Key</th>
+                <th style="width: 32px; text-align: center;">#</th>
+                <th style="white-space: nowrap;">Họ Và Tên</th>
+                <th style="white-space: nowrap;">Tài Khoản</th>
+                <th style="white-space: nowrap;">Vai Trò</th>
+                <th style="white-space: nowrap;">Trạng Thái</th>
+                <th style="white-space: nowrap;">Bản Quyền / Key</th>
+                <th style="white-space: nowrap;">Ngày Tạo</th>
+                <th style="text-align: center; white-space: nowrap;">Thao Tác Phân Quyền &amp; Key</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
@@ -672,13 +675,13 @@
           <table class="admin-table">
             <thead>
               <tr>
-                <th style="width: 45px;">#</th>
-                <th style="width: 200px;">Mã Máy (HWID)</th>
-                <th style="width: 180px;">Nhân Viên / Key</th>
-                <th style="width: 120px;">Vai Trò</th>
-                <th style="width: 110px; text-align: center;">Tổng Bài</th>
-                <th style="width: 160px;">Lần Cuối Tải</th>
-                <th style="text-align: center; width: 140px;">Lịch Sử</th>
+                <th style="width: 32px; text-align: center;">#</th>
+                <th style="white-space: nowrap;">Mã Máy (HWID)</th>
+                <th style="white-space: nowrap;">Nhân Viên / Key</th>
+                <th style="white-space: nowrap;">Vai Trò</th>
+                <th style="white-space: nowrap; text-align: center;">Tổng Bài</th>
+                <th style="white-space: nowrap;">Lần Cuối Tải</th>
+                <th style="text-align: center; white-space: nowrap;">Lịch Sử</th>
               </tr>
             </thead>
             <tbody id="machinesTableBody">
@@ -1341,9 +1344,9 @@
               licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #f43f5e; cursor: pointer; white-space: nowrap;" title="Bấm để gia hạn">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
             }
           }
-          let licenseHtml = `<div style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">${licenseStatus}`;
+          let licenseHtml = `<div style="white-space: nowrap; line-height: 1.35;"><div>${licenseStatus}</div>`;
           if (u.licenseKey) {
-            licenseHtml += `<span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 4px; white-space: nowrap;">Key: ${escapeHtml(u.licenseKey)}</span>`;
+            licenseHtml += `<div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber-primary); white-space: nowrap; margin-top: 1px;">Key: ${escapeHtml(u.licenseKey)}</div>`;
           }
           licenseHtml += `</div>`;
 
@@ -1388,7 +1391,7 @@
 
           return `
             <tr>
-              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
+              <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.78rem; text-align: center;">${idx + 1}</td>
               <td style="font-weight: 700; color: #fff; white-space: nowrap;">
                 <span onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" 
                       title="Nhấn để xem toàn bộ bài hát đã tải của ${escapeHtml(u.fullName)}" 
@@ -1398,7 +1401,7 @@
                   ${escapeHtml(u.fullName || '—')} <span style="font-size: 0.72rem; color: #38bdf8; opacity: 0.85;">🔍</span>
                 </span>
               </td>
-              <td style="font-family: var(--font-mono); color: var(--amber-primary); font-size: 0.84rem; white-space: nowrap;">
+              <td style="font-family: var(--font-mono); color: var(--amber-primary); font-size: 0.82rem; white-space: nowrap;">
                 <span onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" 
                       title="Nhấn để xem lịch sử tải của @${escapeHtml(u.username)}" 
                       style="cursor: pointer; text-decoration: underline dotted var(--amber-primary); white-space: nowrap;">
@@ -1408,8 +1411,8 @@
               <td style="white-space: nowrap;">${roleHtml}</td>
               <td style="white-space: nowrap;">${statusHtml}</td>
               <td style="white-space: nowrap;">${licenseHtml}</td>
-              <td style="color: var(--text-dim); font-size: 0.78rem; white-space: nowrap;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
-              <td style="text-align: center; white-space: nowrap;"><div style="display: inline-flex; align-items: center; justify-content: center; gap: 5px;">${actionsHtml}</div></td>
+              <td style="color: var(--text-dim); font-size: 0.75rem; white-space: nowrap;">${escapeHtml((u.createdAt || '').substring(0, 16))}</td>
+              <td style="text-align: center; white-space: nowrap;"><div style="display: inline-flex; align-items: center; justify-content: center; gap: 3px;">${actionsHtml}</div></td>
             </tr>
           `;
         }).join('');
