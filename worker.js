@@ -138,6 +138,32 @@ export default {
       return env.ASSETS.fetch(new Request(new URL("/admin.html", request.url), request));
     }
 
+    // ── Version Info API ──────────────────────────────────────────────────────
+    if (pathname === "/api/version" && request.method === "GET") {
+      return jsonRes({
+        appId: "suno-bulk-studio",
+        name: "Suno Bulk Studio",
+        currentVersion: "3.2",
+        releaseDate: "16/09/2026",
+        status: "stable",
+        statusText: "Hoạt động ổn định",
+        download: {
+          zipFile: "Suno_Bulk_Downloader.zip",
+          fileName: "Suno_Bulk_Downloader.zip",
+          directUrl: "https://github.com/fikatuwu/fikat/releases/download/v3.2/Suno_Bulk_Downloader.zip",
+          fileSize: "116.8 MB",
+          architecture: "Windows x64 (Win 10 / 11)"
+        },
+        highlights: [
+          "🚀 Tái cấu trúc bộ xử lý âm thanh Native Direct Stream: Lưu nhạc MP3 từ Suno tức thì 0ms, bảo tồn 100% chất lượng gốc không nén lại",
+          "🛠️ Khắc phục triệt để lỗi FFmpeg mã 69 [mp3float Header missing] bằng bộ nhận diện định dạng âm thanh chuyên sâu 8 lớp (DetectAudioContainer)",
+          "🧹 Tự động dọn dẹp file hỏng: Xóa sạch ngay lập tức file rác dở dang < 50KB, loại bỏ hoàn toàn tình trạng sinh ra các file 00s/01s và duplicate _2, _3, _4",
+          "📥 Tích hợp tính năng Tải bản cập nhật trực tiếp ngay trong ứng dụng kèm thanh tiến trình siêu tốc và nút mở chạy ngay",
+          "🔄 Đồng bộ hóa toàn diện các cải tiến cho cả hai phiên bản Online v3.2 và Offline Studio v2.0"
+        ]
+      });
+    }
+
     // ========================================================================
     // PHẦN 1: AUTHENTICATION
     // ========================================================================
