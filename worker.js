@@ -152,14 +152,14 @@ export default {
       return jsonRes({
         appId: "suno-bulk-studio",
         name: "Suno Bulk Studio",
-        currentVersion: "3.4",
+        currentVersion: "3.5",
         releaseDate: "16/09/2026",
         status: "stable",
         statusText: "Hoạt động ổn định",
         download: {
           zipFile: "Suno_Bulk_Downloader.zip",
           fileName: "Suno_Bulk_Downloader.zip",
-          directUrl: "https://github.com/fikatuwu/fikat/releases/download/v3.4/Suno_Bulk_Downloader.zip",
+          directUrl: "https://github.com/fikatuwu/fikat/releases/download/v3.5/Suno_Bulk_Downloader.zip",
           fileSize: "116.9 MB",
           architecture: "Windows x64 (Win 10 / 11)"
         },

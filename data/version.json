@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.4",
+  "currentVersion": "3.5",
   "releaseDate": "2026-09-16",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.4/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.5/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -59,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.5",
+      "date": "16/09/2026",
+      "tag": "Bản phát hành chính thức 3.5",
+      "badge": "latest",
+      "highlights": [
+        "🪙 Đưa nút Credit Suno trực quan trở lại thanh công cụ: Tự động đồng bộ số dư credit theo thời gian thực (hỗ trợ đọc từ React root store, DOM và Suno Billing API). Bấm vào để xem phân tích số bài hát và số lượt bóc tách stem khả dụng.",
+        "⚠️ Cảnh báo tự động hết Credit trước khi tạo nhạc: Tự động kiểm tra số dư credit (< 10 credit) trước khi gửi bài và trong suốt quá trình chạy hàng loạt, loại bỏ triệt để tình trạng bị Suno bỏ qua sau 60s.",
+        "🔄 Tối ưu luồng Feed Polling & đồng bộ ID clip: Cập nhật cơ chế quét feed sang các endpoint Suno mới nhất (/api/feed/v3, /api/feed/), khắc phục hoàn toàn lỗi kẹt clip tạm thời.",
+        "🏷️ Đồng bộ nhận diện thương hiệu HaloTo chuyên nghiệp, tinh tế."
+      ]
+    },
+    {
       "version": "3.4",
       "date": "16/09/2026",
-      "tag": "Bản phát hành chính thức 3.4",
-      "badge": "latest",
+      "tag": "Bản phát hành 3.4",
+      "badge": "patch",
       "highlights": [
         "🚀 Cơ chế tự động làm mới phiên bảo mật (Auto Token Refresh): Tự động trích xuất token Clerk JWT mới nhất, giải quyết triệt để lỗi 422 'Token validation failed'",
         "⚡ Thuật toán kích hoạt nút Tạo nhạc thế hệ mới: Nhận diện thông minh mọi thành phần giao diện tạo nhạc mới của Suno, đồng bộ chính xác prompt vào React state",
