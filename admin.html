@@ -1336,7 +1336,7 @@
             const expDate = new Date(u.licensedUntil);
             const isLifetime = expDate.getFullYear() >= 2090;
             if (isLifetime) {
-              licenseStatus = `<b onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #fbbf24; cursor: pointer; white-space: nowrap;" title="Bấm để thay đổi hạn dùng">Vĩnh viễn (VIP)</b>`;
+              licenseStatus = `<b onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #fbbf24; cursor: pointer; white-space: nowrap;" title="Bấm để thay đổi hạn dùng">Vĩnh viễn</b>`;
             } else if (expDate > new Date()) {
               const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
               licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #4ade80; cursor: pointer; white-space: nowrap;" title="Bấm để gia hạn">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
