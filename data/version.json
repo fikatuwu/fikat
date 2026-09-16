@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.2",
+  "currentVersion": "3.3",
   "releaseDate": "2026-09-16",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.2/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.3/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -59,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.3",
+      "date": "16/09/2026",
+      "tag": "Bản phát hành chính thức 3.3",
+      "badge": "latest",
+      "highlights": [
+        "Ẩn hoàn toàn tab Web Suno trên giao diện ứng dụng, mang lại trải nghiệm phần mềm độc lập, gọn gàng và chuyên nghiệp",
+        "Khóa cố định phiên tài khoản: Khi đã kết nối Suno, nhấn vào tên tài khoản sẽ không làm nhảy tab Web hay mở popup trình duyệt",
+        "Cửa sổ đăng nhập độc lập: Tích hợp cửa sổ đăng nhập Suno riêng biệt, tự động đồng bộ cookie và token bảo mật",
+        "Kế thừa toàn bộ hệ thống In-App Auto-Update v3.2: Tự động tải bản mới và cập nhật tức thì khi thoát ra vào lại"
+      ]
+    },
+    {
       "version": "3.2",
       "date": "16/09/2026",
       "tag": "Đại bản phát hành 3.2 (Cập nhật lớn)",
-      "badge": "latest",
+      "badge": "feature",
       "highlights": [
         "📥 Tự động tải và cập nhật trực tiếp trong app (In-App Self-Update): Tải siêu tốc trong app kèm thanh tiến trình và % hoàn thành, không cần mở Chrome",
         "⚡ Cơ chế Zero-Click Update: Chỉ cần thoát app ra vào lại hoặc bấm 'Khởi động lại ngay' là hệ thống tự động thay thế bản mới tức thì",
