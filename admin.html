@@ -780,7 +780,9 @@
       <div class="auth-input-group">
         <label class="auth-label">Thời hạn bản quyền:</label>
         <select id="selectLicenseDays" class="admin-select" style="width: 100%;">
-          <option value="30">30 Ngày (1 Tháng)</option>
+          <option value="3">3 Ngày (Dùng thử)</option>
+          <option value="7">7 Ngày (1 Tuần)</option>
+          <option value="30" selected>30 Ngày (1 Tháng)</option>
           <option value="90">90 Ngày (3 Tháng)</option>
           <option value="180">180 Ngày (6 Tháng)</option>
           <option value="365">365 Ngày (1 Năm)</option>
@@ -1286,17 +1288,17 @@
           }
 
           // Bản quyền
-          let licenseHtml = `<span style="color: var(--text-dim); font-size: 0.8rem;">Chưa kích hoạt</span>`;
+          let licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: var(--text-dim); font-size: 0.8rem; cursor: pointer; text-decoration: underline dotted;" title="Bấm để cấp thời hạn cho Key">Chưa kích hoạt 🔑</span>`;
           if (u.licensedUntil) {
             const expDate = new Date(u.licensedUntil);
             const isLifetime = expDate.getFullYear() >= 2090;
             if (isLifetime) {
-              licenseHtml = `<b style="color: #fbbf24;">Vĩnh viễn (VIP)</b>`;
+              licenseHtml = `<b onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #fbbf24; cursor: pointer;" title="Bấm để thay đổi hạn dùng">Vĩnh viễn (VIP)</b>`;
             } else if (expDate > new Date()) {
               const diffDays = Math.ceil((expDate - new Date()) / (1000 * 3600 * 24));
-              licenseHtml = `<span style="color: #4ade80;">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
+              licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #4ade80; cursor: pointer;" title="Bấm để gia hạn">Còn ${diffDays} ngày (${u.licensedUntil.substring(0, 10)})</span>`;
             } else {
-              licenseHtml = `<span style="color: #f43f5e;">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
+              licenseHtml = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #f43f5e; cursor: pointer;" title="Bấm để gia hạn">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
             }
           }
           if (u.licenseKey) {
@@ -1325,11 +1327,13 @@
               } else {
                 actionsHtml += `<button class="btn-action-sm btn-block" onclick="toggleBlockUser('${u.id}', true)">Khóa</button> `;
               }
-              // 3. Sửa tool permission
-              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})">Tool</button> `;
+              // 3. Kích hoạt / Cấp Key
+              actionsHtml += `<button class="btn-action-sm btn-license" onclick="openLicenseModal('${u.id}','${escapeHtml(u.fullName)}')" title="Cấp thời hạn bản quyền cho Key của nhân viên này">🔑 Cấp Key</button> `;
+              // 4. Sửa tool permission
+              actionsHtml += `<button class="btn-action-sm" style="background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.35);color:#38bdf8;padding:4px 8px;border-radius:6px;cursor:pointer;font-size:0.75rem;" onclick="openToolEditModal('${u.id}','${escapeHtml(u.fullName)}',${JSON.stringify(u.allowedTools||[])})" title="Phân quyền tool">🛠️ Tool</button> `;
             }
 
-            // 4. Xem lịch sử Suno
+            // 5. Xem lịch sử Suno
             actionsHtml += `<button class="btn-action-sm btn-ghost" onclick="filterLogsByUser('${escapeHtml(u.username)}', '${escapeHtml(u.fullName)}')" title="Xem bài hát đã tải trên Suno của người này" style="color:#38bdf8;border-color:rgba(56,189,248,0.35);padding:4px 8px;font-size:0.75rem;margin-right:2px;">🎵 Lịch sử</button> `;
 
             // 5. Xóa vĩnh viễn tài khoản (icon thùng rác)

@@ -423,7 +423,7 @@ export default {
         if (!target) return jsonRes({ ok: false, message: "Không tìm thấy người dùng." }, 404);
 
         let untilDate;
-        if (days === -1) {
+        if (days === -1 || days >= 9000) {
           untilDate = new Date("2099-12-31T23:59:59.000Z");
         } else {
           const currentExpiry = target.licensedUntil ? new Date(target.licensedUntil) : new Date();
