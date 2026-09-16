@@ -1227,6 +1227,13 @@ button {
                   <span class="ndi-sub">Trộn & ghép playlist ngẫu nhiên</span>
                 </span>
               </a>
+              <a href="/livestream" class="nav-drop-item" data-tool="haloli-livestream">
+                <span class="ndi-icon">📡</span>
+                <span>
+                  <span class="ndi-title">HaloLi Livestream</span>
+                  <span class="ndi-sub">Phát HLS/RTMP YouTube 24/7</span>
+                </span>
+              </a>
               <div id="toolsEmptyNotice" style="display:none;padding:14px 16px;color:var(--text-muted);font-size:0.82rem;text-align:center;line-height:1.5;">
                 🔒 Bạn chưa được cấp quyền tải tool nào.<br>
                 <span style="color:var(--text-dim);font-size:0.75rem;">Vui lòng liên hệ Admin để được cấp tool.</span>
@@ -1369,15 +1376,18 @@ button {
           var tools = Array.isArray(allowedTools) ? allowedTools : [];
           var hasSuno = isAdmin || tools.indexOf('suno-bulk-studio') !== -1;
           var hasRandom = isAdmin || tools.indexOf('tool-random-nhac') !== -1;
+          var hasLivestream = isAdmin || tools.indexOf('haloli-livestream') !== -1;
 
           // 1. Dropdown items
           var itemSuno = document.querySelector('.nav-drop-item[data-tool="suno-bulk-studio"]');
           var itemRandom = document.querySelector('.nav-drop-item[data-tool="tool-random-nhac"]');
+          var itemLivestream = document.querySelector('.nav-drop-item[data-tool="haloli-livestream"]');
           var emptyNotice = document.getElementById('toolsEmptyNotice');
 
           if (itemSuno) itemSuno.style.display = hasSuno ? 'flex' : 'none';
           if (itemRandom) itemRandom.style.display = hasRandom ? 'flex' : 'none';
-          if (emptyNotice) emptyNotice.style.display = (!hasSuno && !hasRandom) ? 'block' : 'none';
+          if (itemLivestream) itemLivestream.style.display = hasLivestream ? 'flex' : 'none';
+          if (emptyNotice) emptyNotice.style.display = (!hasSuno && !hasRandom && !hasLivestream) ? 'block' : 'none';
 
           // 2. Hàm khóa nút tải
           function lockBtn(el, toolName) {

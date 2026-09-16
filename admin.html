@@ -908,10 +908,16 @@
             <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎵 Suno Bulk Studio</span>
           </span>
         </label>
-        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer">
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer;margin-bottom:8px">
           <input type="checkbox" id="editToolCheck_random" value="tool-random-nhac" style="width:16px;height:16px;accent-color:#f59e0b">
           <span>
             <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">🎲 Tool Random Nhạc</span>
+          </span>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);cursor:pointer">
+          <input type="checkbox" id="editToolCheck_livestream" value="haloli-livestream" style="width:16px;height:16px;accent-color:#f59e0b">
+          <span>
+            <span style="display:block;font-size:.86rem;font-weight:700;color:#fff">📡 HaloLi Livestream YouTube</span>
           </span>
         </label>
       </div>
@@ -1261,6 +1267,7 @@
         if (!Array.isArray(tools)) tools = [];
         document.getElementById('editToolCheck_suno').checked = tools.includes('suno-bulk-studio');
         document.getElementById('editToolCheck_random').checked = tools.includes('tool-random-nhac');
+        document.getElementById('editToolCheck_livestream').checked = tools.includes('haloli-livestream');
         document.getElementById('toolEditModal').style.display = 'flex';
       };
       window.closeToolEditModal = function() { document.getElementById('toolEditModal').style.display = 'none'; };
@@ -1269,6 +1276,7 @@
         const tools = [];
         if (document.getElementById('editToolCheck_suno').checked) tools.push('suno-bulk-studio');
         if (document.getElementById('editToolCheck_random').checked) tools.push('tool-random-nhac');
+        if (document.getElementById('editToolCheck_livestream').checked) tools.push('haloli-livestream');
         const token = localStorage.getItem(TOKEN_KEY);
         try {
           const res = await fetch('/api/admin/user/tools', {

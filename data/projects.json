@@ -45,5 +45,28 @@
       "⚡ Tối ưu FFmpeg Lossless: Nối nhạc và ghép video trực tiếp không encode lại hình ảnh",
       "📦 Bộ nhớ Meta ID chống lặp bài: Tự động gom các bài đã chọn vào thư mục DA DUNG"
     ]
+  },
+  {
+    "id": "haloli-livestream",
+    "name": "HaloLi Livestream YouTube",
+    "category": "livestream-automation",
+    "categoryLabel": "Livestream & Cloud VPS",
+    "version": "1.0.0",
+    "updatedAt": "16/09/2026",
+    "status": "active",
+    "featured": true,
+    "shortDesc": "Hệ thống phát trực tiếp HLS / RTMP tự động lên YouTube 24/7 từ Google Drive qua Service Account, điều khiển cụm VPS đa điểm và phát trực tiếp từ máy cục bộ hoàn toàn miễn phí.",
+    "techStack": ["Python FastAPI", "FFmpeg HLS/RTMP", "Google Drive API", "Cloudflare Worker", "Tailwind CSS"],
+    "badge": "Mới ra mắt",
+    "downloadUrl": "/livestream",
+    "hasLiveUpdates": true,
+    "highlights": [
+      "📡 Phát trực tiếp HLS & RTMP lên YouTube Studio ổn định 24/7",
+      "📁 Đồng bộ không giới hạn từ Google Drive bằng Google Service Account riêng",
+      "🖥️ Quản lý & giám sát cụm VPS đa máy chủ (CPU, RAM, Ổ cứng thời gian thực)",
+      "💻 Hỗ trợ phát trực tiếp từ máy tính cục bộ (Local Free) 0 đồng chi phí",
+      "🎵 Tính năng chèn Intro, lặp vô hạn, trộn nhạc nền tự động (Mix / Replace 40%)",
+      "📱 Hỗ trợ đầy đủ luồng ngang (16:9) và luồng dọc (9:16 Shorts)"
+    ]
   }
 ]

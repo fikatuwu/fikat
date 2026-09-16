@@ -146,6 +146,18 @@ export default {
         headers: newHeaders
       });
     }
+    if (pathname === "/livestream" || pathname === "/livestream/" || pathname === "/livestream.html") {
+      const assetResp = await env.ASSETS.fetch(new Request(new URL("/livestream.html", request.url), request));
+      const newHeaders = new Headers(assetResp.headers);
+      newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      newHeaders.set("Pragma", "no-cache");
+      newHeaders.set("Expires", "0");
+      return new Response(assetResp.body, {
+        status: assetResp.status,
+        statusText: assetResp.statusText,
+        headers: newHeaders
+      });
+    }
 
     // ── Version Info API ──────────────────────────────────────────────────────
     if (pathname === "/api/version" && request.method === "GET") {
@@ -214,7 +226,7 @@ export default {
           : `NV-${generateRandomHex(4).toUpperCase()}-${generateRandomHex(4).toUpperCase()}`;
         const licensedUntil = isRootAdmin ? "2099-12-31T23:59:59.000Z" : null;
         const status = isRootAdmin ? "active" : "pending";
-        const allowedTools = isRootAdmin ? '["suno-bulk-studio","tool-random-nhac"]' : '[]';
+        const allowedTools = isRootAdmin ? '["suno-bulk-studio","tool-random-nhac","haloli-livestream"]' : '[]';
 
         await env.DB.prepare(`
           INSERT INTO users (id, fullName, username, passwordHash, salt, role, isRootAdmin, status, allowedTools, licenseKey, licensedUntil, hwid, createdAt, updatedAt)
@@ -318,7 +330,7 @@ export default {
             role: "Quản trị viên",
             isRootAdmin: true,
             status: "active",
-            allowedTools: ["suno-bulk-studio", "tool-random-nhac"]
+            allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream"]
           };
           const token = await createAuthToken(fakeRoot);
           return jsonRes({ ok: true, token, user: sanitizeUser(fakeRoot) });
@@ -891,7 +903,7 @@ async function getAuthenticatedUser(request, env) {
       role: "Quản trị viên",
       isRootAdmin: true,
       status: "active",
-      allowedTools: ["suno-bulk-studio", "tool-random-nhac"]
+      allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream"]
     };
   }
 
