@@ -436,9 +436,8 @@ export default {
         if (days === -1 || days >= 9000) {
           untilDate = new Date("2099-12-31T23:59:59.000Z");
         } else {
-          const currentExpiry = target.licensedUntil ? new Date(target.licensedUntil) : new Date();
-          const baseTime = currentExpiry > new Date() ? currentExpiry.getTime() : Date.now();
-          untilDate = new Date(baseTime + days * 24 * 3600 * 1000);
+          // Tính thẳng từ thời điểm hiện tại (không cộng dồn vào hạn cũ)
+          untilDate = new Date(Date.now() + days * 24 * 3600 * 1000);
         }
 
         let licenseKey = target.licenseKey;
