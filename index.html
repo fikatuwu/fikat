@@ -1509,22 +1509,26 @@ button {
             <span id="cardVersionChip" class="version-chip">v3.2 • STABLE</span>
           </div>
 
-          <ul class="feature-bullets">
+          <ul class="feature-bullets" id="cardFeatureBullets">
             <li class="feature-bullet">
-              <span class="bullet-icon">✓</span>
-              <span><strong>Theo dõi Credit Suno:</strong> Hiển thị số dư trực quan, ước tính số bài hát và lượt tách stem khả dụng.</span>
+              <span class="bullet-icon">🚀</span>
+              <span><strong>Native Direct Stream (0ms):</strong> Lưu nhạc MP3 trực tiếp tức thì từ CDN Suno, bảo toàn 100% chất lượng gốc không nén lại qua FFmpeg.</span>
             </li>
             <li class="feature-bullet">
-              <span class="bullet-icon">✓</span>
-              <span><strong>Dừng tức thì:</strong> Ngắt ngay lập tức mọi tiến trình quét, tải & tạo nhạc khi ấn Dừng.</span>
+              <span class="bullet-icon">🛠️</span>
+              <span><strong>Triệt tiêu lỗi FFmpeg 69:</strong> Nhận diện định dạng âm thanh 8 lớp (DetectAudioContainer), chống giải mã nhầm stream CDN chưa mã hóa.</span>
             </li>
             <li class="feature-bullet">
-              <span class="bullet-icon">✓</span>
-              <span><strong>Quản lý phiên & Đa tài khoản:</strong> Cách ly session, chống xung đột cookie và crash.</span>
+              <span class="bullet-icon">🧹</span>
+              <span><strong>Tự động dọn sạch file lỗi 00s / 01s:</strong> Cơ chế tự xóa ngay lập tức file rác dở dang &lt; 50KB khi lỗi mạng, chấm dứt file trùng tên _2, _3.</span>
             </li>
             <li class="feature-bullet">
-              <span class="bullet-icon">✓</span>
-              <span><strong>Tách Stems 12 tracks:</strong> Bóc tách Vocal, Beat, xuất MIDI & nén ZIP trọn bộ.</span>
+              <span class="bullet-icon">📥</span>
+              <span><strong>Tải cập nhật trực tiếp trong App:</strong> Tự phát hiện bản mới, tải file cập nhật siêu tốc kèm thanh tiến trình (%) và mở ngay không qua web.</span>
+            </li>
+            <li class="feature-bullet">
+              <span class="bullet-icon">🪙</span>
+              <span><strong>Theo dõi Credit &amp; Bóc tách Stems 12 tracks:</strong> Hiển thị số dư thời gian thực, bóc tách Vocal/Beat, xuất MIDI &amp; nén ZIP trọn bộ.</span>
             </li>
           </ul>
 
@@ -1536,13 +1540,13 @@ button {
               </span>
               <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--amber-primary); font-weight: 700;">Portable 100%</span>
             </div>
-            <a id="cardDownloadBtn" href="https://github.com/fikatuwu/fikat/releases/download/v3.1/Suno_Bulk_Downloader.zip" class="btn-primary" style="width: 100%; justify-content: center;" download>
+            <a id="cardDownloadBtn" href="https://github.com/fikatuwu/fikat/releases/download/v3.2/Suno_Bulk_Downloader.zip" class="btn-primary" style="width: 100%; justify-content: center;" download>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Tải File Cài Đặt v3.1 (.ZIP)</span>
+              <span>Tải File Cài Đặt v3.2 (.ZIP)</span>
             </a>
             <div class="download-details">
               <span>Bản sạch virus, đã mã hóa Obfuscar</span>
@@ -2064,6 +2068,20 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
     }, 20000);
   });
 
+  function isNewerVersion(v1, v2) {
+    if (!v1 || !v2) return false;
+    const p1 = String(v1).replace(/^[vV\.\s]+/, '').split('.').map(n => parseInt(n, 10) || 0);
+    const p2 = String(v2).replace(/^[vV\.\s]+/, '').split('.').map(n => parseInt(n, 10) || 0);
+    const len = Math.max(p1.length, p2.length);
+    for (let i = 0; i < len; i++) {
+      const n1 = p1[i] || 0;
+      const n2 = p2[i] || 0;
+      if (n1 > n2) return true;
+      if (n1 < n2) return false;
+    }
+    return false;
+  }
+
   /* --------------------------------------------------------------------------
      Helper: Fetch latest release from GitHub API or local JSON fallback
      -------------------------------------------------------------------------- */
@@ -2078,7 +2096,7 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
       }
     } catch (e) {}
 
-    // 2. Query GitHub Releases API for real-time release info (always up to date)
+    // 2. Query GitHub Releases API for real-time release info (only override if newer)
     try {
       const ghRes = await fetch('https://api.github.com/repos/fikatuwu/fikat/releases/latest', {
         headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -2089,7 +2107,8 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
         const cleanVer = rawTag.replace(/^[vV]\.?/, '');
         const zipAsset = (gh.assets || []).find(a => (a.name || '').endsWith('.zip')) || (gh.assets || [])[0];
         
-        if (cleanVer) {
+        const currentBaseVer = (data && data.currentVersion) ? data.currentVersion : '0.0';
+        if (cleanVer && isNewerVersion(cleanVer, currentBaseVer)) {
           if (!data) data = {};
           data.currentVersion = cleanVer;
           if (gh.published_at) {
@@ -2147,14 +2166,38 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
       if (heroDownloadBtn) {
         heroDownloadBtn.href = downloadPath;
         heroDownloadBtn.setAttribute('download', fileName);
+        const span = heroDownloadBtn.querySelector('span');
+        if (span) span.textContent = `Tải Bản Cập Nhật v${data.currentVersion} (.ZIP)`;
       }
       if (cardDownloadBtn) {
         cardDownloadBtn.href = downloadPath;
         cardDownloadBtn.setAttribute('download', fileName);
+        const span = cardDownloadBtn.querySelector('span');
+        if (span) span.textContent = `Tải File Cài Đặt v${data.currentVersion} (.ZIP)`;
       }
       if (toastDownloadBtn) {
         toastDownloadBtn.href = downloadPath;
         toastDownloadBtn.setAttribute('download', fileName);
+      }
+
+      // Update card feature bullets dynamically if changelog highlights exist
+      const cardBulletsEl = document.getElementById('cardFeatureBullets');
+      if (cardBulletsEl && data.changelog && data.changelog[0] && Array.isArray(data.changelog[0].highlights)) {
+        cardBulletsEl.innerHTML = data.changelog[0].highlights.map(h => {
+          let title = '';
+          let desc = h;
+          const colonIdx = h.indexOf(':');
+          if (colonIdx > 0) {
+            title = h.substring(0, colonIdx + 1);
+            desc = h.substring(colonIdx + 1).trim();
+          }
+          return `
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span>${title ? `<strong>${title}</strong> ` : ''}${desc}</span>
+            </li>
+          `;
+        }).join('');
       }
 
       // Render Changelog

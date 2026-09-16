@@ -37,6 +37,20 @@
     }, 20000);
   });
 
+  function isNewerVersion(v1, v2) {
+    if (!v1 || !v2) return false;
+    const p1 = String(v1).replace(/^[vV\.\s]+/, '').split('.').map(n => parseInt(n, 10) || 0);
+    const p2 = String(v2).replace(/^[vV\.\s]+/, '').split('.').map(n => parseInt(n, 10) || 0);
+    const len = Math.max(p1.length, p2.length);
+    for (let i = 0; i < len; i++) {
+      const n1 = p1[i] || 0;
+      const n2 = p2[i] || 0;
+      if (n1 > n2) return true;
+      if (n1 < n2) return false;
+    }
+    return false;
+  }
+
   /* --------------------------------------------------------------------------
      Helper: Fetch latest release from GitHub API or local JSON fallback
      -------------------------------------------------------------------------- */
@@ -51,7 +65,7 @@
       }
     } catch (e) {}
 
-    // 2. Query GitHub Releases API for real-time release info (always up to date)
+    // 2. Query GitHub Releases API for real-time release info (only override if newer)
     try {
       const ghRes = await fetch('https://api.github.com/repos/fikatuwu/fikat/releases/latest', {
         headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -62,7 +76,8 @@
         const cleanVer = rawTag.replace(/^[vV]\.?/, '');
         const zipAsset = (gh.assets || []).find(a => (a.name || '').endsWith('.zip')) || (gh.assets || [])[0];
         
-        if (cleanVer) {
+        const currentBaseVer = (data && data.currentVersion) ? data.currentVersion : '0.0';
+        if (cleanVer && isNewerVersion(cleanVer, currentBaseVer)) {
           if (!data) data = {};
           data.currentVersion = cleanVer;
           if (gh.published_at) {
@@ -120,14 +135,38 @@
       if (heroDownloadBtn) {
         heroDownloadBtn.href = downloadPath;
         heroDownloadBtn.setAttribute('download', fileName);
+        const span = heroDownloadBtn.querySelector('span');
+        if (span) span.textContent = `Tải Bản Cập Nhật v${data.currentVersion} (.ZIP)`;
       }
       if (cardDownloadBtn) {
         cardDownloadBtn.href = downloadPath;
         cardDownloadBtn.setAttribute('download', fileName);
+        const span = cardDownloadBtn.querySelector('span');
+        if (span) span.textContent = `Tải File Cài Đặt v${data.currentVersion} (.ZIP)`;
       }
       if (toastDownloadBtn) {
         toastDownloadBtn.href = downloadPath;
         toastDownloadBtn.setAttribute('download', fileName);
+      }
+
+      // Update card feature bullets dynamically if changelog highlights exist
+      const cardBulletsEl = document.getElementById('cardFeatureBullets');
+      if (cardBulletsEl && data.changelog && data.changelog[0] && Array.isArray(data.changelog[0].highlights)) {
+        cardBulletsEl.innerHTML = data.changelog[0].highlights.map(h => {
+          let title = '';
+          let desc = h;
+          const colonIdx = h.indexOf(':');
+          if (colonIdx > 0) {
+            title = h.substring(0, colonIdx + 1);
+            desc = h.substring(colonIdx + 1).trim();
+          }
+          return `
+            <li class="feature-bullet">
+              <span class="bullet-icon">✓</span>
+              <span>${title ? `<strong>${title}</strong> ` : ''}${desc}</span>
+            </li>
+          `;
+        }).join('');
       }
 
       // Render Changelog
