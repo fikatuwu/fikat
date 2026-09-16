@@ -58,7 +58,8 @@
     "shortDesc": "Hệ thống phát trực tiếp HLS / RTMP tự động lên YouTube 24/7 từ Google Drive qua Service Account, điều khiển cụm VPS đa điểm và phát trực tiếp từ máy cục bộ hoàn toàn miễn phí.",
     "techStack": ["Python FastAPI", "FFmpeg HLS/RTMP", "Google Drive API", "Cloudflare Worker", "Tailwind CSS"],
     "badge": "Mới ra mắt",
-    "downloadUrl": "/livestream",
+    "webUrl": "/livestream",
+    "actionText": "Truy cập ➔",
     "hasLiveUpdates": true,
     "highlights": [
       "📡 Phát trực tiếp HLS & RTMP lên YouTube Studio ổn định 24/7",

@@ -3,8 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NGUYỄN HỮU PHI — Suno Bulk Studio</title>
-  <meta name="description" content="Portfolio các công cụ tự động hóa sáng tạo nội dung, AI Music và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <title>HaloTo — Hệ Sinh Thái Công Cụ Tự Động Hóa</title>
+  <meta name="description" content="HaloTo — Hệ sinh thái công cụ tự động hóa sáng tạo nội dung, AI Music, Livestream YouTube và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://fikat.cloud/">
+  <meta property="og:title" content="HaloTo — Hệ Sinh Thái Công Cụ Tự Động Hóa">
+  <meta property="og:description" content="HaloTo — Hệ sinh thái công cụ tự động hóa sáng tạo nội dung, AI Music, Livestream YouTube và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <meta property="og:image" content="https://fikat.cloud/assets/cat-square.png">
+  <meta property="og:site_name" content="HaloTo">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://fikat.cloud/">
+  <meta name="twitter:title" content="HaloTo — Hệ Sinh Thái Công Cụ Tự Động Hóa">
+  <meta name="twitter:description" content="HaloTo — Hệ sinh thái công cụ tự động hóa sáng tạo nội dung, AI Music, Livestream YouTube và xử lý media hàng loạt. Cập nhật phiên bản realtime.">
+  <meta name="twitter:image" content="https://fikat.cloud/assets/cat-square.png">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="shortcut icon" href="assets/favicon.png">
   <link rel="apple-touch-icon" href="assets/cat-square.png">
@@ -2097,7 +2108,7 @@ button {
       </div>
 
       <div class="footer-copy">
-        © 2026 HaloTo. Tất cả các quyền được bảo lưu. Phát triển bởi Nguyễn Hữu Phi.
+        © 2026 HaloTo. Tất cả các quyền được bảo lưu.
       </div>
     </div>
   </footer>
@@ -2387,9 +2398,11 @@ window.__INITIAL_PROJECTS__ = [{"id":"suno-bulk-studio","name":"Suno Bulk Studio
         </div>
         <div class="card-footer">
           <span style="font-size: 0.8rem; color: var(--text-dim);">${escapeHtml(p.categoryLabel || '')}</span>
-          ${p.downloadUrl && p.downloadUrl !== '#'
-            ? `<a href="${p.downloadUrl}" class="card-link" download>Tải về ⬇</a>`
-            : `<a href="#featured" class="card-link">Chi tiết ➔</a>`
+          ${p.webUrl || p.id === 'haloli-livestream'
+            ? `<a href="${p.webUrl || '/livestream'}" class="card-link" style="color: var(--amber-primary, #f59e0b); font-weight: 600;">${escapeHtml(p.actionText || 'Truy cập ➔')}</a>`
+            : (p.downloadUrl && p.downloadUrl !== '#'
+                ? `<a href="${p.downloadUrl}" class="card-link" download>Tải về ⬇</a>`
+                : `<a href="${p.linkUrl || '#featured'}" class="card-link">Chi tiết ➔</a>`)
           }
         </div>
       `;
