@@ -132,7 +132,16 @@ export default {
 
     // ── Static routes ────────────────────────────────────────────────────────
     if (pathname === "/" || pathname === "/index.html") {
-      return env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
+      const assetResp = await env.ASSETS.fetch(new Request(new URL("/index.html", request.url), request));
+      const newHeaders = new Headers(assetResp.headers);
+      newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      newHeaders.set("Pragma", "no-cache");
+      newHeaders.set("Expires", "0");
+      return new Response(assetResp.body, {
+        status: assetResp.status,
+        statusText: assetResp.statusText,
+        headers: newHeaders
+      });
     }
     if (pathname === "/admin" || pathname === "/admin/" || pathname === "/admin.html") {
       const assetResp = await env.ASSETS.fetch(new Request(new URL("/admin.html", request.url), request));
