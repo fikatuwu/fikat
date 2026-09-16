@@ -546,6 +546,63 @@ export default {
       }
     }
 
+    // 2.9 POST /api/admin/machine/assign (Gán máy HWID cho Nhân viên)
+    if (pathname === "/api/admin/machine/assign" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Quản trị viên mới có quyền gán máy." }, 403);
+        }
+        const body = await request.json();
+        const hwid = (body.hwid || "").trim();
+        const targetUserId = (body.targetUserId || "").trim();
+
+        if (!hwid) return jsonRes({ ok: false, message: "Thiếu mã máy HWID." }, 400);
+
+        const target = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(targetUserId).first();
+        if (!target) return jsonRes({ ok: false, message: "Không tìm thấy tài khoản nhân viên." }, 404);
+
+        const vnTime = getVnTime();
+
+        // 1. Gán HWID vào user
+        await env.DB.prepare("UPDATE users SET hwid = ?, updatedAt = ? WHERE id = ?")
+          .bind(hwid, vnTime, target.id).run();
+
+        // 2. Cập nhật bảng hwids
+        await env.DB.prepare(`
+          INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(hwid) DO UPDATE SET
+            username = excluded.username,
+            fullName = excluded.fullName,
+            licenseKey = excluded.licenseKey,
+            role = excluded.role
+        `).bind(
+          hwid,
+          target.licenseKey || target.fullName,
+          target.username,
+          target.fullName,
+          target.role === "Quản trị viên" ? "Admin" : "Nhân viên",
+          vnTime,
+          vnTime
+        ).run();
+
+        // 3. Cập nhật tên nhân viên cho toàn bộ logs của máy này
+        await env.DB.prepare(`
+          UPDATE logs 
+          SET fullName = ?, username = ?, userId = ?, licenseKey = ?
+          WHERE hwid = ?
+        `).bind(target.fullName, target.username, target.id, target.licenseKey || target.fullName, hwid).run();
+
+        return jsonRes({
+          ok: true,
+          message: `Đã liên kết máy [${hwid.length > 14 ? hwid.substring(0, 10) + '...' : hwid}] cho nhân viên [${target.fullName}]!`,
+        });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
     // ========================================================================
     // PHẦN 3: TELEMETRY & GIÁM SÁT LỊCH SỬ TẢI NHẠC
     // ========================================================================
@@ -558,7 +615,7 @@ export default {
         const licenseKey = (payload.licenseKey || "").trim() || "Free / Trial";
         const rawRole = (payload.role || "").trim().toLowerCase();
         const role = (rawRole === "admin" || licenseKey.toLowerCase().includes("admin")) ? "Admin" : "Nhân viên";
-        const appVersion = (payload.appVersion || "3.1").trim();
+        const appVersion = (payload.appVersion || "3.2").trim();
         const items = Array.isArray(payload.items) ? payload.items : [];
 
         // Kiểm tra xem máy hoặc key có bị admin chặn không
@@ -581,18 +638,34 @@ export default {
         const nowIso = new Date().toISOString();
         const vnTime = getVnTime();
 
-        // Tìm nhân viên sở hữu key này
-        const ownerUser = await env.DB.prepare("SELECT id, username, fullName FROM users WHERE licenseKey = ?").bind(licenseKey).first();
+        // Tìm nhân viên sở hữu máy (HWID) hoặc licenseKey
+        let ownerUser = null;
+        if (hwid && hwid !== "UNKNOWN_HWID") {
+          ownerUser = await env.DB.prepare("SELECT id, username, fullName, licenseKey FROM users WHERE hwid = ? AND hwid != ''").bind(hwid).first();
+        }
+        if (!ownerUser && licenseKey && licenseKey !== "Free / Trial" && !licenseKey.startsWith("DESKTOP-")) {
+          ownerUser = await env.DB.prepare("SELECT id, username, fullName, licenseKey FROM users WHERE licenseKey = ? AND licenseKey != ''").bind(licenseKey).first();
+        }
+        if (!ownerUser && hwid) {
+          const m = await env.DB.prepare("SELECT username, fullName, licenseKey FROM hwids WHERE hwid = ? AND fullName != '' AND fullName NOT LIKE 'DESKTOP-%'").bind(hwid).first();
+          if (m) ownerUser = m;
+        }
+
+        const finalName = ownerUser?.fullName || "";
+        const finalUsername = ownerUser?.username || "";
+        const finalKey = ownerUser?.licenseKey || (licenseKey.startsWith("DESKTOP-") ? "Suno Client" : licenseKey);
 
         // Lưu / cập nhật HWID
         await env.DB.prepare(`
           INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
           VALUES (?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(hwid) DO UPDATE SET
-            licenseKey = excluded.licenseKey,
+            licenseKey = CASE WHEN excluded.licenseKey != '' AND excluded.licenseKey NOT LIKE 'DESKTOP-%' THEN excluded.licenseKey ELSE hwids.licenseKey END,
+            username = CASE WHEN excluded.username != '' THEN excluded.username ELSE hwids.username END,
+            fullName = CASE WHEN excluded.fullName != '' THEN excluded.fullName ELSE hwids.fullName END,
             lastSeen = excluded.lastSeen,
             role = excluded.role
-        `).bind(hwid, licenseKey, ownerUser?.username || "", ownerUser?.fullName || "", role, vnTime, vnTime).run();
+        `).bind(hwid, finalKey, finalUsername, finalName, role, vnTime, vnTime).run();
 
         // Batch insert logs
         const insertStmt = env.DB.prepare(`
@@ -602,10 +675,10 @@ export default {
 
         const batch = items.map(item => insertStmt.bind(
           hwid,
-          licenseKey,
+          finalKey,
           ownerUser?.id || "",
-          ownerUser?.username || "",
-          ownerUser?.fullName || "",
+          finalUsername,
+          finalName,
           item.clipId || "",
           item.title || "Chưa có tên bài",
           item.prompt || "",
@@ -651,8 +724,28 @@ export default {
         });
       }
 
-      const { results: hwidList } = await env.DB.prepare("SELECT * FROM hwids ORDER BY lastSeen DESC").all();
-      const { results: logs } = await env.DB.prepare("SELECT * FROM logs ORDER BY id DESC LIMIT 2000").all();
+      // Lấy danh sách máy kèm tên nhân viên liên kết
+      const { results: hwidList } = await env.DB.prepare(`
+        SELECT 
+          h.*,
+          COALESCE(NULLIF(h.fullName, ''), u.fullName, '') as resolvedFullName,
+          COALESCE(NULLIF(h.username, ''), u.username, '') as resolvedUsername
+        FROM hwids h
+        LEFT JOIN users u ON (h.hwid = u.hwid AND u.hwid != '') OR (h.licenseKey = u.licenseKey AND u.licenseKey != '')
+        ORDER BY h.lastSeen DESC
+      `).all();
+
+      // Lấy danh sách lịch sử tải kèm tên nhân viên đã giải mã
+      const { results: logs } = await env.DB.prepare(`
+        SELECT 
+          l.*,
+          COALESCE(NULLIF(l.fullName, ''), u.fullName, h.fullName, '') as resolvedFullName,
+          COALESCE(NULLIF(l.username, ''), u.username, h.username, '') as resolvedUsername
+        FROM logs l
+        LEFT JOIN users u ON (l.hwid = u.hwid AND u.hwid != '') OR (l.licenseKey = u.licenseKey AND u.licenseKey != '')
+        LEFT JOIN hwids h ON l.hwid = h.hwid
+        ORDER BY l.id DESC LIMIT 2000
+      `).all();
 
       const today = new Date().toISOString().substring(0, 10);
       const totalMachines = (hwidList || []).length;

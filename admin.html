@@ -640,7 +640,7 @@
               <tr>
                 <th style="width: 45px;">#</th>
                 <th style="width: 200px;">Mã Máy (HWID)</th>
-                <th style="width: 160px;">Tên / License Key</th>
+                <th style="width: 180px;">Nhân Viên / Key</th>
                 <th style="width: 120px;">Vai Trò</th>
                 <th style="width: 110px; text-align: center;">Tổng Bài</th>
                 <th style="width: 160px;">Lần Cuối Tải</th>
@@ -669,7 +669,7 @@
               <option value="WAV">WAV</option>
               <option value="Stem">Stems</option>
             </select>
-            <input type="text" id="searchLogKeyword" class="admin-input" placeholder="Tìm tên bài, prompt, key..." style="width: 240px;" oninput="filterAndRenderLogs()">
+            <input type="text" id="searchLogKeyword" class="admin-input" placeholder="Tìm tên bài, prompt, key, nhân viên..." style="width: 240px;" oninput="filterAndRenderLogs()">
           </div>
           <button class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="exportCsv()">
             <span>Xuất file CSV</span>
@@ -683,7 +683,7 @@
                 <th style="width: 45px;">#</th>
                 <th style="width: 150px;">Thời Gian</th>
                 <th style="width: 160px;">Mã Máy (HWID)</th>
-                <th style="width: 130px;">Key / Khách</th>
+                <th style="width: 180px;">Nhân Viên (Tài Khoản)</th>
                 <th>Tên Bài Hát & Tags</th>
                 <th style="width: 280px;">Prompt</th>
                 <th style="width: 90px;">Định Dạng</th>
@@ -818,6 +818,27 @@
       </div>
     </div>
   </div>
+
+  <!-- Assign Machine Modal -->
+  <div id="assignMachineModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9998;align-items:center;justify-content:center">
+    <div style="background:#0f0c08;border:1px solid rgba(245,158,11,0.4);border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 24px 60px rgba(0,0,0,0.85)">
+      <h3 style="margin:0 0 6px;color:#fff;font-size:1.1rem;">👤 Gán Máy HWID Cho Nhân Viên</h3>
+      <p id="assignMachineDesc" style="color:var(--text-muted);font-size:.84rem;margin:0 0 16px;line-height:1.5"></p>
+      <div style="margin-bottom:18px">
+        <label style="display:block;font-size:.8rem;color:var(--text-dim);margin-bottom:6px;font-weight:600;">CHỌN NHÂN VIÊN SỞ HỮU MÁY:</label>
+        <select id="selectAssignUser" class="admin-select" style="width:100%;padding:10px;font-size:.88rem;">
+        </select>
+      </div>
+      <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 14px;margin-bottom:20px;font-size:.8rem;color:#fde68a;">
+        💡 Sau khi lưu, toàn bộ lịch sử tải của mã máy này sẽ lập tức hiển thị tên và tài khoản nhân viên đã chọn!
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button onclick="closeAssignMachineModal()" class="btn-ghost" style="padding:8px 16px;font-size:.84rem">Hủy</button>
+        <button id="btnSubmitAssign" onclick="submitAssignMachine()" class="btn-primary" style="padding:8px 20px;font-size:.84rem">💾 Lưu Liên Kết</button>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ====================================================================== -->
   <!-- JAVASCRIPT XỬ LÝ TOÀN BỘ LOGIC PHÂN QUYỀN & DỮ LIỆU -->
@@ -1441,11 +1462,36 @@
             ? `<span class="badge-role badge-admin">Admin</span>`
             : `<span class="badge-role badge-staff">Nhân viên</span>`;
 
+          // Tên nhân viên sở hữu máy
+          let empName = (m.resolvedFullName || m.fullName || '').trim();
+          let empUser = (m.resolvedUsername || m.username || '').trim();
+          if (!empName || empName.startsWith('DESKTOP-')) {
+            const u = rawUsersList.find(usr => 
+              (usr.hwid && usr.hwid === m.hwid) || 
+              (usr.licenseKey && usr.licenseKey === m.licenseKey)
+            );
+            if (u) { empName = u.fullName; empUser = u.username; }
+          }
+
+          let machineOwnerHtml = '';
+          if (empName && !empName.startsWith('DESKTOP-')) {
+            machineOwnerHtml = `
+              <div><b style="color: #fff; font-size: 0.88rem;">${escapeHtml(empName)}</b></div>
+              ${empUser ? `<div style="font-size: 0.75rem; color: var(--amber-primary); font-family: var(--font-mono);">@${escapeHtml(empUser)}</div>` : ''}
+              <button class="btn-action-sm btn-license" style="font-size: 0.7rem; padding: 2px 6px; margin-top: 4px;" onclick="openAssignMachineModal('${escapeHtml(m.hwid)}', '${escapeHtml(empName)}')">👤 Đổi NV</button>
+            `;
+          } else {
+            machineOwnerHtml = `
+              <div style="color: var(--amber-primary); font-weight: 600; font-size: 0.84rem;">${escapeHtml(m.licenseKey || 'Free')}</div>
+              <button class="btn-action-sm btn-promote" style="font-size: 0.72rem; padding: 2px 8px; margin-top: 4px;" onclick="openAssignMachineModal('${escapeHtml(m.hwid)}')">👤 Gán nhân viên</button>
+            `;
+          }
+
           return `
             <tr>
               <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
               <td><span class="hwid-badge" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">${escapeHtml(shortHwid)}</span></td>
-              <td style="color: var(--amber-primary); font-weight: 600;">${escapeHtml(m.licenseKey || 'Free')}</td>
+              <td>${machineOwnerHtml}</td>
               <td>${roleBadge}</td>
               <td style="text-align: center; font-weight: 700; color: #fff;">${m.totalDownloads || 0}</td>
               <td style="color: var(--text-dim); font-size: 0.8rem;">${escapeHtml((m.lastSeen || '').substring(0, 19))}</td>
@@ -1466,7 +1512,9 @@
           const opt = document.createElement('option');
           opt.value = m.hwid;
           const short = m.hwid.length > 14 ? m.hwid.substring(0, 10) + '...' : m.hwid;
-          opt.textContent = `${short} [${m.licenseKey || 'Free'}]`;
+          const name = m.resolvedFullName || m.fullName;
+          const label = (name && !name.startsWith('DESKTOP-')) ? `${short} [${name}]` : `${short} [${m.licenseKey || 'Free'}]`;
+          opt.textContent = label;
           if (m.hwid === currentVal) opt.selected = true;
           select.appendChild(opt);
         });
@@ -1491,7 +1539,9 @@
             const matchTitle = (item.title || '').toLowerCase().includes(keyword);
             const matchPrompt = (item.prompt || '').toLowerCase().includes(keyword);
             const matchKey = (item.licenseKey || '').toLowerCase().includes(keyword);
-            if (!matchTitle && !matchPrompt && !matchKey) return false;
+            const matchName = ((item.resolvedFullName || item.fullName || '')).toLowerCase().includes(keyword);
+            const matchUser = ((item.resolvedUsername || item.username || '')).toLowerCase().includes(keyword);
+            if (!matchTitle && !matchPrompt && !matchKey && !matchName && !matchUser) return false;
           }
           return true;
         });
@@ -1513,6 +1563,40 @@
 
           const sunoLink = item.clipId ? `https://suno.com/song/${item.clipId}` : '#';
 
+          // Tìm tên nhân viên sở hữu máy / key này
+          let empName = (item.resolvedFullName || item.fullName || '').trim();
+          let empUser = (item.resolvedUsername || item.username || '').trim();
+
+          if (!empName || empName.startsWith('DESKTOP-') || empName === 'Khách') {
+            const u = rawUsersList.find(usr => 
+              (usr.hwid && usr.hwid === item.hwid) || 
+              (usr.licenseKey && usr.licenseKey === item.licenseKey)
+            );
+            if (u) {
+              empName = u.fullName;
+              empUser = u.username;
+            } else {
+              const m = rawMachinesList.find(mc => mc.hwid === item.hwid);
+              if (m && (m.resolvedFullName || m.fullName) && !(m.resolvedFullName || m.fullName).startsWith('DESKTOP-')) {
+                empName = m.resolvedFullName || m.fullName;
+                empUser = m.resolvedUsername || m.username;
+              }
+            }
+          }
+
+          let staffHtml = '';
+          if (empName && !empName.startsWith('DESKTOP-')) {
+            staffHtml = `
+              <div><b style="color: #fff; font-size: 0.88rem;">${escapeHtml(empName)}</b></div>
+              ${empUser ? `<div style="font-size: 0.74rem; color: var(--amber-primary); font-family: var(--font-mono); margin-top: 1px;">@${escapeHtml(empUser)}</div>` : ''}
+            `;
+          } else {
+            staffHtml = `
+              <div style="font-size: 0.82rem; color: #fbbf24; font-weight: 600;">${escapeHtml(item.licenseKey || 'Chưa gán')}</div>
+              <button class="btn-action-sm btn-license" style="font-size: 0.7rem; padding: 2px 6px; margin-top: 3px;" onclick="openAssignMachineModal('${escapeHtml(item.hwid)}')">+ Gán nhân viên</button>
+            `;
+          }
+
           return `
             <tr>
               <td style="color: var(--text-dim); font-family: var(--font-mono); font-size: 0.8rem;">${idx + 1}</td>
@@ -1520,7 +1604,7 @@
                 ${escapeHtml(item.timeVn || (item.timestamp || '').substring(0, 19).replace('T', ' '))}
               </td>
               <td><span class="hwid-badge" onclick="filterLogsByHwid('${escapeHtml(item.hwid)}')">${escapeHtml(shortHwid)}</span></td>
-              <td style="font-size: 0.84rem; color: #f59e0b; font-weight: 600;">${escapeHtml(item.licenseKey || 'Free')}</td>
+              <td>${staffHtml}</td>
               <td>
                 <div style="font-weight: 700; color: #fff;">${escapeHtml(item.title || 'Không rõ')}</div>
                 <div style="font-size: 0.76rem; color: var(--text-dim);">${escapeHtml(item.tags || '')}</div>
@@ -1539,23 +1623,88 @@
         }).join('');
       };
 
+      // ── Assign Machine Modal Handlers ──
+      let activeAssignHwid = null;
+
+      window.openAssignMachineModal = function(hwid, currentName = '') {
+        activeAssignHwid = hwid;
+        const short = hwid.length > 16 ? hwid.substring(0, 10) + '...' + hwid.slice(-6) : hwid;
+        document.getElementById('assignMachineDesc').innerHTML = `Gán mã máy HWID: <b style="color:var(--amber-primary);font-family:var(--font-mono);">${escapeHtml(short)}</b> cho nhân viên trong hệ thống:`;
+        
+        const sel = document.getElementById('selectAssignUser');
+        sel.innerHTML = '<option value="">-- Chọn nhân viên sở hữu máy này --</option>';
+        rawUsersList.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = `${u.fullName} (@${u.username}) [${u.role}]`;
+          if (currentName && u.fullName === currentName) opt.selected = true;
+          sel.appendChild(opt);
+        });
+
+        document.getElementById('assignMachineModal').style.display = 'flex';
+      };
+
+      window.closeAssignMachineModal = function() {
+        document.getElementById('assignMachineModal').style.display = 'none';
+        activeAssignHwid = null;
+      };
+
+      window.submitAssignMachine = async function() {
+        if (!activeAssignHwid) return;
+        const targetUserId = document.getElementById('selectAssignUser').value;
+        if (!targetUserId) {
+          alert('Vui lòng chọn một nhân viên!');
+          return;
+        }
+
+        const token = localStorage.getItem(TOKEN_KEY);
+        const btn = document.getElementById('btnSubmitAssign');
+        if (btn) { btn.disabled = true; btn.textContent = 'Đang lưu...'; }
+
+        try {
+          const res = await fetch('/api/admin/machine/assign', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ hwid: activeAssignHwid, targetUserId })
+          });
+          const data = await res.json();
+          closeAssignMachineModal();
+          if (data.ok) {
+            showToast(data.message || 'Đã liên kết nhân viên thành công!', 'success');
+            await loadAdminDashboard();
+          } else {
+            showToast(data.message || 'Lỗi liên kết', 'error');
+          }
+        } catch (e) {
+          showToast('Lỗi kết nối: ' + e.message, 'error');
+        } finally {
+          if (btn) { btn.disabled = false; btn.textContent = '💾 Lưu Liên Kết'; }
+        }
+      };
+
       window.exportCsv = function () {
         if (!rawLogsList || rawLogsList.length === 0) {
           alert('Không có dữ liệu để xuất CSV.');
           return;
         }
-        const headers = ['STT', 'Thời Gian', 'Mã Máy (HWID)', 'License Key', 'Tên Bài Hát', 'Thể Loại', 'Prompt', 'Định Dạng', 'Clip ID'];
-        const rows = rawLogsList.map((item, idx) => [
-          idx + 1,
-          `"${(item.timeVn || item.timestamp || '').replace(/"/g, '""')}"`,
-          `"${(item.hwid || '').replace(/"/g, '""')}"`,
-          `"${(item.licenseKey || '').replace(/"/g, '""')}"`,
-          `"${(item.title || '').replace(/"/g, '""')}"`,
-          `"${(item.tags || '').replace(/"/g, '""')}"`,
-          `"${(item.prompt || '').replace(/"/g, '""')}"`,
-          `"${(item.actionType || '').replace(/"/g, '""')}"`,
-          `"${(item.clipId || '').replace(/"/g, '""')}"`
-        ]);
+        const headers = ['STT', 'Thời Gian', 'Mã Máy (HWID)', 'Nhân Viên', 'Tài Khoản', 'Key', 'Tên Bài Hát', 'Thể Loại', 'Prompt', 'Định Dạng', 'Clip ID'];
+        const rows = rawLogsList.map((item, idx) => {
+          const empName = item.resolvedFullName || item.fullName || '';
+          const empUser = item.resolvedUsername || item.username || '';
+          return [
+            idx + 1,
+            `"${(item.timeVn || item.timestamp || '').replace(/"/g, '""')}"`,
+            `"${(item.hwid || '').replace(/"/g, '""')}"`,
+            `"${empName.replace(/"/g, '""')}"`,
+            `"${empUser.replace(/"/g, '""')}"`,
+            `"${(item.licenseKey || '').replace(/"/g, '""')}"`,
+            `"${(item.title || '').replace(/"/g, '""')}"`,
+            `"${(item.tags || '').replace(/"/g, '""')}"`,
+            `"${(item.prompt || '').replace(/"/g, '""')}"`,
+            `"${(item.actionType || '').replace(/"/g, '""')}"`,
+            `"${(item.clipId || '').replace(/"/g, '""')}"`
+          ];
+        });
         const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
