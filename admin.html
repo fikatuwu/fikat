@@ -1344,9 +1344,9 @@
               licenseStatus = `<span onclick="openLicenseModal('${u.id}', '${escapeHtml(u.fullName)}')" style="color: #f43f5e; cursor: pointer; white-space: nowrap;" title="Bấm để gia hạn">Đã hết hạn (${u.licensedUntil.substring(0, 10)})</span>`;
             }
           }
-          let licenseHtml = `<div style="white-space: nowrap; line-height: 1.35;"><div>${licenseStatus}</div>`;
+          let licenseHtml = `<div style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">${licenseStatus}`;
           if (u.licenseKey) {
-            licenseHtml += `<div style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--amber-primary); white-space: nowrap; margin-top: 1px;">Key: ${escapeHtml(u.licenseKey)}</div>`;
+            licenseHtml += `<span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 4px; white-space: nowrap;">Key: ${escapeHtml(u.licenseKey)}</span>`;
           }
           licenseHtml += `</div>`;
 
