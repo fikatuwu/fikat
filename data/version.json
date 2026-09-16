@@ -64,10 +64,11 @@
       "tag": "Đại bản phát hành 3.2 (Cập nhật lớn)",
       "badge": "latest",
       "highlights": [
+        "📥 Tự động tải và cập nhật trực tiếp trong app (In-App Self-Update): Tải siêu tốc trong app kèm thanh tiến trình và % hoàn thành, không cần mở Chrome",
+        "⚡ Cơ chế Zero-Click Update: Chỉ cần thoát app ra vào lại hoặc bấm 'Khởi động lại ngay' là hệ thống tự động thay thế bản mới tức thì",
         "🚀 Tái cấu trúc bộ xử lý âm thanh Native Direct Stream: Lưu nhạc MP3 từ Suno tức thì 0ms, bảo tồn 100% chất lượng gốc không nén lại",
         "🛠️ Khắc phục triệt để lỗi FFmpeg mã 69 [mp3float Header missing] bằng bộ nhận diện định dạng âm thanh chuyên sâu 8 lớp (DetectAudioContainer)",
         "🧹 Tự động dọn dẹp file hỏng: Xóa sạch ngay lập tức file rác dở dang < 50KB, loại bỏ hoàn toàn tình trạng sinh ra các file 00s/01s và duplicate _2, _3, _4",
-        "📥 Tích hợp tính năng Tải bản cập nhật trực tiếp ngay trong ứng dụng kèm thanh tiến trình siêu tốc và nút mở chạy ngay",
         "🔄 Đồng bộ hóa toàn diện các cải tiến cho cả hai phiên bản Online v3.2 và Offline Studio v2.0"
       ]
     },
