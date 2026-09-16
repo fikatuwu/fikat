@@ -33,8 +33,35 @@
     }
 
     html {
-      overflow-y: scroll;
+      color-scheme: dark;
       scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(245, 158, 11, 0.3) #080604;
+    }
+
+    /* Custom Sleek Dark-Themed Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #080604;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(245, 158, 11, 0.28);
+      border-radius: 99px;
+      transition: background 0.2s ease;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--amber-primary);
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+    }
+
+    ::-webkit-scrollbar-corner {
+      background: #080604;
     }
 
     body {
