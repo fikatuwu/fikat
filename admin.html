@@ -1397,7 +1397,8 @@
           }
           let licenseHtml = `<div style="display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;">${licenseStatus}`;
           if (u.licenseKey) {
-            licenseHtml += `<span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 4px; white-space: nowrap;">Key: ${escapeHtml(u.licenseKey)}</span>`;
+            licenseHtml += `<span style="font-family: var(--font-mono); font-size: 0.74rem; color: var(--amber-primary); background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); padding: 2px 7px; border-radius: 4px; white-space: nowrap; user-select: all;">Key: ${escapeHtml(u.licenseKey)}</span>`;
+            licenseHtml += `<button class="btn-action-sm btn-ghost" style="font-size: 0.65rem; padding: 1px 5px; margin-left: -4px;" title="Sao chép Key" onclick="copyKey('${escapeHtml(u.licenseKey)}')">📋 Chép</button>`;
           }
           licenseHtml += `</div>`;
 
@@ -1579,6 +1580,15 @@
         } catch (e) {
           showToast('Lỗi kết nối: ' + e.message, 'error');
         }
+      };
+
+      window.copyKey = function (key) {
+        if (!key) return;
+        navigator.clipboard.writeText(key).then(() => {
+          showToast(`Đã sao chép Key: ${key}`, 'success');
+        }).catch(() => {
+          prompt('Sao chép Key kích hoạt:', key);
+        });
       };
 
       // Render Bảng Máy HWID
