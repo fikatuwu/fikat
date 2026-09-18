@@ -874,6 +874,216 @@ export default {
       });
     }
 
+    // 3.4 POST / GET /api/verify hoặc /verify (Xác thực & Kích hoạt bản quyền trực tiếp từ App C#)
+    if ((pathname === "/api/verify" || pathname === "/verify") && (request.method === "POST" || request.method === "GET")) {
+      try {
+        let body = {};
+        if (request.method === "POST") {
+          try { body = await request.json(); } catch {}
+        } else {
+          url.searchParams.forEach((v, k) => { body[k] = v; });
+        }
+
+        const action = (body.action || "verify").toLowerCase();
+        const hwid = (body.hwid || "").trim();
+        const key = (body.key || body.licenseKey || "").trim();
+        const machineName = (body.name || body.machineName || "").trim();
+        const secretSalt = "Suno_Bulk_Downloader_Secure_Salt_2026_@99#";
+
+        if (!hwid) {
+          return jsonRes({ ok: false, status: "error", message: "Thiếu mã máy HWID." }, 400);
+        }
+
+        const vnTime = getVnTime();
+
+        // ── 1. KÍCH HOẠT VỚI KEY (action === 'activate' HOẶC có truyền key) ──
+        if (action === "activate" || key) {
+          // A. Master Admin Key
+          if (key.toUpperCase() === "FIKAT-ADMIN-2026-VIP") {
+            const expires = "Forever";
+            const token = await computeHmacSha256(`${hwid}:active:${expires}`, secretSalt);
+            await env.DB.prepare(`
+              INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
+              VALUES (?, ?, 'fikat', 'Quản trị viên (Master)', 'Admin', ?, ?)
+              ON CONFLICT(hwid) DO UPDATE SET role = 'Admin', fullName = 'Quản trị viên (Master)', lastSeen = excluded.lastSeen
+            `).bind(hwid, key, vnTime, vnTime).run();
+
+            return jsonRes({
+              ok: true,
+              status: "active",
+              customer: "Quản trị viên (Master)",
+              role: "Admin",
+              expires: expires,
+              token: token,
+              message: "Kích hoạt bản quyền Quản trị viên vĩnh viễn thành công!"
+            });
+          }
+
+          // B. Tìm user trong bảng users theo licenseKey (không phân biệt hoa/thường)
+          let user = await env.DB.prepare(
+            "SELECT * FROM users WHERE UPPER(licenseKey) = UPPER(?) AND licenseKey != ''"
+          ).bind(key).first();
+
+          // C. Nếu không thấy trong users, thử tìm trong hwids
+          if (!user) {
+            const hwRow = await env.DB.prepare(
+              "SELECT * FROM hwids WHERE UPPER(licenseKey) = UPPER(?) AND licenseKey != ''"
+            ).bind(key).first();
+
+            if (hwRow) {
+              user = {
+                id: "",
+                fullName: hwRow.fullName || "Nhân viên",
+                username: hwRow.username || "staff",
+                role: hwRow.role || "Nhân viên",
+                status: "active",
+                licensedUntil: null
+              };
+            }
+          }
+
+          if (!user) {
+            return jsonRes({
+              ok: false,
+              status: "invalid",
+              message: `Mã kích hoạt [${key}] không tồn tại trên hệ thống hoặc chưa được cấp!`
+            });
+          }
+
+          if (user.status === "blocked") {
+            return jsonRes({
+              ok: false,
+              status: "blocked",
+              message: "Tài khoản hoặc key này đã bị Quản trị viên khóa truy cập!"
+            });
+          }
+
+          // Kiểm tra hạn sử dụng
+          let expires = "Forever";
+          let daysRemaining = 9999;
+          if (user.licensedUntil) {
+            const expDate = new Date(user.licensedUntil);
+            if (expDate.getFullYear() < 2090) {
+              expires = user.licensedUntil.substring(0, 10);
+              daysRemaining = Math.ceil((expDate.getTime() - Date.now()) / (24 * 3600 * 1000));
+              if (daysRemaining < 0) {
+                return jsonRes({
+                  ok: false,
+                  status: "expired",
+                  message: `Key bản quyền đã hết hạn vào ngày ${expires}. Vui lòng liên hệ Admin gia hạn!`
+                });
+              }
+            }
+          }
+
+          // Gán HWID của máy khách cho tài khoản này và cập nhật bảng hwids
+          if (user.id) {
+            await env.DB.prepare("UPDATE users SET hwid = ?, updatedAt = ? WHERE id = ?")
+              .bind(hwid, vnTime, user.id).run();
+          }
+
+          const userRole = user.role === "Quản trị viên" ? "Admin" : "Staff";
+          await env.DB.prepare(`
+            INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(hwid) DO UPDATE SET
+              licenseKey = excluded.licenseKey,
+              username = excluded.username,
+              fullName = excluded.fullName,
+              role = excluded.role,
+              lastSeen = excluded.lastSeen
+          `).bind(hwid, key, user.username, user.fullName, userRole, vnTime, vnTime).run();
+
+          const token = await computeHmacSha256(`${hwid}:active:${expires}`, secretSalt);
+
+          return jsonRes({
+            ok: true,
+            status: "active",
+            customer: user.fullName || user.username || "Nhân viên",
+            role: userRole,
+            expires: expires,
+            daysRemaining: daysRemaining,
+            token: token,
+            message: `Kích hoạt bản quyền thành công cho ${user.fullName || user.username}!`
+          });
+        }
+
+        // ── 2. XÁC THỰC TỰ ĐỘNG BẰNG HWID (verify / register) ──
+        let boundUser = await env.DB.prepare(
+          "SELECT * FROM users WHERE hwid = ? AND hwid != ''"
+        ).bind(hwid).first();
+
+        let hwidInfo = await env.DB.prepare("SELECT * FROM hwids WHERE hwid = ?").bind(hwid).first();
+
+        if (!boundUser && hwidInfo?.licenseKey) {
+          boundUser = await env.DB.prepare(
+            "SELECT * FROM users WHERE licenseKey = ? AND licenseKey != ''"
+          ).bind(hwidInfo.licenseKey).first();
+        }
+
+        if (boundUser) {
+          if (boundUser.status === "blocked") {
+            return jsonRes({
+              ok: false,
+              status: "blocked",
+              message: "Thiết bị của bạn đã bị Quản trị viên khóa truy cập."
+            });
+          }
+
+          let expires = "Forever";
+          let daysRemaining = 9999;
+          if (boundUser.licensedUntil) {
+            const expDate = new Date(boundUser.licensedUntil);
+            if (expDate.getFullYear() < 2090) {
+              expires = boundUser.licensedUntil.substring(0, 10);
+              daysRemaining = Math.ceil((expDate.getTime() - Date.now()) / (24 * 3600 * 1000));
+              if (daysRemaining < 0) {
+                return jsonRes({
+                  ok: false,
+                  status: "expired",
+                  customer: boundUser.fullName,
+                  expires: expires,
+                  message: `Bản quyền đã hết hạn vào ngày ${expires}. Vui lòng liên hệ Admin gia hạn!`
+                });
+              }
+            }
+          }
+
+          const userRole = boundUser.role === "Quản trị viên" ? "Admin" : "Staff";
+          const token = await computeHmacSha256(`${hwid}:active:${expires}`, secretSalt);
+
+          await env.DB.prepare("UPDATE hwids SET lastSeen = ? WHERE hwid = ?").bind(vnTime, hwid).run();
+
+          return jsonRes({
+            ok: true,
+            status: "active",
+            customer: boundUser.fullName || boundUser.username,
+            role: userRole,
+            expires: expires,
+            daysRemaining: daysRemaining,
+            token: token,
+            message: `Bản quyền hợp lệ: ${boundUser.fullName || boundUser.username}`
+          });
+        }
+
+        // Chưa kích hoạt: ghi nhận vào hwids và trả về pending
+        await env.DB.prepare(`
+          INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
+          VALUES (?, '', 'client', ?, 'Nhân viên', ?, ?)
+          ON CONFLICT(hwid) DO UPDATE SET lastSeen = excluded.lastSeen
+        `).bind(hwid, machineName ? `Khách (${machineName})` : 'Khách', vnTime, vnTime).run();
+
+        return jsonRes({
+          ok: true,
+          status: "pending",
+          hwid: hwid,
+          message: "Mã máy của bạn đã được gửi lên hệ thống. Vui lòng chờ Admin kích hoạt hoặc nhập Key được cấp."
+        });
+      } catch (err) {
+        return jsonRes({ ok: false, status: "error", message: "Lỗi xác thực: " + err.message }, 500);
+      }
+    }
+
     // ========================================================================
     // PHẦN 4: STATIC ASSETS
     // ========================================================================
@@ -919,6 +1129,22 @@ async function hashPassword(password, salt) {
   const data = enc.encode(`${password}:${salt}:fikat_salt_2026`);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function computeHmacSha256(data, secretKey) {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secretKey),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("")
+    .toLowerCase();
 }
 
 function generateRandomHex(len = 8) {
