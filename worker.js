@@ -631,6 +631,29 @@ export default {
       }
     }
 
+    // 2.10 POST /api/admin/machine/delete (Xóa máy HWID)
+    if (pathname === "/api/admin/machine/delete" && request.method === "POST") {
+      try {
+        const authUser = await getAuthenticatedUser(request, env);
+        if (!authUser || authUser.role !== "Quản trị viên") {
+          return jsonRes({ ok: false, message: "Chỉ Quản trị viên mới có quyền xóa máy." }, 403);
+        }
+        const body = await request.json();
+        const hwid = (body.hwid || "").trim();
+        if (!hwid) return jsonRes({ ok: false, message: "Thiếu mã máy HWID." }, 400);
+
+        await env.DB.prepare("DELETE FROM hwids WHERE hwid = ?").bind(hwid).run();
+        await env.DB.prepare("UPDATE users SET hwid = '' WHERE hwid = ?").bind(hwid).run();
+
+        return jsonRes({
+          ok: true,
+          message: `Đã xóa thiết bị [${hwid}] thành công khỏi hệ thống!`
+        });
+      } catch (e) {
+        return jsonRes({ ok: false, message: e.message }, 500);
+      }
+    }
+
     // ========================================================================
     // PHẦN 3: TELEMETRY & GIÁM SÁT LỊCH SỬ TẢI NHẠC
     // ========================================================================

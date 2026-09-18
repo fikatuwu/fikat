@@ -1661,10 +1661,36 @@
               <td style="text-align: center;">
                 <button class="btn-action-sm btn-license" onclick="filterLogsByHwid('${escapeHtml(m.hwid)}')">Xem máy này</button>
                 ${empUser ? `<button class="btn-action-sm btn-ghost" style="font-size:0.72rem;padding:2px 6px;margin-left:4px;color:#38bdf8;border-color:rgba(56,189,248,0.3)" onclick="filterLogsByUser('${escapeHtml(empUser)}', '${escapeHtml(empName)}')">Theo NV</button>` : ''}
+                <button class="btn-action-sm btn-del-account" style="font-size:0.72rem;padding:2px 6px;margin-left:4px;" onclick="deleteMachine('${escapeHtml(m.hwid)}')" title="Xóa thiết bị này khỏi hệ thống">🗑️ Xóa</button>
               </td>
             </tr>
           `;
         }).join('');
+      };
+
+      // Xóa thiết bị HWID
+      window.deleteMachine = async function (hwid) {
+        if (!hwid) return;
+        if (!confirm(`Bạn có chắc chắn muốn xóa thiết bị HWID:\n[${hwid}]\n\nKhỏi hệ thống quản trị không?`)) {
+          return;
+        }
+        const token = localStorage.getItem(TOKEN_KEY);
+        try {
+          const res = await fetch('/api/admin/machine/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ hwid })
+          });
+          const data = await res.json();
+          if (data.ok) {
+            showToast(data.message || `Đã xóa thiết bị [${hwid}]!`, 'success');
+            await loadAdminDashboard();
+          } else {
+            showToast(data.message || 'Lỗi khi xóa thiết bị', 'error');
+          }
+        } catch (e) {
+          showToast('Lỗi kết nối: ' + e.message, 'error');
+        }
       };
 
       // ── Helper: Lấy thông tin nhân viên cho một bản ghi log ──
