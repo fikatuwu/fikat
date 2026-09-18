@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.5",
-  "releaseDate": "2026-09-16",
+  "currentVersion": "3.6",
+  "releaseDate": "2026-09-18",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.5/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.6/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -59,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.6",
+      "date": "18/09/2026",
+      "tag": "Bản phát hành chính thức 3.6",
+      "badge": "latest",
+      "highlights": [
+        "🚪 Nút Đăng xuất Suno trực quan: Cho phép xóa sạch phiên đăng nhập, cookie và cache trong WebView2 chỉ với 1 click để đổi tài khoản mới dễ dàng.",
+        "🛡️ Khóa triệt để cache vĩnh viễn cũ & Bắt buộc kết nối máy chủ Cloudflare: Ngăn chặn hoàn toàn tình trạng máy test tự nạp bản quyền vĩnh viễn cũ, kiểm tra HMAC token bảo mật và tính toán hạn dùng theo thời gian thực.",
+        "🗑️ Nút Reset bản quyền tích hợp: Cho phép xóa cache bản quyền cũ trên máy và gửi lại yêu cầu duyệt lên trang Web quản trị tức thì.",
+        "⚡ Nâng cấp trang Quản Trị Web Cloudflare: Hỗ trợ cụm nút chọn hạn dùng 1-chạm (+1 ngày, +3 ngày, +7 ngày, +30 ngày, +1 năm, Vĩnh viễn) duyệt máy khách siêu tốc."
+      ]
+    },
+    {
       "version": "3.5",
       "date": "16/09/2026",
-      "tag": "Bản phát hành chính thức 3.5",
-      "badge": "latest",
+      "tag": "Bản phát hành 3.5",
+      "badge": "patch",
       "highlights": [
         "🪙 Đưa nút Credit Suno trực quan trở lại thanh công cụ: Tự động đồng bộ số dư credit theo thời gian thực (hỗ trợ đọc từ React root store, DOM và Suno Billing API). Bấm vào để xem phân tích số bài hát và số lượt bóc tách stem khả dụng.",
         "⚠️ Cảnh báo tự động hết Credit trước khi tạo nhạc: Tự động kiểm tra số dư credit (< 10 credit) trước khi gửi bài và trong suốt quá trình chạy hàng loạt, loại bỏ triệt để tình trạng bị Suno bỏ qua sau 60s.",
