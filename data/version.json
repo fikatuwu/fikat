@@ -2,14 +2,14 @@
   "appId": "suno-bulk-studio",
   "name": "Suno Bulk Studio",
   "tagline": "Bộ công cụ tự động tạo nhạc theo Sheet và tải nhạc hàng loạt chất lượng cao từ Suno AI",
-  "currentVersion": "3.6",
+  "currentVersion": "3.7",
   "releaseDate": "2026-09-18",
   "status": "stable",
   "statusText": "Hoạt động ổn định",
   "download": {
     "zipFile": "Suno_Bulk_Downloader.zip",
     "fileName": "Suno_Bulk_Downloader.zip",
-    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.6/Suno_Bulk_Downloader.zip",
+    "directUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.7/Suno_Bulk_Downloader.zip",
     "fileSize": "116.8 MB",
     "architecture": "Windows x64 (Win 10 / 11)",
     "framework": ".NET 8.0 LTS (Self-Contained - Không cần cài đặt gì)",
@@ -59,10 +59,22 @@
   ],
   "changelog": [
     {
+      "version": "3.7",
+      "date": "18/09/2026",
+      "tag": "Bản phát hành chính thức 3.7",
+      "badge": "latest",
+      "highlights": [
+        "🎵 Khắc phục triệt để lỗi tên bài hát và Prompt: Cấu hình giữ nguyên dữ liệu khi làm rối mã nguồn, truyền đầy đủ tên bài hát, lời nhạc / prompt và tags lên hệ thống quản trị theo thời gian thực.",
+        "👤 Tự động nhận diện danh tính người dùng: Tự động trích xuất tài khoản Suno (@username / email) và thông tin máy tính (Tên máy / Windows User) gửi về máy chủ, không còn bắt admin phải gán tên thủ công.",
+        "📊 Nâng cấp giao diện Quản Trị Web: Hiển thị ngay lập tức danh tính người dùng tải nhạc với huy hiệu tài khoản nổi bật, hỗ trợ nút đổi / gán nhân viên linh hoạt.",
+        "🔔 Thông báo Telegram thông minh: Báo ngay tên tài khoản người dùng tải nhạc và danh sách bài hát chi tiết."
+      ]
+    },
+    {
       "version": "3.6",
       "date": "18/09/2026",
-      "tag": "Bản phát hành chính thức 3.6",
-      "badge": "latest",
+      "tag": "Bản phát hành 3.6",
+      "badge": "patch",
       "highlights": [
         "🚪 Nút Đăng xuất Suno trực quan: Cho phép xóa sạch phiên đăng nhập, cookie và cache trong WebView2 chỉ với 1 click để đổi tài khoản mới dễ dàng.",
         "🛡️ Khóa triệt để cache vĩnh viễn cũ & Bắt buộc kết nối máy chủ Cloudflare: Ngăn chặn hoàn toàn tình trạng máy test tự nạp bản quyền vĩnh viễn cũ, kiểm tra HMAC token bảo mật và tính toán hạn dùng theo thời gian thực.",

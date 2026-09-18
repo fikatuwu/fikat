@@ -666,7 +666,13 @@ export default {
         const nowIso = new Date().toISOString();
         const vnTime = getVnTime();
 
-        // Tìm nhân viên sở hữu máy (HWID) hoặc licenseKey
+        // Tự động nhận diện danh tính thiết bị / người dùng
+        const machineName = (payload.machineName || "").trim();
+        const windowsUser = (payload.windowsUser || "").trim();
+        const sunoUser = (payload.sunoUser || "").trim();
+        const sunoEmail = (payload.sunoEmail || "").trim();
+
+        // 1. Tìm nhân viên sở hữu máy (HWID) hoặc licenseKey đã được gán chính thức trong bảng users hoặc hwids
         let ownerUser = null;
         if (hwid && hwid !== "UNKNOWN_HWID") {
           ownerUser = await env.DB.prepare("SELECT id, username, fullName, licenseKey FROM users WHERE hwid = ? AND hwid != ''").bind(hwid).first();
@@ -675,56 +681,90 @@ export default {
           ownerUser = await env.DB.prepare("SELECT id, username, fullName, licenseKey FROM users WHERE licenseKey = ? AND licenseKey != ''").bind(licenseKey).first();
         }
         if (!ownerUser && hwid) {
-          const m = await env.DB.prepare("SELECT username, fullName, licenseKey FROM hwids WHERE hwid = ? AND fullName != '' AND fullName NOT LIKE 'DESKTOP-%'").bind(hwid).first();
+          const m = await env.DB.prepare("SELECT username, fullName, licenseKey FROM hwids WHERE hwid = ? AND fullName != '' AND fullName != 'Suno Client'").bind(hwid).first();
           if (m) ownerUser = m;
         }
 
-        const finalName = ownerUser?.fullName || "";
-        const finalUsername = ownerUser?.username || "";
-        const finalKey = ownerUser?.licenseKey || (licenseKey.startsWith("DESKTOP-") ? "Suno Client" : licenseKey);
+        // Tự động suy luận danh tính nếu chưa có nhân viên được gán
+        let autoName = "";
+        let autoUsername = "";
+
+        if (sunoUser) {
+          autoName = sunoUser;
+          autoUsername = sunoUser;
+        } else if (sunoEmail) {
+          autoName = sunoEmail.split('@')[0];
+          autoUsername = sunoEmail;
+        } else if (windowsUser && machineName) {
+          autoName = `${windowsUser} (${machineName})`;
+          autoUsername = windowsUser;
+        } else if (windowsUser) {
+          autoName = windowsUser;
+          autoUsername = windowsUser;
+        } else if (machineName) {
+          autoName = machineName;
+          autoUsername = machineName;
+        } else {
+          autoName = "Khách Suno";
+          autoUsername = "client";
+        }
+
+        const finalName = ownerUser?.fullName || autoName;
+        const finalUsername = ownerUser?.username || autoUsername;
+        const finalKey = ownerUser?.licenseKey || (licenseKey.startsWith("DESKTOP-") ? (machineName || "Suno Client") : licenseKey);
 
         // Lưu / cập nhật HWID
         await env.DB.prepare(`
           INSERT INTO hwids (hwid, licenseKey, username, fullName, role, registeredAt, lastSeen)
           VALUES (?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(hwid) DO UPDATE SET
-            licenseKey = CASE WHEN excluded.licenseKey != '' AND excluded.licenseKey NOT LIKE 'DESKTOP-%' THEN excluded.licenseKey ELSE hwids.licenseKey END,
-            username = CASE WHEN excluded.username != '' THEN excluded.username ELSE hwids.username END,
-            fullName = CASE WHEN excluded.fullName != '' THEN excluded.fullName ELSE hwids.fullName END,
+            licenseKey = CASE WHEN excluded.licenseKey != '' THEN excluded.licenseKey ELSE hwids.licenseKey END,
+            username = CASE WHEN hwids.username = '' OR hwids.username IS NULL OR hwids.username = 'client' THEN excluded.username ELSE hwids.username END,
+            fullName = CASE WHEN hwids.fullName = '' OR hwids.fullName IS NULL OR hwids.fullName = 'Suno Client' OR hwids.fullName = 'Khách Suno' THEN excluded.fullName ELSE hwids.fullName END,
             lastSeen = excluded.lastSeen,
-            role = excluded.role
+            role = CASE WHEN hwids.role != '' THEN hwids.role ELSE excluded.role END
         `).bind(hwid, finalKey, finalUsername, finalName, role, vnTime, vnTime).run();
 
-        // Batch insert logs
+        // Batch insert logs kèm hỗ trợ fallback cho các thuộc tính bị làm rối
         const insertStmt = env.DB.prepare(`
           INSERT INTO logs (hwid, licenseKey, userId, username, fullName, clipId, title, prompt, tags, actionType, appVersion, timeVn, createdAt)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `);
 
-        const batch = items.map(item => insertStmt.bind(
-          hwid,
-          finalKey,
-          ownerUser?.id || "",
-          finalUsername,
-          finalName,
-          item.clipId || "",
-          item.title || "Chưa có tên bài",
-          item.prompt || "",
-          item.tags || "",
-          item.actionType || "MP3",
-          appVersion,
-          vnTime,
-          item.timestamp || nowIso
-        ));
+        const batch = items.map(item => {
+          const rawTitle = (item.title || item.a || "").trim();
+          const rawPrompt = (item.prompt || item.B || item.b || "").trim();
+          const rawClipId = (item.clipId || item.A || "").trim();
+          const rawTags = (item.tags || item.Tags || "").trim();
+          const rawAction = (item.actionType || item.C || "MP3").trim();
+          const rawTime = item.timestamp || item.c || nowIso;
+
+          return insertStmt.bind(
+            hwid,
+            finalKey,
+            ownerUser?.id || "",
+            finalUsername,
+            finalName,
+            rawClipId,
+            rawTitle || "Chưa có tên bài",
+            rawPrompt,
+            rawTags,
+            rawAction || "MP3",
+            appVersion,
+            vnTime,
+            rawTime
+          );
+        });
 
         await env.DB.batch(batch);
 
-        // Bắn Telegram thông báo ngầm
-        ctx.waitUntil(sendTelegramAlert(env, payload, items, vnTime));
+        // Bắn Telegram thông báo ngầm kèm thông tin danh tính đã nhận diện
+        const alertPayload = { ...payload, resolvedName: finalName, resolvedUsername: finalUsername };
+        ctx.waitUntil(sendTelegramAlert(env, alertPayload, items, vnTime));
 
         return jsonRes({
           ok: true,
-          message: `Đã ghi nhận thành công ${items.length} bài hát.`,
+          message: `Đã ghi nhận thành công ${items.length} bài hát cho ${finalName}.`,
           recorded: items.length,
         });
       } catch (err) {
@@ -951,16 +991,21 @@ async function sendTelegramAlert(env, payload, items, vnTime) {
   const shortHwid = hwid.length > 16 ? hwid.substring(0, 8) + "..." + hwid.slice(-6) : hwid;
   const key = payload.licenseKey || "Free / Trial";
   const roleIcon = payload.role === "Admin" ? "👑 ADMIN" : "💼 NHÂN VIÊN";
+  const userName = payload.resolvedName || payload.sunoUser || payload.windowsUser || "Suno Client";
+  const userHandle = payload.resolvedUsername ? ` (@${payload.resolvedUsername})` : "";
 
   let songListText = "";
   items.slice(0, 6).forEach((item, i) => {
-    songListText += `  ${i + 1}. 🎵 <b>${escapeHtml(item.title || "Không có tên")}</b> [<i>${escapeHtml(item.actionType || "MP3")}</i>]\n`;
+    const itTitle = item.title || item.a || "Không có tên";
+    const itAction = item.actionType || item.C || "MP3";
+    songListText += `  ${i + 1}. 🎵 <b>${escapeHtml(itTitle)}</b> [<i>${escapeHtml(itAction)}</i>]\n`;
   });
   if (items.length > 6) songListText += `  ... và ${items.length - 6} bài khác.\n`;
 
   const message =
     `🚀 <b>[Suno Bulk Studio] Khách vừa tải nhạc!</b>\n\n` +
-    `👤 <b>Vai trò:</b> <b>${roleIcon}</b>\n` +
+    `👤 <b>Người dùng:</b> <b>${escapeHtml(userName)}${escapeHtml(userHandle)}</b>\n` +
+    `💼 <b>Vai trò:</b> <b>${roleIcon}</b>\n` +
     `💻 <b>HWID:</b> <code>${shortHwid}</code>\n` +
     `🔑 <b>Key:</b> <code>${escapeHtml(key)}</code>\n` +
     `📦 <b>Số lượng:</b> <b>${items.length}</b> bài\n` +
