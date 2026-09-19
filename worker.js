@@ -192,11 +192,13 @@ export default {
           else if (targetUrl.startsWith("UC") && targetUrl.length >= 24) targetUrl = `https://www.youtube.com/channel/${targetUrl}`;
           else targetUrl = `https://www.youtube.com/@${targetUrl}`;
         }
+        targetUrl = targetUrl.replace(/\/$/, "");
+        const aboutUrl = targetUrl.endsWith("/about") ? targetUrl : `${targetUrl}/about`;
 
-        const ytResp = await fetch(targetUrl, {
+        const ytResp = await fetch(aboutUrl, {
           headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-            "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8"
+            "Accept-Language": "en-US,en;q=0.9,vi;q=0.8"
           }
         });
 
@@ -211,32 +213,80 @@ export default {
         const mCid = html.match(/itemprop="channelId"\s+content="([^"]+)"/) || html.match(/"channelId":"(UC[a-zA-Z0-9_-]{22})"/);
         if (mCid) cid = mCid[1];
 
-        // 2. Title
+        // 2. Default Title & Avatar from meta
         let title = "";
         const mTitle = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || html.match(/<title>([^<]+)<\/title>/i);
         if (mTitle) title = mTitle[1].replace(" - YouTube", "").trim();
 
-        // 3. Avatar
         let avatar = "";
         const mAvatar = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
         if (mAvatar) avatar = mAvatar[1];
 
-        // 4. Subscribers
         let subs = 0;
-        const mSubLabel = html.match(/"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([^"]+)"/);
-        const mSubSimple = html.match(/"subscriberCountText":\{"simpleText":"([^"]+)"/);
-        if (mSubLabel) subs = parseYtStat(mSubLabel[1]);
-        else if (mSubSimple) subs = parseYtStat(mSubSimple[1]);
-
-        // 5. Views
         let views = 0;
-        const mView = html.match(/"viewCountText":\{"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s+lượt xem/);
-        if (mView) views = parseInt(mView[1].replace(/[^\d]/g, "")) || 0;
-
-        // 6. Videos
         let videos = 0;
-        const mVid = html.match(/"videoCountText":\{"runs":\[\{"text":"([^"]+)"/) || html.match(/([\d.,]+)\s+video/);
-        if (mVid) videos = parseYtStat(mVid[1]);
+
+        // 3. Parse ytInitialData JSON for modern YouTube (2024–2026)
+        const mData = html.match(/var ytInitialData = ({.*?});<\/script>/);
+        if (mData) {
+          try {
+            const data = JSON.parse(mData[1]);
+
+            // Try pageHeaderViewModel (Header)
+            const phVm = data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
+            if (phVm) {
+              const dynTitle = phVm?.title?.dynamicTextViewModel?.text?.content;
+              if (dynTitle) title = dynTitle;
+
+              const avatarSources = phVm?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources;
+              if (Array.isArray(avatarSources) && avatarSources.length > 0) {
+                avatar = avatarSources[avatarSources.length - 1].url || avatar;
+              }
+
+              const rows = phVm?.metadata?.contentMetadataViewModel?.metadataRows || [];
+              for (const r of rows) {
+                for (const p of r?.metadataParts || []) {
+                  const text = (p?.text?.content || "").toLowerCase().trim();
+                  if (text.includes("subscriber") || text.includes("người đăng ký")) {
+                    subs = parseYtStat(text);
+                  } else if (text.includes("video")) {
+                    videos = parseYtStat(text);
+                  }
+                }
+              }
+            }
+
+            // Search aboutChannelViewModel for viewCountText
+            function findChannelViews(obj) {
+              if (!obj || typeof obj !== "object") return 0;
+              if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
+                return parseYtStat(obj.aboutChannelViewModel.viewCountText);
+              }
+              for (const key of Object.keys(obj)) {
+                const found = findChannelViews(obj[key]);
+                if (found) return found;
+              }
+              return 0;
+            }
+            views = findChannelViews(data);
+          } catch (jsonErr) {
+            console.warn("ytInitialData parse error:", jsonErr);
+          }
+        }
+
+        // 4. Fallbacks if ytInitialData didn't find them
+        if (!subs) {
+          const mSub = html.match(/"subscriberCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+(?:\s*[mktrb])?)\s*(?:subscribers|người đăng ký)/i);
+          if (mSub) subs = parseYtStat(mSub[1]);
+        }
+        if (!videos) {
+          const mVid = html.match(/"videoCountText":\{.*?"text":"([^"]+)"/) || html.match(/([\d.,]+)\s*videos/i);
+          if (mVid) videos = parseYtStat(mVid[1]);
+        }
+        if (!views) {
+          const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s*(?:views|lượt xem)/i);
+          if (mView) views = parseYtStat(mView[1]);
+        }
 
         return jsonRes({
           ok: true,
@@ -1237,19 +1287,22 @@ function sanitizeUser(user) {
 function parseYtStat(str) {
   if (!str) return 0;
   const s = String(str).toLowerCase().trim();
-  if (s.includes("triệu") || s.includes(" tr") || s.includes("m")) {
-    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
-    return Math.round((num || 0) * 1000000);
+  const multiMatch = s.match(/([\d.,]+)\s*(triệu|tr|nghìn|ngàn|\bn\b|tỷ|m(?![a-z])|k(?![a-z])|b(?![a-z]))/i);
+  if (multiMatch) {
+    let rawNum = multiMatch[1].replace(/,/g, '.');
+    if ((rawNum.match(/\./g) || []).length > 1) {
+      rawNum = rawNum.replace(/\./g, '');
+    }
+    const val = parseFloat(rawNum);
+    const unit = multiMatch[2].toLowerCase();
+    if (['triệu', 'tr', 'm'].includes(unit)) return Math.round(val * 1000000);
+    if (['nghìn', 'ngàn', 'k', 'n'].includes(unit)) return Math.round(val * 1000);
+    if (['tỷ', 'b'].includes(unit)) return Math.round(val * 1000000000);
   }
-  if (s.includes("nghìn") || s.includes(" ngàn") || s.includes("k") || s.includes(" n")) {
-    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
-    return Math.round((num || 0) * 1000);
-  }
-  if (s.includes("tỷ") || s.includes("b")) {
-    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
-    return Math.round((num || 0) * 1000000000);
-  }
-  return parseInt(s.replace(/[^\d]/g, "")) || 0;
+  const numOnly = s.match(/[\d.,]+/);
+  if (!numOnly) return 0;
+  const cleaned = numOnly[0].replace(/[.,]/g, '');
+  return parseInt(cleaned, 10) || 0;
 }
 
 async function hashPassword(password, salt) {
