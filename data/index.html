@@ -921,6 +921,11 @@
 
   <!-- ======================== JAVASCRIPT ======================== -->
   <script>
+    // Hoàn toàn riêng biệt: Nếu bị nhúng trong iframe (như trang admin), tự động bung ra toàn màn hình fikat.cloud/data/
+    if (window.top !== window.self) {
+      window.top.location.href = window.location.href;
+    }
+
     const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
     const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
     const DEFAULT_PIN = "fikat2026";

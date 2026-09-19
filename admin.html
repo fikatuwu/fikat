@@ -617,9 +617,6 @@
         <button class="nav-tab-btn" id="tabBtnTelemetry" onclick="switchAdminTab('telemetry')">
           <span>Lịch Sử Tải Nhạc Realtime</span>
         </button>
-        <button class="nav-tab-btn" id="tabBtnSfsData" onclick="switchAdminTab('sfsData')" style="background:linear-gradient(135deg,rgba(228,90,60,0.18),rgba(240,138,91,0.08));border:1px solid rgba(228,90,60,0.4);color:#F08A5B;font-weight:700;">
-          <span>📊 Dữ Liệu Thị Trường (SFS Metrics)</span>
-        </button>
       </nav>
 
       <!-- Stat Cards -->
@@ -801,15 +798,6 @@
               <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Đang tải lịch sử...</td></tr>
             </tbody>
           </table>
-        </div>
-      </section>
-
-      <!-- ================================================================== -->
-      <!-- TAB 4: TRUNG TÂM DỮ LIỆU SFS METRICS (CHỈ ADMIN XEM ĐƯỢC) -->
-      <!-- ================================================================== -->
-      <section id="paneSfsData" style="display:none;margin-left:-20px;margin-right:-20px;width:calc(100% + 40px);">
-        <div style="background:transparent;border:none;border-radius:0;overflow:hidden;height:calc(100vh - 130px);position:relative;">
-          <iframe src="/data/index.html" style="width:100%;height:100%;border:none;display:block;" title="SFS Data Metrics"></iframe>
         </div>
       </section>
 
@@ -1182,27 +1170,19 @@
       };
 
       window.switchAdminTab = function (tab) {
-        ['users','machines','telemetry','pending','sfsData'].forEach(t => {
+        if (tab === 'sfsData') tab = 'users';
+        ['users','machines','telemetry','pending'].forEach(t => {
           const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
           const pane = document.getElementById('pane' + t.charAt(0).toUpperCase() + t.slice(1));
           if (btn) btn.classList.toggle('active', t === tab);
           if (pane) pane.style.display = t === tab ? 'block' : 'none';
         });
 
-        // Ẩn bảng thống kê tải nhạc của HaloTo khi xem Dữ liệu thị trường SFS Metrics
         const statGrid = document.getElementById('adminStatGrid');
-        if (statGrid) {
-          statGrid.style.display = (tab === 'sfsData') ? 'none' : 'grid';
-        }
+        if (statGrid) statGrid.style.display = 'grid';
 
         try { localStorage.setItem('admin_active_tab', tab); } catch(e){}
         if (tab === 'pending') renderPendingTable();
-        if (tab === 'sfsData') {
-          const ifr = document.querySelector('#paneSfsData iframe');
-          if (ifr && ifr.contentWindow && ifr.contentWindow.loadTursoData) {
-            ifr.contentWindow.loadTursoData();
-          }
-        }
       };
 
       // ── Pending Users ──
