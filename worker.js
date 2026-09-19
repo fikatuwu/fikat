@@ -1201,7 +1201,7 @@ async function getAuthenticatedUser(request, env) {
       role: "Quản trị viên",
       isRootAdmin: true,
       status: "active",
-      allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream"]
+      allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream", "bi-thuat"]
     };
   }
 
