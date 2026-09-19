@@ -237,6 +237,7 @@
     .app-wrap {
       display: flex;
       min-height: 100vh;
+      position: relative;
     }
     .sidebar {
       width: 250px;
@@ -245,6 +246,33 @@
       border-right: 1px solid var(--line);
       display: flex;
       flex-direction: column;
+      transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1), flex 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease;
+      position: relative;
+      z-index: 1000;
+    }
+    .sidebar.collapsed {
+      width: 0 !important;
+      min-width: 0 !important;
+      flex: 0 0 0 !important;
+      border-right: none !important;
+      overflow: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+    .sidebar.floating-sidebar {
+      position: fixed !important;
+      left: 0 !important;
+      top: 0 !important;
+      bottom: 0 !important;
+      width: 250px !important;
+      flex: 0 0 250px !important;
+      box-shadow: 15px 0 45px rgba(0,0,0,0.85);
+      border-right: 1px solid var(--p);
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      visibility: visible !important;
+      z-index: 99999 !important;
     }
     .sidebar-head {
       height: 70px;
@@ -673,7 +701,13 @@
     <!-- MAIN BODY -->
     <main class="main-body">
       <header class="topbar">
-        <div class="top-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button id="btnToggleSidebar" class="action-btn" onclick="toggleSidebar()" style="height:36px;padding:0 12px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text);display:inline-flex;align-items:center;gap:7px;" title="Bật/Tắt Menu Sidebar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            <span style="font-size:12px;font-weight:600;" id="sidebarToggleText">Menu</span>
+          </button>
+          <div class="top-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
+        </div>
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="user-pill">
             <span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span>
@@ -747,18 +781,21 @@
                   Biểu đồ mức tăng mỗi ngày (view hôm sau − view hôm trước) · Bỏ qua điểm gỡ video
                 </div>
               </div>
-              <div style="display:flex;gap:5px;align-items:center;">
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                <button class="action-btn" style="padding:4px 10px;font-size:11px;background:rgba(228,90,60,0.18);border:1px solid var(--p);color:var(--p);" onclick="filterTopChannels(5)">⚡ Top 5 Kênh Mạnh</button>
+                <button class="action-btn" style="padding:4px 10px;font-size:11px;background:#261d15;border:1px solid var(--line);" onclick="filterAllChannels()">👁️ Hiện tất cả (12)</button>
+                <div style="width:1px;height:18px;background:var(--line);margin:0 4px;"></div>
                 <button class="action-btn chart-filter-btn" id="cwin-7" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(7)">7 ngày</button>
                 <button class="action-btn chart-filter-btn active" id="cwin-14" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(14)">14 ngày</button>
                 <button class="action-btn chart-filter-btn" id="cwin-30" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(30)">30 ngày</button>
               </div>
             </div>
             <div id="chartChips" style="padding:10px 18px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
-            <div id="chartContainer" style="height:320px;position:relative;margin-top:8px;">
+            <div id="chartContainer" style="height:480px;position:relative;margin-top:8px;">
               <canvas id="growthChart"></canvas>
             </div>
             <div class="hint" style="font-size:11.5px;padding:8px 18px 14px;color:var(--text-3);">
-              Đơn vị: view tăng / ngày · Bấm vào chip kênh phía trên để bật/tắt hiển thị từng kênh trên biểu đồ
+              Đơn vị: view tăng / ngày · Bấm vào chip kênh phía trên để bật/tắt từng kênh · Rê chuột lên đường biểu đồ để phóng to nổi bật
             </div>
           </div>
 
@@ -1318,6 +1355,27 @@
     function toggleChannelOnChart(cid) {
       if (hiddenChannelIds.has(cid)) hiddenChannelIds.delete(cid);
       else hiddenChannelIds.add(cid);
+      refreshChartAfterFilter();
+    }
+
+    function filterTopChannels(topN = 5) {
+      if (!channelsData || !channelsData.length) return;
+      hiddenChannelIds.clear();
+      const topIds = new Set(channelsData.slice(0, topN).map(c => c.id));
+      channelsData.forEach(c => {
+        if (!topIds.has(c.id)) hiddenChannelIds.add(c.id);
+      });
+      refreshChartAfterFilter();
+      showToast(`⚡ Đang hiển thị Top ${topN} kênh mạnh nhất!`);
+    }
+
+    function filterAllChannels() {
+      hiddenChannelIds.clear();
+      refreshChartAfterFilter();
+      showToast(`👁️ Đang hiển thị toàn bộ 12 kênh`);
+    }
+
+    function refreshChartAfterFilter() {
       if (channelsData && snapshotsData) {
         const snapMap = {};
         snapshotsData.forEach(s => {
@@ -1327,6 +1385,29 @@
         });
         renderChart(channelsData, snapMap);
       }
+    }
+
+    function highlightChartDataset(label) {
+      if (!chartInstance) return;
+      chartInstance.data.datasets.forEach(ds => {
+        if (ds.label === label) {
+          ds.borderWidth = 3.6;
+          ds.pointRadius = 4;
+        } else {
+          ds.borderWidth = 0.8;
+          ds.pointRadius = 0;
+        }
+      });
+      chartInstance.update('none');
+    }
+
+    function resetChartHighlight() {
+      if (!chartInstance) return;
+      chartInstance.data.datasets.forEach(ds => {
+        ds.borderWidth = 1.8;
+        ds.pointRadius = 0;
+      });
+      chartInstance.update('none');
     }
 
     function parseVnDate(str) {
@@ -1355,13 +1436,16 @@
 
       const colors = ['#e2553c', '#35b635', '#355bb6', '#259d9d', '#7c6f27', '#b63582', '#8935b6', '#277c41', '#5991c0', '#c07859', '#7f9d25', '#b6354f'];
 
-      // Render Channel Filter Chips
+      // Render Channel Filter Chips with hover highlight
       if (chipsEl) {
         chipsEl.innerHTML = channels.map((c, idx) => {
           const col = c.color || colors[idx % colors.length];
           const isOff = hiddenChannelIds.has(c.id);
           return `
-            <span onclick="toggleChannelOnChart(${c.id})" style="
+            <span onclick="toggleChannelOnChart(${c.id})"
+                  onmouseenter="highlightChartDataset('${escapeHtml(c.title)}')"
+                  onmouseleave="resetChartHighlight()"
+                  style="
               cursor:pointer;
               display:inline-flex;
               align-items:center;
@@ -1374,8 +1458,8 @@
               border:1px solid ${col};
               background:${isOff ? 'transparent' : col + '22'};
               color:${isOff ? 'var(--text-3)' : '#fff'};
-              opacity:${isOff ? '0.45' : '1'};
-            ">
+              opacity:${isOff ? '0.4' : '1'};
+            " title="Bấm để bật/tắt · Rê chuột để làm nổi bật đường biểu đồ">
               <span style="width:7px;height:7px;border-radius:50%;background:${col};"></span>
               ${escapeHtml(c.title)}
             </span>
@@ -1405,7 +1489,7 @@
         return p.length >= 2 ? `${p[0]}/${p[1]}` : d;
       });
 
-      // Compute datasets using DAILY GROWTH formula
+      // Compute datasets using DAILY GROWTH formula - No clutter point dots, sleek lines
       const datasets = channels
         .filter(c => !hiddenChannelIds.has(c.id))
         .map((c, idx) => {
@@ -1424,11 +1508,12 @@
             data: dataPoints,
             borderColor: col,
             backgroundColor: 'transparent',
-            borderWidth: 2.2,
-            tension: 0.32,
-            spanGaps: true, // Nối mượt qua các ngày bị tụt/gỡ video (không hõm giả xuống 0)
-            pointRadius: 2.5,
-            pointHoverRadius: 5.5,
+            borderWidth: 1.8,
+            tension: 0.22,
+            spanGaps: true,
+            pointRadius: 0, // Triệt tiêu toàn bộ nốt tròn dày đặc để không dính chùm
+            pointHitRadius: 10,
+            pointHoverRadius: 6,
             pointHoverBackgroundColor: col,
             pointHoverBorderColor: '#ffffff',
             pointHoverBorderWidth: 2
@@ -1915,13 +2000,87 @@
       return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // ==========================================
+    // SIDEBAR AUTO HIDE / COLLAPSE
+    // ==========================================
+    let isSidebarPinned = false;
+
+    function initSidebarAutoHide() {
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+
+      // Mặc định tự động ẩn thanh bên để biểu đồ bung rộng 100%
+      sidebar.classList.add('collapsed');
+      updateSidebarToggleBtn(true, false);
+
+      let hideTimeout = null;
+
+      // Rê chuột sát mép trái màn hình (<= 20px) -> tự động trượt Menu ra
+      document.addEventListener('mousemove', (e) => {
+        if (isSidebarPinned) return;
+        if (e.clientX <= 20) {
+          clearTimeout(hideTimeout);
+          sidebar.classList.remove('collapsed');
+          sidebar.classList.add('floating-sidebar');
+          updateSidebarToggleBtn(false, false);
+        }
+      });
+
+      sidebar.addEventListener('mouseleave', () => {
+        if (isSidebarPinned) return;
+        hideTimeout = setTimeout(() => {
+          sidebar.classList.add('collapsed');
+          sidebar.classList.remove('floating-sidebar');
+          updateSidebarToggleBtn(true, false);
+        }, 350);
+      });
+
+      sidebar.addEventListener('mouseenter', () => {
+        clearTimeout(hideTimeout);
+      });
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      if (!sidebar) return;
+      isSidebarPinned = !isSidebarPinned;
+      if (isSidebarPinned) {
+        sidebar.classList.remove('collapsed', 'floating-sidebar');
+        updateSidebarToggleBtn(false, true);
+        showToast("📌 Đã ghim cố định Menu");
+      } else {
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('floating-sidebar');
+        updateSidebarToggleBtn(true, false);
+        showToast("⚡ Đã bật tự động ẩn Menu (Rê chuột mép trái để mở)");
+      }
+      setTimeout(() => {
+        if (chartInstance) chartInstance.resize();
+      }, 300);
+    }
+
+    function updateSidebarToggleBtn(isCollapsed, isPinned = false) {
+      const txt = document.getElementById('sidebarToggleText');
+      if (!txt) return;
+      if (isPinned) {
+        txt.textContent = "Đang ghim Menu";
+      } else if (isCollapsed) {
+        txt.textContent = "Mở Menu";
+      } else {
+        txt.textContent = "Ẩn Menu";
+      }
+    }
+
     // Ẩn tooltip biểu đồ khi cuộn trang để thao tác mượt mà tuyệt đối
     window.addEventListener('scroll', () => {
       const tt = document.getElementById('sfsCustomTooltip');
       if (tt) tt.style.opacity = '0';
     }, { passive: true });
 
-    window.addEventListener('DOMContentLoaded', checkAuth);
+    window.addEventListener('DOMContentLoaded', () => {
+      checkAuth();
+      initSidebarAutoHide();
+    });
   </script>
 </body>
 </html>
