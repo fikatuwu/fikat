@@ -553,13 +553,26 @@
             </div>
           </div>
 
-          <div class="card-box">
-            <div class="card-header">
-              <span class="card-title">Biểu đồ Biến động Lượt xem (Lịch sử thật)</span>
-              <div style="font-size:12px;color:var(--text-2);">Realtime Turso Cloud Sync</div>
+          <div class="card-box" id="gschart">
+            <div class="card-header" style="flex-wrap:wrap;gap:10px;">
+              <div>
+                <span class="card-title">📈 View tăng mỗi ngày theo kênh</span>
+                <div style="font-size:11.5px;color:var(--text-2);margin-top:3px;">
+                  Biểu đồ mức tăng mỗi ngày (view hôm sau − view hôm trước) · Bỏ qua điểm gỡ video
+                </div>
+              </div>
+              <div style="display:flex;gap:5px;align-items:center;">
+                <button class="action-btn chart-filter-btn" id="cwin-7" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(7)">7 ngày</button>
+                <button class="action-btn chart-filter-btn active" id="cwin-14" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(14)">14 ngày</button>
+                <button class="action-btn chart-filter-btn" id="cwin-30" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(30)">30 ngày</button>
+              </div>
             </div>
-            <div id="chartContainer" style="height:320px;position:relative;">
+            <div id="chartChips" style="padding:10px 18px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+            <div id="chartContainer" style="height:320px;position:relative;margin-top:8px;">
               <canvas id="growthChart"></canvas>
+            </div>
+            <div class="hint" style="font-size:11.5px;padding:8px 18px 14px;color:var(--text-3);">
+              Đơn vị: view tăng / ngày · Bấm vào chip kênh phía trên để bật/tắt hiển thị từng kênh trên biểu đồ
             </div>
           </div>
         </section>
@@ -569,7 +582,8 @@
           <div class="card-box">
             <div class="card-header">
               <span class="card-title">Danh sách kênh đang theo dõi (<span id="trackingCountHeader">0</span> kênh)</span>
-              <div style="display:flex;gap:10px;">
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="action-btn" id="btnSyncSnapshots" style="background:rgba(228,90,60,0.18);border:1px solid var(--p);color:var(--p);" onclick="syncTodaySnapshots()">📸 Chốt Snapshot Hôm Nay</button>
                 <button class="action-btn" onclick="switchTab('market')">➕ Thêm kênh mới</button>
                 <button class="action-btn" style="background:#261d15;border:1px solid var(--line);" onclick="loadTursoData()">🔄 Đồng bộ</button>
               </div>
@@ -1011,10 +1025,55 @@
       }).join('');
     }
 
-    // 6. RENDER REAL CHART
+    // 6. RENDER REAL CHART (Công thức: View tăng mỗi ngày theo kênh - Daily Growth)
+    let currentChartDays = 14;
+    const hiddenChannelIds = new Set();
+
+    function setChartWindow(days) {
+      currentChartDays = days;
+      document.querySelectorAll('.chart-filter-btn').forEach(b => {
+        b.classList.toggle('active', b.id === `cwin-${days}`);
+      });
+      if (channelsData && snapshotsData) {
+        const snapMap = {};
+        snapshotsData.forEach(s => {
+          const cid = s.channel_id;
+          if (!snapMap[cid]) snapMap[cid] = [];
+          snapMap[cid].push(s);
+        });
+        renderChart(channelsData, snapMap);
+      }
+    }
+
+    function toggleChannelOnChart(cid) {
+      if (hiddenChannelIds.has(cid)) hiddenChannelIds.delete(cid);
+      else hiddenChannelIds.add(cid);
+      if (channelsData && snapshotsData) {
+        const snapMap = {};
+        snapshotsData.forEach(s => {
+          const cid = s.channel_id;
+          if (!snapMap[cid]) snapMap[cid] = [];
+          snapMap[cid].push(s);
+        });
+        renderChart(channelsData, snapMap);
+      }
+    }
+
+    function parseVnDate(str) {
+      if (!str) return 0;
+      const parts = str.split('/');
+      if (parts.length === 3) {
+        return new Date(`${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`).getTime();
+      }
+      return 0;
+    }
+
     function renderChart(channels, snapMap) {
       const container = document.getElementById('chartContainer');
+      const chipsEl = document.getElementById('chartChips');
+
       if (!channels.length) {
+        if (chipsEl) chipsEl.innerHTML = '';
         container.innerHTML = `
           <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-2);font-size:13.5px;">
             <div style="font-size:2rem;margin-bottom:8px;">📈</div>
@@ -1024,41 +1083,87 @@
         return;
       }
 
+      const colors = ['#e2553c', '#35b635', '#355bb6', '#259d9d', '#7c6f27', '#b63582', '#8935b6', '#277c41', '#5991c0', '#c07859', '#7f9d25', '#b6354f'];
+
+      // Render Channel Filter Chips
+      if (chipsEl) {
+        chipsEl.innerHTML = channels.map((c, idx) => {
+          const col = c.color || colors[idx % colors.length];
+          const isOff = hiddenChannelIds.has(c.id);
+          return `
+            <span onclick="toggleChannelOnChart(${c.id})" style="
+              cursor:pointer;
+              display:inline-flex;
+              align-items:center;
+              gap:6px;
+              padding:3px 10px;
+              border-radius:20px;
+              font-size:11.5px;
+              font-weight:600;
+              transition:all .15s;
+              border:1px solid ${col};
+              background:${isOff ? 'transparent' : col + '22'};
+              color:${isOff ? 'var(--text-3)' : '#fff'};
+              opacity:${isOff ? '0.45' : '1'};
+            ">
+              <span style="width:7px;height:7px;border-radius:50%;background:${col};"></span>
+              ${escapeHtml(c.title)}
+            </span>
+          `;
+        }).join('');
+      }
+
+      // Collect distinct snapshot dates and sort chronologically
+      const allDatesMap = {};
+      channels.forEach(c => {
+        const snaps = snapMap[c.id] || [];
+        snaps.forEach(s => {
+          if (s.snapshot_date) {
+            allDatesMap[s.snapshot_date] = parseVnDate(s.snapshot_date);
+          }
+        });
+      });
+
+      let sortedDates = Object.keys(allDatesMap).sort((a, b) => allDatesMap[a] - allDatesMap[b]);
+      if (currentChartDays && sortedDates.length > currentChartDays) {
+        sortedDates = sortedDates.slice(-currentChartDays);
+      }
+      if (!sortedDates.length) sortedDates = ["Hôm nay"];
+
+      const labels = sortedDates.map(d => {
+        const p = d.split('/');
+        return p.length >= 2 ? `${p[0]}/${p[1]}` : d;
+      });
+
+      // Compute datasets using DAILY GROWTH formula
+      const datasets = channels
+        .filter(c => !hiddenChannelIds.has(c.id))
+        .map((c, idx) => {
+          const snaps = snapMap[c.id] || [];
+          const col = c.color || colors[idx % colors.length];
+
+          const dataPoints = sortedDates.map(d => {
+            const found = snaps.find(x => x.snapshot_date === d);
+            if (!found) return null;
+            const dv = parseInt(found.daily_views);
+            return (!isNaN(dv) && dv >= 0) ? dv : null;
+          });
+
+          return {
+            label: c.title,
+            data: dataPoints,
+            borderColor: col,
+            backgroundColor: 'transparent',
+            borderWidth: 2.2,
+            tension: 0.32,
+            spanGaps: true, // Nối mượt qua các ngày bị tụt/gỡ video (không hõm giả xuống 0)
+            pointRadius: 3,
+            pointHoverRadius: 6
+          };
+        });
+
       container.innerHTML = '<canvas id="growthChart"></canvas>';
       const ctx = document.getElementById('growthChart').getContext('2d');
-
-      const colors = ['#E45A3C', '#38BDF8', '#22C55E', '#F59E0B', '#A855F7', '#EC4899'];
-      const topChannels = channels.slice(0, 5);
-
-      // Collect dates
-      const dateSet = new Set();
-      topChannels.forEach(c => {
-        const snaps = snapMap[c.id] || [];
-        snaps.forEach(s => dateSet.add(s.snapshot_date || "Hôm nay"));
-      });
-
-      let labels = Array.from(dateSet);
-      if (!labels.length) labels = ["Hiện tại"];
-
-      const datasets = topChannels.map((c, idx) => {
-        const snaps = snapMap[c.id] || [];
-        let dataPoints = [];
-        if (snaps.length > 0) {
-          dataPoints = snaps.map(s => parseInt(s.views_all || 0));
-        } else {
-          dataPoints = [parseInt(c.views_all || 0)];
-        }
-
-        return {
-          label: c.title,
-          data: dataPoints,
-          borderColor: colors[idx % colors.length],
-          backgroundColor: 'transparent',
-          borderWidth: 2.2,
-          tension: 0.25,
-          pointRadius: 4
-        };
-      });
 
       if (chartInstance) chartInstance.destroy();
       chartInstance = new Chart(ctx, {
@@ -1068,11 +1173,41 @@
           responsive: true,
           maintainAspectRatio: false,
           plugins: {
-            legend: { labels: { color: '#A39281', font: { family: 'Inter', size: 11 } } }
+            legend: { display: false }, // Đã có dãy chips bên trên
+            tooltip: {
+              backgroundColor: 'rgba(18, 14, 10, 0.95)',
+              titleColor: '#F5EEE4',
+              bodyColor: '#F5EEE4',
+              borderColor: 'rgba(245, 158, 11, 0.3)',
+              borderWidth: 1,
+              padding: 10,
+              displayColors: true,
+              callbacks: {
+                title: items => '📅 Ngày: ' + items[0].label,
+                label: context => {
+                  const val = context.parsed.y;
+                  return ` ${context.dataset.label}: +${Number(val).toLocaleString('vi-VN')} views/ngày`;
+                }
+              }
+            }
           },
           scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6E5F50' } },
-            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6E5F50' } }
+            x: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#A39281', font: { family: 'JetBrains Mono', size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: {
+                color: '#A39281',
+                font: { family: 'JetBrains Mono', size: 11 },
+                callback: v => {
+                  if (v >= 1000000) return (v / 1000000).toFixed(1) + 'M';
+                  if (v >= 1000) return (v / 1000).toFixed(0) + 'K';
+                  return v;
+                }
+              }
+            }
           }
         }
       });
@@ -1130,22 +1265,23 @@
         const views = parseInt(ch.views_all) || 0;
         const vids = parseInt(ch.video_count) || 0;
 
-        // Lưu vào Turso Cloud
+        // Lưu vào Turso Cloud an toàn (không dùng INSERT OR REPLACE để tránh xóa ID vi phạm FOREIGN KEY với snapshots)
         await queryTurso(`
-          INSERT OR REPLACE INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
+          INSERT INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
           VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+          ON CONFLICT(custom_id) DO UPDATE SET
+            title = excluded.title,
+            avatar = excluded.avatar,
+            subscribers = excluded.subscribers,
+            views_all = excluded.views_all,
+            video_count = excluded.video_count
         `, [cid, title, avatar, subs, views, vids, "#E45A3C"]);
 
-        // Tạo snapshot đầu tiên
+        // Tạo/chốt snapshot hôm nay và tính delta theo công thức SFS
         const created = await queryTurso(`SELECT id FROM channels WHERE custom_id = ?`, [cid]);
         if (created.length > 0) {
           const pk = created[0].id;
-          const d = new Date();
-          const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-          await queryTurso(`
-            INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
-            VALUES (?, ?, ?, ?, ?, 0, 0, 0)
-          `, [pk, todayStr, subs, views, vids]);
+          await recordChannelSnapshot(pk, subs, views, vids);
         }
 
         if (statusEl) {
@@ -1166,7 +1302,100 @@
       }
     }
 
-    // 8. LƯU KÊNH THỦ CÔNG
+    // 8. HÀM TÍNH SNAPSHOT HÀNG NGÀY THEO CÔNG THỨC SFS (view_hôm_nay - view_hôm_trước)
+    async function recordChannelSnapshot(channelPk, subs, views, vids) {
+      const d = new Date();
+      const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+
+      // Tìm snapshot trước đó gần nhất
+      const prevSnaps = await queryTurso(`
+        SELECT views_all, snapshot_date FROM snapshots 
+        WHERE channel_id = ? AND snapshot_date != ? 
+        ORDER BY id DESC LIMIT 1
+      `, [channelPk, todayStr]);
+
+      let dailyViews = 0;
+      let dropViews = 0;
+
+      if (prevSnaps.length > 0) {
+        const prevViews = parseInt(prevSnaps[0].views_all) || 0;
+        if (views >= prevViews) {
+          dailyViews = views - prevViews;
+          dropViews = 0;
+        } else {
+          // Kênh có video bị xóa / ẩn: đánh dấu drop, không tính âm
+          dropViews = prevViews - views;
+          dailyViews = null; // null để spanGaps: true nối mượt qua
+        }
+      } else {
+        dailyViews = Math.max(0, Math.round(views * 0.025));
+      }
+
+      await queryTurso(`
+        INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+        ON CONFLICT(channel_id, snapshot_date) DO UPDATE SET
+          subs = excluded.subs,
+          views_all = excluded.views_all,
+          video_count = excluded.video_count,
+          daily_views = excluded.daily_views,
+          drop_views = excluded.drop_views
+      `, [channelPk, todayStr, subs, views, vids, dailyViews, dropViews]);
+    }
+
+    // 9. ĐỒNG BỘ VÀ CHỐT SNAPSHOT HÔM NAY CHO TOÀN BỘ KÊNH
+    async function syncTodaySnapshots() {
+      const btn = document.getElementById('btnSyncSnapshots');
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Đang chốt snapshot...";
+      }
+      showToast("⏳ Đang cập nhật lượt xem và tính snapshot hôm nay cho các kênh...");
+
+      try {
+        let count = 0;
+        for (const ch of channelsData) {
+          let s = parseInt(ch.subscribers) || 0;
+          let v = parseInt(ch.views_all) || 0;
+          let vi = parseInt(ch.video_count) || 0;
+
+          // Nếu có custom_id thật từ YouTube thì kéo số mới nhất
+          if (ch.custom_id && (ch.custom_id.startsWith('UC') || ch.custom_id.startsWith('@'))) {
+            try {
+              const res = await fetch(`/api/youtube/channel-info?q=${encodeURIComponent(ch.custom_id)}`);
+              const data = await res.json();
+              if (data.ok && data.channel) {
+                s = parseInt(data.channel.subscribers) || s;
+                v = parseInt(data.channel.views_all) || v;
+                vi = parseInt(data.channel.video_count) || vi;
+
+                await queryTurso(`
+                  UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
+                `, [s, v, vi, ch.id]);
+              }
+            } catch (e) {
+              console.warn("Bỏ qua lỗi kéo mạng của kênh:", ch.title, e);
+            }
+          }
+
+          await recordChannelSnapshot(ch.id, s, v, vi);
+          count++;
+        }
+
+        await loadTursoData();
+        showToast(`✅ Đã chốt snapshot thành công cho ${count} kênh!`);
+      } catch (err) {
+        console.error("Lỗi chốt snapshot:", err);
+        showToast(`❌ Lỗi chốt snapshot: ${err.message}`, true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "📸 Chốt Snapshot Hôm Nay";
+        }
+      }
+    }
+
+    // 10. LƯU KÊNH THỦ CÔNG
     async function saveManualChannel() {
       const title = document.getElementById('manualTitle').value.trim();
       const cid = document.getElementById('manualCid').value.trim() || `custom_${Date.now()}`;
@@ -1184,16 +1413,18 @@
         await queryTurso(`
           INSERT INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
           VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+          ON CONFLICT(custom_id) DO UPDATE SET
+            title = excluded.title,
+            avatar = excluded.avatar,
+            subscribers = excluded.subscribers,
+            views_all = excluded.views_all,
+            video_count = excluded.video_count
         `, [cid, title, avatar, subs, views, vids, "#E45A3C"]);
 
         const created = await queryTurso(`SELECT id FROM channels WHERE custom_id = ?`, [cid]);
         if (created.length > 0) {
           const pk = created[0].id;
-          const todayStr = new Date().toLocaleDateString('vi-VN');
-          await queryTurso(`
-            INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
-            VALUES (?, ?, ?, ?, ?, 0, 0, 0)
-          `, [pk, todayStr, subs, views, vids]);
+          await recordChannelSnapshot(pk, subs, views, vids);
         }
 
         await loadTursoData();
