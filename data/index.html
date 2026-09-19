@@ -1790,11 +1790,12 @@
       const d = new Date();
       const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 
-      // Tìm snapshot trước đó gần nhất
+      // Tìm snapshot trước đó gần nhất theo thứ tự ngày tháng thực tế
       const prevSnaps = await queryTurso(`
-        SELECT views_all, snapshot_date FROM snapshots 
+        SELECT views_all, snapshot_date, daily_views FROM snapshots 
         WHERE channel_id = ? AND snapshot_date != ? 
-        ORDER BY id DESC LIMIT 1
+        ORDER BY (substr(snapshot_date, 7, 4) || '-' || substr(snapshot_date, 4, 2) || '-' || substr(snapshot_date, 1, 2)) DESC 
+        LIMIT 1
       `, [channelPk, todayStr]);
 
       let dailyViews = 0;
@@ -1802,11 +1803,12 @@
 
       if (prevSnaps.length > 0) {
         const prevViews = parseInt(prevSnaps[0].views_all) || 0;
+        const prevDaily = parseInt(prevSnaps[0].daily_views) || 20000;
         if (views >= prevViews) {
           dailyViews = views - prevViews;
-          // Guard chống spike bất thường (tránh lệch kênh YouTube ngoài đời)
-          if (dailyViews > 500000 && prevViews < 5000000) {
-            dailyViews = Math.round(prevViews * 0.006) || 15000;
+          // Guard chống spike bất thường: nếu tăng đột ngột quá 150k hoặc chênh lệch quá lớn so với hôm qua
+          if (dailyViews > 150000 && prevViews < 10000000) {
+            dailyViews = Math.min(dailyViews, Math.max(prevDaily, Math.round(prevViews * 0.005)));
           }
           dropViews = 0;
         } else {
