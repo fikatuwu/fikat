@@ -1804,6 +1804,10 @@
         const prevViews = parseInt(prevSnaps[0].views_all) || 0;
         if (views >= prevViews) {
           dailyViews = views - prevViews;
+          // Guard chống spike bất thường (tránh lệch kênh YouTube ngoài đời)
+          if (dailyViews > 500000 && prevViews < 5000000) {
+            dailyViews = Math.round(prevViews * 0.006) || 15000;
+          }
           dropViews = 0;
         } else {
           // Kênh có video bị xóa / ẩn: đánh dấu drop, không tính âm
