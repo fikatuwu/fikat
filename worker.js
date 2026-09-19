@@ -1352,11 +1352,12 @@ async function runDailySnapshotJob(env) {
         }
       }
 
-      // Lấy snapshot trước đó
+      // Lấy snapshot trước đó theo đúng thứ tự ngày tháng lịch thực tế
       const prevSnaps = await queryTursoWorker(`
         SELECT views_all, snapshot_date FROM snapshots 
         WHERE channel_id = ? AND snapshot_date != ? 
-        ORDER BY id DESC LIMIT 1
+        ORDER BY (substr(snapshot_date, 7, 4) || '-' || substr(snapshot_date, 4, 2) || '-' || substr(snapshot_date, 1, 2)) DESC 
+        LIMIT 1
       `, [ch.id, todayStr]);
 
       let dailyViews = 0;

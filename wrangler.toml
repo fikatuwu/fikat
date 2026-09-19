@@ -17,4 +17,4 @@ database_name = "fikat-db"
 database_id = "31e8d3cd-6383-40f7-b140-5b5e74615be8"
 
 [triggers]
-crons = ["0 23 * * *"] # 23:00 UTC = 06:00 sáng mỗi ngày giờ Việt Nam (UTC+7)
+crons = ["0 * * * *"] # Chạy tự động mỗi 1 tiếng một lần (phút 00 của mỗi giờ) 24/7
