@@ -660,6 +660,11 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Trang chủ & Biểu đồ
           </button>
+          <button class="nav-btn" id="navBtnRealtime" onclick="switchTab('video-realtime')" style="margin-top:4px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span class="nav-text" style="color:#38bdf8;font-weight:700;">⚡ Real-time Video (30p)</span>
+            <span class="nav-badge" style="background:rgba(56,189,248,0.2);color:#38bdf8;border:1px solid rgba(56,189,248,0.4);font-weight:700;">MỚI</span>
+          </button>
         </div>
 
         <div class="nav-group">
@@ -721,6 +726,22 @@
       </header>
 
       <div class="content-area">
+        <!-- TOP VIEW MODE SELECTOR TABS -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+          <div style="display:flex;gap:8px;background:rgba(255,255,255,0.04);padding:5px;border-radius:12px;border:1px solid var(--line);">
+            <button id="btnToggleDaily" class="action-btn" onclick="switchTab('dashboard')" style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;border:none;background:var(--p);color:#fff;cursor:pointer;">
+              📊 Dữ Liệu SFS Kênh (Theo Ngày)
+            </button>
+            <button id="btnToggleRealtime" class="action-btn" onclick="switchTab('video-realtime')" style="padding:8px 18px;font-size:13px;font-weight:700;border-radius:8px;border:none;background:transparent;color:var(--text-2);cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+              ⚡ Real-Time Video (30 Phút)
+              <span style="background:rgba(56,189,248,0.2);color:#38bdf8;padding:2px 7px;border-radius:8px;font-size:11px;border:1px solid rgba(56,189,248,0.4);">MỚI</span>
+            </button>
+          </div>
+          <div style="font-size:12px;color:var(--text-3);">
+            💡 Chuyển đổi giữa thống kê chuẩn SFS hàng ngày và giám sát real-time tổng video
+          </div>
+        </div>
+
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-view active">
           <div class="stats-row">
@@ -912,8 +933,150 @@
             </div>
           </div>
         </section>
+
+        <!-- TAB 6: REAL-TIME VIDEO VIEW TRACKER (30 PHÚT) -->
+        <section id="tab-video-realtime" class="tab-view">
+          <!-- Banner & Stats 30 Phút -->
+          <div class="stats-row">
+            <!-- Card 1: TỔNG VIDEO ĐÃ QUÉT -->
+            <div class="stat-card">
+              <div class="stat-icon-wrap icon-blue">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-lbl">VIDEO PUBLIC ĐÃ QUÉT</span>
+                <span class="stat-val" id="rtTotalVideos" style="color:#38bdf8;">759</span>
+                <span class="stat-note" style="color:var(--text-3);">Từ toàn bộ 12 kênh YouTube</span>
+              </div>
+            </div>
+
+            <!-- Card 2: TỔNG LƯỢT XEM CỘNG DỒN -->
+            <div class="stat-card">
+              <div class="stat-icon-wrap icon-gold">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-lbl">TỔNG VIEW VIDEO PUBLIC</span>
+                <span class="stat-val" id="rtTotalViews" style="color:#f59e0b;">--</span>
+                <span class="stat-note" style="color:var(--green);">Cộng dồn từng video</span>
+              </div>
+            </div>
+
+            <!-- Card 3: TĂNG TRƯỞNG 30 PHÚT QUA -->
+            <div class="stat-card">
+              <div class="stat-icon-wrap icon-green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-lbl">TĂNG TRƯỞNG 30 PHÚT</span>
+                <span class="stat-val" id="rtTotalDelta" style="color:var(--green);">--</span>
+                <span class="stat-note" id="rtTimeMark" style="color:var(--text-3);">Mốc gần nhất</span>
+              </div>
+            </div>
+
+            <!-- Card 4: KÊNH BỨT PHÁ 30P QUA -->
+            <div class="stat-card">
+              <div class="stat-icon-wrap icon-pink">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              </div>
+              <div class="stat-info">
+                <span class="stat-lbl">KÊNH BỨT PHÁ 30P QUA</span>
+                <span class="stat-val" id="rtTopChannel" style="font-size:18px;color:#fb7185;">--</span>
+                <span class="stat-note" id="rtTopChannelGain" style="color:var(--green);">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BIỂU ĐỒ REAL-TIME 30 PHÚT -->
+          <div class="card-box">
+            <div class="card-header">
+              <div>
+                <span class="card-title" style="display:flex;align-items:center;gap:8px;">
+                  <span style="color:#38bdf8;">⚡</span> Biến Động Lượt Xem Video Public Theo Chu Kỳ 30 Phút
+                </span>
+                <div style="font-size:11.5px;color:var(--text-2);margin-top:3px;">
+                  Lượt xem tăng trong mỗi nấc 30 phút: View(hiện tại) − View(30 phút trước) · Quét từ từng video
+                </div>
+              </div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <span id="rtStatusBadge" style="font-size:11.5px;padding:4px 10px;border-radius:20px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:var(--green);font-weight:600;">
+                  🟢 Tự động chạy 30p/lần
+                </span>
+                <button class="action-btn" id="btnTriggerRtScan" onclick="triggerScanVideosNow()" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#38bdf8;font-weight:700;">
+                  🔄 Quét Toàn Bộ Video Ngay
+                </button>
+              </div>
+            </div>
+            <div id="rtChartChips" style="padding:10px 18px 0;display:flex;flex-wrap:wrap;gap:8px;align-items:center;"></div>
+            <div style="height:440px;position:relative;margin-top:8px;">
+              <canvas id="realtimeVideoChart"></canvas>
+            </div>
+            <div class="hint" style="font-size:11.5px;padding:8px 18px 14px;color:var(--text-3);">
+              Đơn vị: view tăng / 30 phút · Bấm vào tên kênh trên bảng chip để bật/tắt từng kênh.
+            </div>
+          </div>
+
+          <!-- BẢNG THỐNG KÊ CHI TIẾT 12 KÊNH THEO VIEW VIDEO -->
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">🚀 Bảng Xếp Hạng Lượt Xem Video Public (12 Kênh)</span>
+              <span style="font-size:12px;color:var(--text-3);" id="rtLastUpdatedText">Cập nhật lúc: --:--</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px;">#</th>
+                    <th>Kênh YouTube</th>
+                    <th>Video Quét Được</th>
+                    <th>Tổng View Video Public</th>
+                    <th>Tăng Trưởng 30 Phút</th>
+                    <th>Video Đang Tăng Nhanh Nhất</th>
+                    <th style="width:170px;text-align:center;">Chi Tiết Video</th>
+                  </tr>
+                </thead>
+                <tbody id="rtTableBody">
+                  <tr><td colspan="7" style="text-align:center;padding:30px;">Đang tải dữ liệu video...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
+  </div>
+
+  <!-- MODAL XEM CHI TIẾT DANH SÁCH VIDEO CỦA 1 KÊNH -->
+  <div id="videoModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.82);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(6px);padding:20px;">
+    <div style="background:#16120e;border:1px solid var(--line);border-radius:18px;width:100%;max-width:960px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.7);overflow:hidden;">
+      <div style="padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <h3 id="modalChannelTitle" style="color:#fff;font-size:17px;font-weight:700;">Danh sách video public</h3>
+          <p id="modalChannelSub" style="font-size:12px;color:var(--text-2);margin-top:2px;">Đang tải...</p>
+        </div>
+        <button onclick="closeVideoModal()" style="background:transparent;border:none;color:var(--text-2);font-size:24px;cursor:pointer;line-height:1;padding:4px 10px;">&times;</button>
+      </div>
+      <div style="padding:12px 24px;border-bottom:1px solid var(--line);display:flex;gap:12px;background:rgba(0,0,0,0.15);">
+        <input type="text" id="modalVideoSearch" class="search-inp" placeholder="Tìm kiếm tên bài hát / video..." oninput="filterModalVideos()" style="flex:1;">
+      </div>
+      <div style="overflow-y:auto;flex:1;padding:0;">
+        <table class="data-table" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Tên Video / Bài Hát</th>
+              <th style="width:140px;">Lượt xem</th>
+              <th style="width:130px;">Tăng gần đây</th>
+              <th style="width:130px;">Thời gian</th>
+              <th style="width:90px;text-align:center;">Link</th>
+            </tr>
+          </thead>
+          <tbody id="modalVideoTableBody">
+            <tr><td colspan="6" style="text-align:center;padding:30px;">Đang tải danh sách video...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- ======================== JAVASCRIPT ======================== -->
@@ -1976,9 +2139,28 @@
         'tracking': 'Theo dõi Kênh YouTube (Dữ liệu Đám Mây)',
         'leaderboard': 'Bảng xếp hạng Lượt xem & Quy mô',
         'market': 'Thêm Kênh YouTube Mới Vào Hệ Thống',
-        'admin': 'Cấu hình Cơ sở dữ liệu Cloud'
+        'admin': 'Cấu hình Cơ sở dữ liệu Cloud',
+        'video-realtime': '⚡ Giám Sát Real-Time Video Public (30 Phút)'
       };
       document.getElementById('tabTitle').textContent = titles[tabId] || 'SFS Metrics';
+
+      // Cập nhật trạng thái nút chuyển Top Selector Tabs
+      const btnDaily = document.getElementById('btnToggleDaily');
+      const btnRt = document.getElementById('btnToggleRealtime');
+      if (btnDaily && btnRt) {
+        if (tabId === 'video-realtime') {
+          btnDaily.style.background = 'transparent';
+          btnDaily.style.color = 'var(--text-2)';
+          btnRt.style.background = '#38bdf8';
+          btnRt.style.color = '#000';
+          loadRealtimeVideoData();
+        } else {
+          btnDaily.style.background = 'var(--p)';
+          btnDaily.style.color = '#fff';
+          btnRt.style.background = 'transparent';
+          btnRt.style.color = 'var(--text-2)';
+        }
+      }
 
       if (tabId === 'dashboard' || tabId === 'tracking' || tabId === 'leaderboard') {
         document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
@@ -2001,6 +2183,350 @@
       const targetView = document.getElementById('tab-' + tabId);
       if (targetView) targetView.classList.add('active');
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ========================================================================
+    // PHẦN REAL-TIME VIDEO TRACKER (30 PHÚT)
+    // ========================================================================
+    let rtChartInstance = null;
+    let cachedModalVideos = [];
+
+    async function loadRealtimeVideoData() {
+      try {
+        const [channels, videoCounts, snapshots] = await Promise.all([
+          queryTurso("SELECT id, title, custom_id, avatar, color FROM channels ORDER BY views_all DESC"),
+          queryTurso("SELECT channel_id, count(*) as vid_count, sum(views) as total_views FROM video_items GROUP BY channel_id"),
+          queryTurso("SELECT * FROM video_view_snapshots ORDER BY id ASC")
+        ]);
+
+        const countMap = {};
+        videoCounts.forEach(r => {
+          countMap[r.channel_id] = {
+            count: parseInt(r.vid_count) || 0,
+            views: parseInt(r.total_views) || 0
+          };
+        });
+
+        const snapMap = {};
+        snapshots.forEach(s => {
+          if (!snapMap[s.channel_id]) snapMap[s.channel_id] = [];
+          snapMap[s.channel_id].push(s);
+        });
+
+        let grandTotalVideos = 0;
+        let grandTotalViews = 0;
+        let grandTotalDelta = 0;
+        let topGainer = null;
+        let maxDelta = -1;
+        let latestTimeMark = '';
+
+        channels.forEach(c => {
+          const info = countMap[c.id] || { count: 0, views: 0 };
+          grandTotalVideos += info.count;
+          grandTotalViews += info.views;
+
+          const chSnaps = snapMap[c.id] || [];
+          if (chSnaps.length > 0) {
+            const lastSnap = chSnaps[chSnaps.length - 1];
+            latestTimeMark = lastSnap.captured_at || latestTimeMark;
+            const delta = parseInt(lastSnap.delta_30m) || 0;
+            grandTotalDelta += delta;
+            if (delta > maxDelta) {
+              maxDelta = delta;
+              topGainer = { channel: c, delta, topTitle: lastSnap.top_growing_video_title };
+            }
+          }
+        });
+
+        if (document.getElementById('rtTotalVideos')) document.getElementById('rtTotalVideos').textContent = grandTotalVideos.toLocaleString('vi-VN');
+        if (document.getElementById('rtTotalViews')) document.getElementById('rtTotalViews').textContent = grandTotalViews.toLocaleString('vi-VN');
+        if (document.getElementById('rtTotalDelta')) document.getElementById('rtTotalDelta').textContent = `+${grandTotalDelta.toLocaleString('vi-VN')}`;
+        if (document.getElementById('rtTimeMark')) document.getElementById('rtTimeMark').textContent = latestTimeMark ? `Mốc: ${latestTimeMark}` : 'Chưa có mốc';
+        
+        if (topGainer && document.getElementById('rtTopChannel')) {
+          document.getElementById('rtTopChannel').textContent = topGainer.channel.title;
+          document.getElementById('rtTopChannelGain').textContent = `+${topGainer.delta.toLocaleString('vi-VN')} views`;
+        }
+        if (document.getElementById('rtLastUpdatedText')) {
+          const now = new Date();
+          document.getElementById('rtLastUpdatedText').textContent = `Cập nhật lúc: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+        }
+
+        renderRealtimeTable(channels, countMap, snapMap);
+        renderRealtimeChart(channels, snapshots);
+
+      } catch (err) {
+        console.error("Lỗi nạp realtime video data:", err);
+      }
+    }
+
+    function renderRealtimeTable(channels, countMap, snapMap) {
+      const tbody = document.getElementById('rtTableBody');
+      if (!tbody) return;
+
+      tbody.innerHTML = channels.map((c, i) => {
+        const info = countMap[c.id] || { count: 0, views: 0 };
+        const chSnaps = snapMap[c.id] || [];
+        const lastSnap = chSnaps.length ? chSnaps[chSnaps.length - 1] : null;
+        const delta = lastSnap ? (parseInt(lastSnap.delta_30m) || 0) : 0;
+        const topTitle = lastSnap?.top_growing_video_title ? escapeHtml(lastSnap.top_growing_video_title) : 'Đang theo dõi';
+        const ytLink = getChannelLink(c);
+
+        return `
+          <tr>
+            <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
+            <td>
+              <div class="ch-row">
+                <a href="${ytLink}" target="_blank" rel="noopener noreferrer">
+                  <img src="${escapeHtml(c.avatar || '')}" class="ch-av" alt="${escapeHtml(c.title || '')}">
+                </a>
+                <div>
+                  <div class="ch-title">
+                    <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:none;font-weight:600;">
+                      ${escapeHtml(c.title || 'Kênh')}
+                    </a>
+                  </div>
+                  <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#38bdf8;font-weight:500;">YouTube ↗</a>
+                </div>
+              </div>
+            </td>
+            <td class="mono-cell" style="font-weight:600;">
+              <span style="background:rgba(56,189,248,0.12);color:#38bdf8;padding:3px 9px;border-radius:6px;font-size:12px;border:1px solid rgba(56,189,248,0.25);">
+                🎬 ${info.count} video
+              </span>
+            </td>
+            <td class="mono-cell" style="font-weight:700;color:#fff;">${info.views.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell">
+              <span style="color:var(--green);font-weight:700;background:rgba(34,197,94,0.12);padding:3px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.25);">
+                +${delta.toLocaleString('vi-VN')}
+              </span>
+            </td>
+            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2);" title="${topTitle}">
+              🔥 ${topTitle}
+            </td>
+            <td style="text-align:center;">
+              <button onclick="openChannelVideosModal(${c.id}, '${escapeHtml(c.title || '')}')" style="background:rgba(56,189,248,0.16);border:1px solid #38bdf8;color:#38bdf8;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;">
+                📂 Xem ${info.count} Video ↗
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderRealtimeChart(channels, snapshots) {
+      const canvas = document.getElementById('realtimeVideoChart');
+      if (!canvas) return;
+
+      const uniqueTimes = Array.from(new Set(snapshots.map(s => s.captured_at).filter(Boolean)));
+      if (uniqueTimes.length === 0) return;
+
+      const datasets = channels.map(c => {
+        const color = c.color || '#38bdf8';
+        const chSnaps = snapshots.filter(s => s.channel_id === c.id);
+        const snapByTime = {};
+        chSnaps.forEach(s => { snapByTime[s.captured_at] = s.delta_30m; });
+
+        const dataPoints = uniqueTimes.map(t => {
+          const val = snapByTime[t];
+          return (val !== undefined && val !== null) ? Number(val) : null;
+        });
+
+        return {
+          label: c.title,
+          data: dataPoints,
+          borderColor: color,
+          backgroundColor: color,
+          borderWidth: 2.2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          tension: 0.35,
+          fill: false,
+          spanGaps: true
+        };
+      });
+
+      if (rtChartInstance) rtChartInstance.destroy();
+
+      const ctx = canvas.getContext('2d');
+      rtChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: uniqueTimes,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              titleColor: '#fff',
+              bodyColor: '#e2e8f0',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: function(context) {
+                  const val = context.parsed.y;
+                  return ` ${context.dataset.label}: +${Number(val).toLocaleString('vi-VN')} views`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: { color: '#94a3b8', font: { size: 11 } }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.05)' },
+              ticks: {
+                color: '#94a3b8',
+                font: { size: 11 },
+                callback: function(val) { return '+' + Number(val).toLocaleString('vi-VN'); }
+              }
+            }
+          }
+        }
+      });
+
+      const chipsEl = document.getElementById('rtChartChips');
+      if (chipsEl) {
+        chipsEl.innerHTML = channels.map((c, i) => {
+          const color = c.color || '#38bdf8';
+          return `
+            <div class="chart-chip active" id="rtchip-${i}" onclick="toggleRtDataset(${i})" style="border:1px solid ${color};background:${color}22;color:#fff;font-size:11.5px;padding:4px 10px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${color};"></span>
+              <span>${escapeHtml(c.title)}</span>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleRtDataset(idx) {
+      if (!rtChartInstance) return;
+      const isVisible = rtChartInstance.isDatasetVisible(idx);
+      rtChartInstance.setDatasetVisibility(idx, !isVisible);
+      rtChartInstance.update();
+
+      const chip = document.getElementById(`rtchip-${idx}`);
+      if (chip) {
+        chip.style.opacity = !isVisible ? '1' : '0.4';
+      }
+    }
+
+    async function openChannelVideosModal(channelId, channelTitle) {
+      const modal = document.getElementById('videoModal');
+      const titleEl = document.getElementById('modalChannelTitle');
+      const subEl = document.getElementById('modalChannelSub');
+      const tbody = document.getElementById('modalVideoTableBody');
+      const searchInp = document.getElementById('modalVideoSearch');
+
+      if (!modal) return;
+      modal.style.display = 'flex';
+      titleEl.textContent = `Danh Sách Video Public · ${channelTitle}`;
+      subEl.textContent = "Đang tải dữ liệu...";
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;">Đang nạp video từ Turso...</td></tr>`;
+      if (searchInp) searchInp.value = '';
+
+      try {
+        const rows = await queryTurso(`
+          SELECT * FROM video_items WHERE channel_id = ? ORDER BY views DESC
+        `, [channelId]);
+
+        cachedModalVideos = rows;
+        subEl.textContent = `Tổng cộng: ${rows.length} video public đã quét`;
+        renderModalVideos(rows);
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:30px;">Lỗi: ${err.message}</td></tr>`;
+      }
+    }
+
+    function renderModalVideos(videos) {
+      const tbody = document.getElementById('modalVideoTableBody');
+      if (!tbody) return;
+
+      if (!videos.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3);">Không tìm thấy video nào.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = videos.map((v, i) => {
+        const ytWatchUrl = `https://www.youtube.com/watch?v=${v.id}`;
+        const views = parseInt(v.views) || 0;
+        const delta = parseInt(v.delta_views) || 0;
+        const deltaHtml = delta > 0 
+          ? `<span style="color:var(--green);font-weight:700;">+${delta.toLocaleString('vi-VN')}</span>`
+          : `<span style="color:var(--text-3);">0</span>`;
+
+        return `
+          <tr>
+            <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
+            <td>
+              <a href="${ytWatchUrl}" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:none;font-weight:600;font-size:12.5px;display:block;max-width:440px;line-height:1.4;">
+                ${escapeHtml(v.title || 'Video')}
+              </a>
+            </td>
+            <td class="mono-cell" style="color:#f59e0b;font-weight:700;">${views.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell">${deltaHtml}</td>
+            <td style="font-size:11.5px;color:var(--text-3);">${escapeHtml(v.published_time || '--')}</td>
+            <td style="text-align:center;">
+              <a href="${ytWatchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:4px 9px;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;text-decoration:none;font-size:11.5px;font-weight:700;">
+                Xem ↗
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterModalVideos() {
+      const q = (document.getElementById('modalVideoSearch')?.value || '').toLowerCase().trim();
+      if (!q) {
+        renderModalVideos(cachedModalVideos);
+        return;
+      }
+      const filtered = cachedModalVideos.filter(v => (v.title || '').toLowerCase().includes(q) || (v.id || '').toLowerCase().includes(q));
+      renderModalVideos(filtered);
+    }
+
+    function closeVideoModal() {
+      const modal = document.getElementById('videoModal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    async function triggerScanVideosNow() {
+      const btn = document.getElementById('btnTriggerRtScan');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `⏳ Đang quét video 12 kênh...`;
+      }
+      showToast("⏳ Đang bắt đầu quét toàn bộ video 12 kênh, vui lòng đợi trong giây lát...");
+
+      try {
+        const res = await fetch('/api/video-tracker/snapshot', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`✅ Đã quét xong ${data.count} kênh (${data.totalVideos} videos)!`);
+          await loadRealtimeVideoData();
+        } else {
+          showToast(`❌ Lỗi quét: ${data.message}`, true);
+        }
+      } catch (err) {
+        showToast(`❌ Không thể kết nối quét video: ${err.message}`, true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `🔄 Quét Toàn Bộ Video Ngay`;
+        }
+      }
     }
 
     function escapeHtml(str) {
