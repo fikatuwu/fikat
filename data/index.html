@@ -782,9 +782,6 @@
                 </div>
               </div>
               <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-                <button class="action-btn" style="padding:4px 10px;font-size:11px;background:rgba(228,90,60,0.18);border:1px solid var(--p);color:var(--p);" onclick="filterTopChannels(5)">⚡ Top 5 Kênh Mạnh</button>
-                <button class="action-btn" style="padding:4px 10px;font-size:11px;background:#261d15;border:1px solid var(--line);" onclick="filterAllChannels()">👁️ Hiện tất cả (12)</button>
-                <div style="width:1px;height:18px;background:var(--line);margin:0 4px;"></div>
                 <button class="action-btn chart-filter-btn" id="cwin-7" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(7)">7 ngày</button>
                 <button class="action-btn chart-filter-btn active" id="cwin-14" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(14)">14 ngày</button>
                 <button class="action-btn chart-filter-btn" id="cwin-30" style="padding:4px 11px;font-size:11px;" onclick="setChartWindow(30)">30 ngày</button>
@@ -1197,8 +1194,11 @@
         renderLeaderboard(channels);
         renderChart(channels, snapMap);
 
-        // Tự động kiểm tra chốt snapshot nếu đã qua 6:00 sáng
+        // Tự động kiểm tra chốt snapshot định kỳ mỗi 1 tiếng
         setTimeout(checkAutoDailySnapshot, 1500);
+        if (!window._hourlySnapshotTimer) {
+          window._hourlySnapshotTimer = setInterval(checkAutoDailySnapshot, 60 * 60 * 1000);
+        }
       } catch (e) {
         console.error("Error loading Turso data:", e);
         document.getElementById('channelsTableBody').innerHTML = `
@@ -1830,30 +1830,26 @@
       `, [channelPk, todayStr, subs, views, vids, dailyViews, dropViews]);
     }
 
-    // 8.5. TỰ ĐỘNG CHỐT SNAPSHOT MỖI NGÀY SAU 6H SÁNG (VIỆT NAM)
+    // 8.5. TỰ ĐỘNG CHỐT SNAPSHOT ĐỊNH KỲ MỖI 1 TIẾNG (BỎ CƠ CHẾ 6H SÁNG)
     async function checkAutoDailySnapshot() {
       try {
         const d = new Date();
         const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-        // Nếu trước 6h sáng thì chưa chốt snapshot ngày mới
-        if (d.getHours() < 6) return;
 
-        const lastAutoCheck = localStorage.getItem('last_auto_snapshot_date');
-        if (lastAutoCheck === todayStr) return;
+        const lastSyncTime = parseInt(localStorage.getItem('last_hourly_snapshot_time') || '0');
+        const now = Date.now();
+        const ONE_HOUR = 60 * 60 * 1000;
 
-        // Kiểm tra Turso xem hôm nay đã chốt snapshot chưa
-        const todaySnaps = await queryTurso(`SELECT COUNT(*) as cnt FROM snapshots WHERE snapshot_date = ?`, [todayStr]);
-        const cnt = parseInt(todaySnaps[0]?.cnt || 0);
-        if (cnt >= (channelsData.length || 1)) {
-          localStorage.setItem('last_auto_snapshot_date', todayStr);
+        // Nếu lần chạy gần nhất chưa tới 1 tiếng thì bỏ qua
+        if (now - lastSyncTime < ONE_HOUR) {
           return;
         }
 
-        console.log(`[Auto 06:00 AM Snapshot] Đang tự động chốt snapshot ngày ${todayStr}...`);
-        localStorage.setItem('last_auto_snapshot_date', todayStr);
+        console.log(`[Auto 1h Snapshot] Đang tự động cập nhật snapshot ngày ${todayStr}...`);
+        localStorage.setItem('last_hourly_snapshot_time', String(now));
         await syncTodaySnapshots(true);
       } catch (err) {
-        console.warn("Lỗi kiểm tra auto snapshot:", err);
+        console.warn("Lỗi kiểm tra auto snapshot 1 tiếng/lần:", err);
       }
     }
 
