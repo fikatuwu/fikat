@@ -26,15 +26,95 @@
       --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --mono: 'JetBrains Mono', Consolas, monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+    }
+    *::-webkit-scrollbar, html::-webkit-scrollbar, body::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+      height: 0 !important;
+      background: transparent !important;
+    }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
     a { color: var(--p); text-decoration: none; }
+
+    /* CUSTOM MULTI-CHANNEL CHART TOOLTIP */
+    .sfs-chart-tooltip {
+      position: absolute;
+      z-index: 1000;
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.12);
+      padding: 12px 16px;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+      min-width: 230px;
+      max-width: 290px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .sfs-tooltip-date {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0F172A;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .sfs-tooltip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4.5px;
+    }
+    .sfs-tooltip-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      line-height: 1.35;
+    }
+    .sfs-tooltip-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-right: 12px;
+    }
+    .sfs-tooltip-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sfs-tooltip-name {
+      color: #334155;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 140px;
+    }
+    .sfs-tooltip-val {
+      color: #0F172A;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
 
     /* AUTH OVERLAY */
     #authShield {
@@ -926,6 +1006,25 @@
       }
     }
 
+    // 3.5. LINK GENERATOR TO YOUTUBE
+    function getChannelLink(c) {
+      if (!c) return 'https://www.youtube.com/';
+      const cid = String(c.custom_id || '').trim();
+      if (cid.startsWith('UC') && cid.length >= 20) {
+        return `https://www.youtube.com/channel/${cid}`;
+      }
+      if (cid.startsWith('@')) {
+        return `https://www.youtube.com/${cid}`;
+      }
+      if (cid.startsWith('http://') || cid.startsWith('https://')) {
+        return cid;
+      }
+      if (c.title) {
+        return `https://www.youtube.com/results?search_query=${encodeURIComponent(c.title)}&sp=EgIQAg%253D%253D`;
+      }
+      return 'https://www.youtube.com/';
+    }
+
     // 4. RENDER TABLE WITH REAL METRICS
     function renderChannelsTable(channels, snapMap) {
       const tbody = document.getElementById('channelsTableBody');
@@ -948,8 +1047,7 @@
 
       tbody.innerHTML = channels.map((c, i) => {
         const av = c.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
-        const cid = c.custom_id || c.id;
-        const ytLink = String(cid).startsWith('UC') ? `https://www.youtube.com/channel/${cid}` : (String(cid).startsWith('@') ? `https://www.youtube.com/${cid}` : `https://www.youtube.com/@${cid}`);
+        const ytLink = getChannelLink(c);
         
         const views = parseInt(c.views_all || 0);
         const vids = parseInt(c.video_count || 0);
@@ -976,10 +1074,16 @@
             <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
             <td>
               <div class="ch-row">
-                <img src="${escapeHtml(av)}" class="ch-av" alt="">
+                <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;">
+                  <img src="${escapeHtml(av)}" class="ch-av" alt="${escapeHtml(c.title || '')}">
+                </a>
                 <div>
-                  <div class="ch-title">${escapeHtml(c.title || 'Kênh')}</div>
-                  <a href="${ytLink}" target="_blank" style="font-size:11px;color:var(--p);">Mở trên YouTube ↗</a>
+                  <div class="ch-title">
+                    <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:none;font-weight:600;">
+                      ${escapeHtml(c.title || 'Kênh')}
+                    </a>
+                  </div>
+                  <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="font-size:11.5px;color:var(--p);font-weight:500;">Mở trên YouTube ↗</a>
                 </div>
               </div>
             </td>
@@ -989,8 +1093,8 @@
             <td class="mono-cell" style="color:#f59e0b;">${avgViews > 0 ? avgViews.toLocaleString('vi-VN') : '--'}</td>
             <td class="mono-cell">${deltaHtml}</td>
             <td style="text-align:center;white-space:nowrap;">
-              <a href="${ytLink}" target="_blank" class="badge-qtv" style="text-decoration:none;margin-right:6px;">Xem ↗</a>
-              <button onclick="deleteChannel(${c.id}, '${escapeHtml(c.title || '')}')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#f87171;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;">
+              <a href="${ytLink}" target="_blank" rel="noopener noreferrer" class="badge-qtv" style="text-decoration:none;margin-right:6px;display:inline-block;padding:5px 12px;background:rgba(228,90,60,0.18);border:1px solid var(--p);color:#fff;border-radius:6px;font-size:11.5px;font-weight:700;transition:all .15s;">Xem ↗</a>
+              <button onclick="deleteChannel(${c.id}, '${escapeHtml(c.title || '')}')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#f87171;padding:5px 10px;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;">
                 🗑️ Xóa
               </button>
             </td>
@@ -1012,10 +1116,15 @@
         const views = parseInt(c.views_all || 0);
         const vids = parseInt(c.video_count || 0);
         const avg = vids > 0 ? Math.round(views / vids) : 0;
+        const ytLink = getChannelLink(c);
         return `
           <tr>
             <td style="font-weight:800;color:var(--p);font-size:15px;">#${i + 1}</td>
-            <td><b>${escapeHtml(c.title)}</b></td>
+            <td>
+              <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:none;">
+                <b>${escapeHtml(c.title)}</b> ↗
+              </a>
+            </td>
             <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
             <td class="mono-cell" style="font-weight:700;color:#fff;">${views.toLocaleString('vi-VN')}</td>
             <td class="mono-cell">${vids.toLocaleString('vi-VN')}</td>
@@ -1157,10 +1266,36 @@
             borderWidth: 2.2,
             tension: 0.32,
             spanGaps: true, // Nối mượt qua các ngày bị tụt/gỡ video (không hõm giả xuống 0)
-            pointRadius: 3,
-            pointHoverRadius: 6
+            pointRadius: 2.5,
+            pointHoverRadius: 5.5,
+            pointHoverBackgroundColor: col,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2
           };
         });
+
+      // Vertical dashed guide line plugin on hover column
+      const verticalLinePlugin = {
+        id: 'verticalLinePlugin',
+        afterDraw: (chart) => {
+          if (chart.tooltip?._active?.length) {
+            const activePoint = chart.tooltip._active[0];
+            const ctx = chart.ctx;
+            const x = activePoint.element.x;
+            const topY = chart.scales.y.top;
+            const bottomY = chart.scales.y.bottom;
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 3]);
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.lineWidth = 1.2;
+            ctx.strokeStyle = '#64748B';
+            ctx.stroke();
+            ctx.restore();
+          }
+        }
+      };
 
       container.innerHTML = '<canvas id="growthChart"></canvas>';
       const ctx = document.getElementById('growthChart').getContext('2d');
@@ -1169,25 +1304,90 @@
       chartInstance = new Chart(ctx, {
         type: 'line',
         data: { labels, datasets },
+        plugins: [verticalLinePlugin],
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: 'index',
+            intersect: false
+          },
           plugins: {
-            legend: { display: false }, // Đã có dãy chips bên trên
+            legend: { display: false },
             tooltip: {
-              backgroundColor: 'rgba(18, 14, 10, 0.95)',
-              titleColor: '#F5EEE4',
-              bodyColor: '#F5EEE4',
-              borderColor: 'rgba(245, 158, 11, 0.3)',
-              borderWidth: 1,
-              padding: 10,
-              displayColors: true,
-              callbacks: {
-                title: items => '📅 Ngày: ' + items[0].label,
-                label: context => {
-                  const val = context.parsed.y;
-                  return ` ${context.dataset.label}: +${Number(val).toLocaleString('vi-VN')} views/ngày`;
+              enabled: false, // Sử dụng custom HTML popup trực quan
+              external: function(context) {
+                let tooltipEl = document.getElementById('sfsCustomTooltip');
+                if (!tooltipEl) {
+                  tooltipEl = document.createElement('div');
+                  tooltipEl.id = 'sfsCustomTooltip';
+                  tooltipEl.className = 'sfs-chart-tooltip';
+                  container.appendChild(tooltipEl);
                 }
+
+                const tooltipModel = context.tooltip;
+                if (!tooltipModel || tooltipModel.opacity === 0 || !tooltipModel.dataPoints || !tooltipModel.dataPoints.length) {
+                  tooltipEl.style.opacity = '0';
+                  return;
+                }
+
+                const dataIndex = tooltipModel.dataPoints[0].dataIndex;
+                const fullDate = sortedDates[dataIndex] || tooltipModel.title?.[0] || '';
+
+                // Trích xuất toàn bộ kênh tại ngày này và sắp xếp giảm dần theo lượt xem (từ cao xuống thấp)
+                const points = [];
+                tooltipModel.dataPoints.forEach(dp => {
+                  const raw = dp.raw;
+                  if (raw !== null && raw !== undefined && !isNaN(raw)) {
+                    points.push({
+                      label: dp.dataset.label,
+                      color: dp.dataset.borderColor,
+                      val: Number(raw)
+                    });
+                  }
+                });
+
+                // Sắp xếp lượt xem cao nhất lên đầu
+                points.sort((a, b) => b.val - a.val);
+
+                let rowsHtml = '';
+                points.forEach(p => {
+                  const formattedVal = Number(p.val).toLocaleString('vi-VN');
+                  rowsHtml += `
+                    <div class="sfs-tooltip-row">
+                      <div class="sfs-tooltip-left">
+                        <span class="sfs-tooltip-dot" style="background:${p.color};"></span>
+                        <span class="sfs-tooltip-name" title="${escapeHtml(p.label)}">${escapeHtml(p.label)}</span>
+                      </div>
+                      <span class="sfs-tooltip-val">${formattedVal}</span>
+                    </div>
+                  `;
+                });
+
+                tooltipEl.innerHTML = `
+                  <div class="sfs-tooltip-date">${escapeHtml(fullDate)}</div>
+                  <div class="sfs-tooltip-list">${rowsHtml}</div>
+                `;
+
+                tooltipEl.style.opacity = '1';
+
+                const containerRect = container.getBoundingClientRect();
+                const ttWidth = tooltipEl.offsetWidth || 240;
+                const ttHeight = tooltipEl.offsetHeight || 260;
+
+                let left = tooltipModel.caretX + 16;
+                if (left + ttWidth > containerRect.width - 10) {
+                  left = tooltipModel.caretX - ttWidth - 16;
+                }
+                if (left < 10) left = 10;
+
+                let top = 14;
+                if (containerRect.height > ttHeight + 25) {
+                  top = Math.max(10, Math.min(tooltipModel.caretY - 30, containerRect.height - ttHeight - 12));
+                }
+
+                tooltipEl.style.left = left + 'px';
+                tooltipEl.style.top = top + 'px';
               }
             }
           },

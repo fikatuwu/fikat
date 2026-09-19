@@ -15,3 +15,6 @@ id = "25247767a45041daa05e8258357ce388"
 binding = "DB"
 database_name = "fikat-db"
 database_id = "31e8d3cd-6383-40f7-b140-5b5e74615be8"
+
+[triggers]
+crons = ["0 23 * * *"] # 23:00 UTC = 06:00 sáng mỗi ngày giờ Việt Nam (UTC+7)

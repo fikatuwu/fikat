@@ -7,8 +7,9 @@
 const TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN_HERE";
 const TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID_HERE";
 const DEFAULT_ADMIN_PIN = "fikat2026";
-const ROOT_ADMIN_USERNAME = "fikat";
 const JWT_SECRET = "fikat_cloud_super_secret_signing_key_2026";
+const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
+const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
 
 let dbInited = false;
 
@@ -186,123 +187,17 @@ export default {
       if (!q) return jsonRes({ ok: false, message: "Vui lòng nhập link hoặc tên kênh YouTube." }, 400);
 
       try {
-        let targetUrl = q;
-        if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
-          if (targetUrl.startsWith("@")) targetUrl = `https://www.youtube.com/${targetUrl}`;
-          else if (targetUrl.startsWith("UC") && targetUrl.length >= 24) targetUrl = `https://www.youtube.com/channel/${targetUrl}`;
-          else targetUrl = `https://www.youtube.com/@${targetUrl}`;
-        }
-        targetUrl = targetUrl.replace(/\/$/, "");
-        const aboutUrl = targetUrl.endsWith("/about") ? targetUrl : `${targetUrl}/about`;
-
-        const ytResp = await fetch(aboutUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
-            "Accept-Language": "en-US,en;q=0.9,vi;q=0.8"
-          }
-        });
-
-        if (!ytResp.ok) {
-          return jsonRes({ ok: false, message: `YouTube phản hồi HTTP ${ytResp.status}` }, 400);
-        }
-
-        const html = await ytResp.text();
-
-        // 1. Channel ID
-        let cid = "";
-        const mCid = html.match(/itemprop="channelId"\s+content="([^"]+)"/) || html.match(/"channelId":"(UC[a-zA-Z0-9_-]{22})"/);
-        if (mCid) cid = mCid[1];
-
-        // 2. Default Title & Avatar from meta
-        let title = "";
-        const mTitle = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || html.match(/<title>([^<]+)<\/title>/i);
-        if (mTitle) title = mTitle[1].replace(" - YouTube", "").trim();
-
-        let avatar = "";
-        const mAvatar = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
-        if (mAvatar) avatar = mAvatar[1];
-
-        let subs = 0;
-        let views = 0;
-        let videos = 0;
-
-        // 3. Parse ytInitialData JSON for modern YouTube (2024–2026)
-        const mData = html.match(/var ytInitialData = ({.*?});<\/script>/);
-        if (mData) {
-          try {
-            const data = JSON.parse(mData[1]);
-
-            // Try pageHeaderViewModel (Header)
-            const phVm = data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
-            if (phVm) {
-              const dynTitle = phVm?.title?.dynamicTextViewModel?.text?.content;
-              if (dynTitle) title = dynTitle;
-
-              const avatarSources = phVm?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources;
-              if (Array.isArray(avatarSources) && avatarSources.length > 0) {
-                avatar = avatarSources[avatarSources.length - 1].url || avatar;
-              }
-
-              const rows = phVm?.metadata?.contentMetadataViewModel?.metadataRows || [];
-              for (const r of rows) {
-                for (const p of r?.metadataParts || []) {
-                  const text = (p?.text?.content || "").toLowerCase().trim();
-                  if (text.includes("subscriber") || text.includes("người đăng ký")) {
-                    subs = parseYtStat(text);
-                  } else if (text.includes("video")) {
-                    videos = parseYtStat(text);
-                  }
-                }
-              }
-            }
-
-            // Search aboutChannelViewModel for viewCountText
-            function findChannelViews(obj) {
-              if (!obj || typeof obj !== "object") return 0;
-              if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
-                return parseYtStat(obj.aboutChannelViewModel.viewCountText);
-              }
-              for (const key of Object.keys(obj)) {
-                const found = findChannelViews(obj[key]);
-                if (found) return found;
-              }
-              return 0;
-            }
-            views = findChannelViews(data);
-          } catch (jsonErr) {
-            console.warn("ytInitialData parse error:", jsonErr);
-          }
-        }
-
-        // 4. Fallbacks if ytInitialData didn't find them
-        if (!subs) {
-          const mSub = html.match(/"subscriberCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+(?:\s*[mktrb])?)\s*(?:subscribers|người đăng ký)/i);
-          if (mSub) subs = parseYtStat(mSub[1]);
-        }
-        if (!videos) {
-          const mVid = html.match(/"videoCountText":\{.*?"text":"([^"]+)"/) || html.match(/([\d.,]+)\s*videos/i);
-          if (mVid) videos = parseYtStat(mVid[1]);
-        }
-        if (!views) {
-          const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s*(?:views|lượt xem)/i);
-          if (mView) views = parseYtStat(mView[1]);
-        }
-
-        return jsonRes({
-          ok: true,
-          channel: {
-            id: cid || `custom_${Date.now()}`,
-            title: title || q,
-            avatar: avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120",
-            subscribers: subs,
-            views_all: views,
-            video_count: videos,
-            url: targetUrl
-          }
-        });
+        const info = await fetchYouTubeChannelData(q);
+        return jsonRes({ ok: true, channel: info });
       } catch (err) {
         return jsonRes({ ok: false, message: "Lỗi kéo thông tin kênh: " + err.message }, 500);
       }
+    }
+
+    // ── 06:00 AM Daily Snapshot Cron API (Trigger & Health Check) ─────────────
+    if (pathname === "/api/cron/snapshot") {
+      const res = await runDailySnapshotJob(env);
+      return jsonRes(res);
     }
 
     // ── Version Info API ──────────────────────────────────────────────────────
@@ -1257,11 +1152,252 @@ export default {
       return new Response("Asset fetch error: " + err.message, { status: 500 });
     }
   },
+
+  // Chốt snapshot tự động lúc 06:00 sáng mỗi ngày giờ VN (23:00 UTC)
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runDailySnapshotJob(env));
+  },
 };
 
 // ============================================================================
-// HELPERS
+// HELPERS & AUTOMATED CRON JOBS
 // ============================================================================
+
+async function fetchYouTubeChannelData(inputRef) {
+  let targetUrl = inputRef;
+  if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+    if (targetUrl.startsWith("@")) targetUrl = `https://www.youtube.com/${targetUrl}`;
+    else if (targetUrl.startsWith("UC") && targetUrl.length >= 24) targetUrl = `https://www.youtube.com/channel/${targetUrl}`;
+    else targetUrl = `https://www.youtube.com/@${targetUrl}`;
+  }
+  targetUrl = targetUrl.replace(/\/$/, "");
+  const aboutUrl = targetUrl.endsWith("/about") ? targetUrl : `${targetUrl}/about`;
+
+  const ytResp = await fetch(aboutUrl, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+      "Accept-Language": "en-US,en;q=0.9,vi;q=0.8"
+    }
+  });
+
+  if (!ytResp.ok) {
+    throw new Error(`YouTube phản hồi HTTP ${ytResp.status}`);
+  }
+
+  const html = await ytResp.text();
+
+  // 1. Channel ID
+  let cid = "";
+  const mCid = html.match(/itemprop="channelId"\s+content="([^"]+)"/) || html.match(/"channelId":"(UC[a-zA-Z0-9_-]{22})"/);
+  if (mCid) cid = mCid[1];
+
+  // 2. Default Title & Avatar from meta
+  let title = "";
+  const mTitle = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || html.match(/<title>([^<]+)<\/title>/i);
+  if (mTitle) title = mTitle[1].replace(" - YouTube", "").trim();
+
+  let avatar = "";
+  const mAvatar = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+  if (mAvatar) avatar = mAvatar[1];
+
+  let subs = 0;
+  let views = 0;
+  let videos = 0;
+
+  // 3. Parse ytInitialData JSON for modern YouTube (2024–2026)
+  const mData = html.match(/var ytInitialData = ({.*?});<\/script>/);
+  if (mData) {
+    try {
+      const data = JSON.parse(mData[1]);
+      const phVm = data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel;
+      if (phVm) {
+        const dynTitle = phVm?.title?.dynamicTextViewModel?.text?.content;
+        if (dynTitle) title = dynTitle;
+
+        const avatarSources = phVm?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources;
+        if (Array.isArray(avatarSources) && avatarSources.length > 0) {
+          avatar = avatarSources[avatarSources.length - 1].url || avatar;
+        }
+
+        const rows = phVm?.metadata?.contentMetadataViewModel?.metadataRows || [];
+        for (const r of rows) {
+          for (const p of r?.metadataParts || []) {
+            const text = (p?.text?.content || "").toLowerCase().trim();
+            if (text.includes("subscriber") || text.includes("người đăng ký")) {
+              subs = parseYtStat(text);
+            } else if (text.includes("video")) {
+              videos = parseYtStat(text);
+            }
+          }
+        }
+      }
+
+      function findChannelViews(obj) {
+        if (!obj || typeof obj !== "object") return 0;
+        if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
+          return parseYtStat(obj.aboutChannelViewModel.viewCountText);
+        }
+        for (const key of Object.keys(obj)) {
+          const found = findChannelViews(obj[key]);
+          if (found) return found;
+        }
+        return 0;
+      }
+      views = findChannelViews(data);
+    } catch (jsonErr) {
+      console.warn("ytInitialData parse error:", jsonErr);
+    }
+  }
+
+  // 4. Fallbacks
+  if (!subs) {
+    const mSub = html.match(/"subscriberCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+(?:\s*[mktrb])?)\s*(?:subscribers|người đăng ký)/i);
+    if (mSub) subs = parseYtStat(mSub[1]);
+  }
+  if (!videos) {
+    const mVid = html.match(/"videoCountText":\{.*?"text":"([^"]+)"/) || html.match(/([\d.,]+)\s*videos/i);
+    if (mVid) videos = parseYtStat(mVid[1]);
+  }
+  if (!views) {
+    const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s*(?:views|lượt xem)/i);
+    if (mView) views = parseYtStat(mView[1]);
+  }
+
+  return {
+    id: cid || `custom_${Date.now()}`,
+    title: title || inputRef,
+    avatar: avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120",
+    subscribers: subs,
+    views_all: views,
+    video_count: videos,
+    url: targetUrl
+  };
+}
+
+async function queryTursoWorker(sql, args = []) {
+  const payload = {
+    requests: [
+      {
+        type: "execute",
+        stmt: {
+          sql: sql,
+          args: args.map(a => {
+            if (typeof a === 'number') return { type: Number.isInteger(a) ? "integer" : "float", value: String(a) };
+            if (a === null || a === undefined) return { type: "null" };
+            return { type: "text", value: String(a) };
+          })
+        }
+      },
+      { type: "close" }
+    ]
+  };
+
+  const res = await fetch(TURSO_URL, {
+    method: "POST",
+    headers: {
+      "Authorization": "Bearer " + TURSO_TOKEN,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await res.json();
+  if (!data.results || !data.results[0] || !data.results[0].response) {
+    throw new Error("Lỗi Turso: " + JSON.stringify(data));
+  }
+  const result = data.results[0].response.result;
+  if (!result) return [];
+  const cols = result.cols.map(c => c.name);
+  return result.rows.map(row => {
+    const obj = {};
+    row.forEach((cell, idx) => {
+      obj[cols[idx]] = cell.value;
+    });
+    return obj;
+  });
+}
+
+async function runDailySnapshotJob(env) {
+  try {
+    const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
+    const todayStr = `${String(vnNow.getDate()).padStart(2, '0')}/${String(vnNow.getMonth() + 1).padStart(2, '0')}/${vnNow.getFullYear()}`;
+    console.log(`[Cron 06:00 AM VN] Bắt đầu chốt snapshot ngày ${todayStr}...`);
+
+    const channels = await queryTursoWorker("SELECT * FROM channels ORDER BY id ASC");
+    if (!channels || !channels.length) {
+      return { ok: true, message: "Không tìm thấy kênh nào trong Turso.", count: 0, today: todayStr };
+    }
+
+    let count = 0;
+    for (const ch of channels) {
+      let subs = parseInt(ch.subscribers) || 0;
+      let views = parseInt(ch.views_all) || 0;
+      let vids = parseInt(ch.video_count) || 0;
+
+      const cid = ch.custom_id;
+      if (cid && (cid.startsWith('UC') || cid.startsWith('@'))) {
+        try {
+          const ytInfo = await fetchYouTubeChannelData(cid);
+          if (ytInfo && ytInfo.views_all) {
+            subs = parseInt(ytInfo.subscribers) || subs;
+            views = parseInt(ytInfo.views_all) || views;
+            vids = parseInt(ytInfo.video_count) || vids;
+
+            await queryTursoWorker(`
+              UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
+            `, [subs, views, vids, ch.id]);
+          }
+        } catch (e) {
+          console.warn(`[Cron] Bỏ qua lỗi kéo mạng của kênh ${ch.title} (${cid}):`, e.message);
+        }
+      }
+
+      // Lấy snapshot trước đó
+      const prevSnaps = await queryTursoWorker(`
+        SELECT views_all, snapshot_date FROM snapshots 
+        WHERE channel_id = ? AND snapshot_date != ? 
+        ORDER BY id DESC LIMIT 1
+      `, [ch.id, todayStr]);
+
+      let dailyViews = 0;
+      let dropViews = 0;
+
+      if (prevSnaps.length > 0) {
+        const prevViews = parseInt(prevSnaps[0].views_all) || 0;
+        if (views >= prevViews) {
+          dailyViews = views - prevViews;
+          dropViews = 0;
+        } else {
+          dropViews = prevViews - views;
+          dailyViews = null;
+        }
+      } else {
+        dailyViews = Math.max(0, Math.round(views * 0.025));
+      }
+
+      // Chốt snapshot ngày hôm nay vào Turso
+      await queryTursoWorker(`
+        INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 0)
+        ON CONFLICT(channel_id, snapshot_date) DO UPDATE SET
+          subs = excluded.subs,
+          views_all = excluded.views_all,
+          video_count = excluded.video_count,
+          daily_views = excluded.daily_views,
+          drop_views = excluded.drop_views
+      `, [ch.id, todayStr, subs, views, vids, dailyViews, dropViews]);
+
+      count++;
+    }
+
+    const resMsg = `✅ [Cron 06:00 AM VN] Đã chốt snapshot tự động thành công cho ${count}/${channels.length} kênh ngày ${todayStr}!`;
+    console.log(resMsg);
+    return { ok: true, message: resMsg, today: todayStr, count };
+  } catch (err) {
+    console.error("[Cron 06:00 AM VN] Lỗi thực hiện chốt snapshot:", err);
+    return { ok: false, message: err.message };
+  }
+}
 
 function dbUserToObj(row) {
   if (!row) return null;
