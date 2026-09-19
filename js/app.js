@@ -265,9 +265,11 @@
         </div>
         <div class="card-footer">
           <span style="font-size: 0.8rem; color: var(--text-dim);">${escapeHtml(p.categoryLabel || '')}</span>
-          ${p.downloadUrl && p.downloadUrl !== '#'
-            ? `<a href="${p.downloadUrl}" class="card-link" download>Tải về ⬇</a>`
-            : `<a href="#featured" class="card-link">Chi tiết ➔</a>`
+          ${p.webUrl || p.id === 'haloli-livestream'
+            ? `<a href="${p.webUrl || '/livestream'}" class="card-link" style="color: var(--amber-primary, #f59e0b); font-weight: 600;">${escapeHtml(p.actionText || 'Truy cập ➔')}</a>`
+            : (p.downloadUrl && p.downloadUrl !== '#'
+                ? `<a href="${p.downloadUrl}" class="card-link" download>Tải về ⬇</a>`
+                : `<a href="${p.linkUrl || '#featured'}" class="card-link">Chi tiết ➔</a>`)
           }
         </div>
       `;

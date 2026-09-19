@@ -69,5 +69,29 @@
       "🎵 Tính năng chèn Intro, lặp vô hạn, trộn nhạc nền tự động (Mix / Replace 40%)",
       "📱 Hỗ trợ đầy đủ luồng ngang (16:9) và luồng dọc (9:16 Shorts)"
     ]
+  },
+  {
+    "id": "bi-thuat",
+    "name": "Bí thuật",
+    "category": "analytics-automation",
+    "categoryLabel": "YouTube Studio & HALO SEO",
+    "version": "0.7.18",
+    "updatedAt": "19/09/2026",
+    "status": "active",
+    "featured": true,
+    "shortDesc": "Extension Chrome chuyên dụng tự động quét và bóc tách toàn bộ chỉ số video (Views, CTR, Đề xuất 24h/48h, Retention 45s, AVD, APV, RPM, Quốc gia, Thiết bị) từ YouTube Studio và đồng bộ một chạm sang HALO Records.",
+    "techStack": ["Chrome Extension MV3", "Vanilla JS", "DOM Engine", "HALO API", "Studio Analytics"],
+    "badge": "Mới phát hành",
+    "downloadUrl": "downloads/BiThuat.zip",
+    "hasLiveUpdates": true,
+    "highlights": [
+      "🔥 Tự động bóc tách Views, CTR, Lượt đề xuất chính xác tại mốc 24h & 48h trên biểu đồ Từ khi xuất bản",
+      "🎯 Nhận diện chuẩn xác điểm RET gần 45s (00:30 – 01:00) và bóc tách AVD, APV, RPM theo từng video",
+      "🌍 Tự động lấy Top 3 Quốc gia và Top 3 Thiết bị xem nhiều nhất",
+      "⚡ Quét hàng loạt video theo ngày hoặc khoảng ngày (tự động bỏ qua video đã đủ dữ liệu trên HALO)",
+      "🔄 Tự động tạo kênh, tạo video và cập nhật thời lượng chuẩn qua giao diện HALO Records",
+      "🛡️ Mã nguồn được mã hóa và bảo vệ toàn diện (Obfuscated), an toàn và bảo mật 100%"
+    ]
   }
 ]
+
