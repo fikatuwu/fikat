@@ -996,6 +996,9 @@
         renderChannelsTable(channels, snapMap);
         renderLeaderboard(channels);
         renderChart(channels, snapMap);
+
+        // Tự động kiểm tra chốt snapshot nếu đã qua 6:00 sáng
+        setTimeout(checkAutoDailySnapshot, 1500);
       } catch (e) {
         console.error("Error loading Turso data:", e);
         document.getElementById('channelsTableBody').innerHTML = `
@@ -1543,14 +1546,41 @@
       `, [channelPk, todayStr, subs, views, vids, dailyViews, dropViews]);
     }
 
+    // 8.5. TỰ ĐỘNG CHỐT SNAPSHOT MỖI NGÀY SAU 6H SÁNG (VIỆT NAM)
+    async function checkAutoDailySnapshot() {
+      try {
+        const d = new Date();
+        const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        // Nếu trước 6h sáng thì chưa chốt snapshot ngày mới
+        if (d.getHours() < 6) return;
+
+        const lastAutoCheck = localStorage.getItem('last_auto_snapshot_date');
+        if (lastAutoCheck === todayStr) return;
+
+        // Kiểm tra Turso xem hôm nay đã chốt snapshot chưa
+        const todaySnaps = await queryTurso(`SELECT COUNT(*) as cnt FROM snapshots WHERE snapshot_date = ?`, [todayStr]);
+        const cnt = parseInt(todaySnaps[0]?.cnt || 0);
+        if (cnt >= (channelsData.length || 1)) {
+          localStorage.setItem('last_auto_snapshot_date', todayStr);
+          return;
+        }
+
+        console.log(`[Auto 06:00 AM Snapshot] Đang tự động chốt snapshot ngày ${todayStr}...`);
+        localStorage.setItem('last_auto_snapshot_date', todayStr);
+        await syncTodaySnapshots(true);
+      } catch (err) {
+        console.warn("Lỗi kiểm tra auto snapshot:", err);
+      }
+    }
+
     // 9. ĐỒNG BỘ VÀ CHỐT SNAPSHOT HÔM NAY CHO TOÀN BỘ KÊNH
-    async function syncTodaySnapshots() {
+    async function syncTodaySnapshots(silent = false) {
       const btn = document.getElementById('btnSyncSnapshots');
-      if (btn) {
+      if (btn && !silent) {
         btn.disabled = true;
         btn.textContent = "⏳ Đang chốt snapshot...";
       }
-      showToast("⏳ Đang cập nhật lượt xem và tính snapshot hôm nay cho các kênh...");
+      if (!silent) showToast("⏳ Đang cập nhật lượt xem và tính snapshot hôm nay cho các kênh...");
 
       try {
         let count = 0;
@@ -1583,12 +1613,13 @@
         }
 
         await loadTursoData();
-        showToast(`✅ Đã chốt snapshot thành công cho ${count} kênh!`);
+        if (!silent) showToast(`✅ Đã chốt snapshot thành công cho ${count} kênh!`);
+        else console.log(`✅ [Auto 6h Sáng] Đã tự động chốt snapshot cho ${count} kênh ngày mới!`);
       } catch (err) {
         console.error("Lỗi chốt snapshot:", err);
-        showToast(`❌ Lỗi chốt snapshot: ${err.message}`, true);
+        if (!silent) showToast(`❌ Lỗi chốt snapshot: ${err.message}`, true);
       } finally {
-        if (btn) {
+        if (btn && !silent) {
           btn.disabled = false;
           btn.textContent = "📸 Chốt Snapshot Hôm Nay";
         }
