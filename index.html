@@ -84,10 +84,115 @@ section[id] {
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  padding: 30px 0;
 }
 
 #featured > .container, #random-nhac > .container, #bithuat > .container, #packages > .container {
   width: 100%;
+}
+
+/* Perfect alignment for #bithuat */
+#bithuat .hero-grid {
+  gap: 40px;
+  align-items: center;
+}
+
+#bithuat .app-card-featured {
+  padding: 24px 28px;
+}
+
+#bithuat .feature-bullets {
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+#bithuat .feature-bullet {
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+#bithuat .download-box {
+  padding: 16px 20px;
+}
+
+/* Perfect alignment for #packages (Hệ Sinh Thái) */
+#packages .section-header {
+  margin-bottom: 22px;
+  text-align: center;
+}
+
+#packages .section-tag {
+  margin-bottom: 6px;
+  display: inline-block;
+}
+
+#packages .section-title {
+  font-size: 2.2rem;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+#packages .section-desc {
+  font-size: 0.95rem;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+#packages .projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 868px) {
+  #packages .projects-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+#packages .project-card {
+  padding: 20px 24px;
+  min-height: auto;
+}
+
+#packages .project-card .card-top {
+  margin-bottom: 10px;
+}
+
+#packages .project-card .project-title {
+  font-size: 1.25rem;
+  margin-bottom: 6px;
+}
+
+#packages .project-card .project-desc {
+  font-size: 0.88rem;
+  line-height: 1.45;
+  margin-bottom: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#packages .project-card .tech-tags {
+  margin-bottom: 12px;
+  gap: 6px;
+}
+
+#packages .project-card .tech-tag {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+}
+
+#packages .project-card .card-footer {
+  padding-top: 10px;
+  margin-top: auto;
 }
 
 body {
@@ -1916,23 +2021,19 @@ button {
           <ul class="feature-bullets">
             <li class="feature-bullet">
               <span class="bullet-icon" style="color: #f59e0b;">✓</span>
-              <span><strong>Tự Động Bóc Tách 24h &amp; 48h:</strong> Lấy chuẩn xác lượt xem, CTR và đề xuất tại đúng mốc 24h và 48h trên biểu đồ Từ khi xuất bản.</span>
+              <span><strong>Tự Động Bóc Tách 24h &amp; 48h:</strong> Lấy chuẩn Views, CTR, Đề xuất tại đúng mốc 24h &amp; 48h trên biểu đồ Studio.</span>
             </li>
             <li class="feature-bullet">
               <span class="bullet-icon" style="color: #f59e0b;">✓</span>
-              <span><strong>RET 45s, AVD, APV &amp; RPM:</strong> Trích xuất tỷ lệ giữ chân tại điểm gần 45s nhất (00:30 - 01:00), cùng AVD, APV và RPM doanh thu.</span>
+              <span><strong>RET 45s, AVD, APV &amp; RPM:</strong> Trích xuất tỷ lệ giữ chân tại ~45s, thời lượng AVD, APV và doanh thu RPM.</span>
             </li>
             <li class="feature-bullet">
               <span class="bullet-icon" style="color: #f59e0b;">✓</span>
-              <span><strong>Top 3 Quốc Gia &amp; Thiết Bị:</strong> Tự nhận diện và tổng hợp 3 quốc gia cùng 3 loại thiết bị người xem chiếm tỷ trọng lớn nhất.</span>
+              <span><strong>Top Quốc Gia &amp; Đồng Bộ HALO:</strong> Nhận diện Top quốc gia, đối chiếu ID video và mở form cập nhật HALO 1-chạm.</span>
             </li>
             <li class="feature-bullet">
               <span class="bullet-icon" style="color: #f59e0b;">✓</span>
-              <span><strong>Đồng Bộ 1-Chạm Sang HALO:</strong> Tự tạo kênh, đối chiếu ID video và mở form cập nhật thời lượng chính xác trên giao diện HALO.</span>
-            </li>
-            <li class="feature-bullet">
-              <span class="bullet-icon" style="color: #f59e0b;">✓</span>
-              <span><strong>Bảo Vệ Mã Nguồn 100%:</strong> Toàn bộ code JS được mã hóa Obfuscated đa tầng, không để lộ mã nguồn khi phân phối.</span>
+              <span><strong>Bảo Vệ Mã Nguồn 100%:</strong> Toàn bộ code JS được mã hóa Obfuscated đa tầng, an toàn và bảo mật tuyệt đối.</span>
             </li>
           </ul>
 
@@ -1972,22 +2073,21 @@ button {
       </div>
 
       <!-- Dynamic Projects Grid (Rendered by app.js & Static Fallback) -->
-      <div id="projectsGrid" class="projects-grid" style="max-width: 1100px; margin: 0 auto; width: 100%;">
+      <div id="projectsGrid" class="projects-grid">
         <!-- Card 1: Suno Bulk Studio -->
         <div class="project-card featured-card" id="pkgCard_suno">
           <div>
             <div class="card-top">
               <span class="project-badge">Bản mới nhất</span>
-              <span class="project-version">v3.3</span>
+              <span class="project-version">v3.5</span>
             </div>
             <h3 class="project-title">Suno Bulk Studio</h3>
-            <p class="project-desc">Phần mềm chuyên dụng tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.</p>
+            <p class="project-desc">Tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.</p>
             <div class="tech-tags">
               <span class="tech-tag">.NET 8.0 LTS</span>
               <span class="tech-tag">WPF</span>
               <span class="tech-tag">WebView2</span>
               <span class="tech-tag">FFmpeg</span>
-              <span class="tech-tag">Native JS Injector</span>
             </div>
           </div>
           <div class="card-footer">
@@ -2004,12 +2104,12 @@ button {
               <span class="project-version">v1.2.0</span>
             </div>
             <h3 class="project-title">Tool Random Nhạc &amp; Ghép Video</h3>
-            <p class="project-desc">Công cụ xáo trộn và ghép playlist nhạc ngẫu nhiên thông minh (nhạc hay ở đầu, nhạc tổng ở sau không trùng lặp) và tự động thay nhạc vào video hàng loạt bằng FFmpeg Native.</p>
+            <p class="project-desc">Xáo trộn và ghép playlist nhạc ngẫu nhiên thông minh (nhạc hay ở đầu, nhạc tổng ở sau) và tự động thay nhạc vào video hàng loạt bằng FFmpeg Native.</p>
             <div class="tech-tags">
               <span class="tech-tag">.NET 10 LTS</span>
               <span class="tech-tag">WPF C#</span>
               <span class="tech-tag">FFmpeg Native</span>
-              <span class="tech-tag">HWID Cloud Auth</span>
+              <span class="tech-tag">HWID Cloud</span>
             </div>
           </div>
           <div class="card-footer">
@@ -2018,7 +2118,29 @@ button {
           </div>
         </div>
 
-        <!-- Card 3: Bí thuật (Studio to HALO Importer) -->
+        <!-- Card 3: HaloLi Livestream YouTube -->
+        <div class="project-card featured-card" id="pkgCard_livestream" style="border-color: rgba(56, 189, 248, 0.45); background: linear-gradient(180deg, rgba(14, 28, 38, 0.85) 0%, rgba(8, 18, 26, 0.85) 100%);">
+          <div>
+            <div class="card-top">
+              <span class="project-badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">Mới ra mắt</span>
+              <span class="project-version">v1.0.0</span>
+            </div>
+            <h3 class="project-title">HaloLi Livestream YouTube</h3>
+            <p class="project-desc">Hệ thống phát trực tiếp HLS / RTMP tự động lên YouTube 24/7 từ Google Drive, điều khiển cụm VPS đa điểm và hỗ trợ phát từ máy cục bộ miễn phí.</p>
+            <div class="tech-tags">
+              <span class="tech-tag">Python FastAPI</span>
+              <span class="tech-tag">FFmpeg HLS/RTMP</span>
+              <span class="tech-tag">Drive API</span>
+              <span class="tech-tag">Cloudflare</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Livestream &amp; Cloud VPS</span>
+            <a href="/livestream" class="card-link" style="color: #38bdf8; font-weight: 600;">Truy cập ➔</a>
+          </div>
+        </div>
+
+        <!-- Card 4: Bí thuật (Studio to HALO Importer) -->
         <div class="project-card featured-card" id="pkgCard_bithuat" style="border-color: rgba(245, 158, 11, 0.45); background: linear-gradient(180deg, rgba(38, 28, 14, 0.85) 0%, rgba(22, 16, 10, 0.85) 100%);">
           <div>
             <div class="card-top">
@@ -2026,22 +2148,20 @@ button {
               <span class="project-version">v0.7.18</span>
             </div>
             <h3 class="project-title">Bí thuật</h3>
-            <p class="project-desc">Extension Chrome chuyên dụng tự động quét và bóc tách toàn bộ chỉ số video (Views, CTR, Đề xuất 24h/48h, Retention 45s, AVD, APV, RPM, Quốc gia, Thiết bị) từ YouTube Studio và đồng bộ một chạm sang HALO Records.</p>
+            <p class="project-desc">Extension Chrome tự động bóc tách Views, CTR, Đề xuất 24h/48h, Retention 45s, AVD, APV, RPM, Thiết bị từ Studio và đồng bộ 1-chạm sang HALO.</p>
             <div class="tech-tags">
-              <span class="tech-tag">Chrome Extension MV3</span>
+              <span class="tech-tag">Chrome MV3</span>
               <span class="tech-tag">Vanilla JS</span>
-              <span class="tech-tag">HALO API</span>
-              <span class="tech-tag">Studio Analytics</span>
               <span class="tech-tag">DOM Engine</span>
+              <span class="tech-tag">HALO API</span>
             </div>
           </div>
           <div class="card-footer">
-            <span style="font-size: 0.8rem; color: var(--text-dim);">YouTube Studio &amp; HALO SEO</span>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">YouTube Studio &amp; HALO</span>
             <a id="pkgDownloadBtn_bithuat" href="downloads/BiThuat.zip" class="card-link" style="color: #fbbf24;" download>Tải về ⬇</a>
           </div>
         </div>
       </div>
-    </div>
     </div>
   </section>
 
@@ -2654,7 +2774,7 @@ window.__INITIAL_PROJECTS__ = {"value":[{"id":"suno-bulk-studio","name":"Suno Bu
       });
     }
 
-    // Smooth scroll for all internal anchors with accurate navbar offset
+    // Smooth scroll for all internal anchors with accurate navbar offset & centering
     document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', (e) => {
         const href = link.getAttribute('href');
@@ -2665,7 +2785,13 @@ window.__INITIAL_PROJECTS__ = {"value":[{"id":"suno-bulk-studio","name":"Suno Bu
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
             if (link.classList.contains('nav-link')) link.classList.add('active');
             const navHeight = document.querySelector('.navbar')?.offsetHeight || 75;
-            const targetY = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            const targetRect = target.getBoundingClientRect();
+            const targetHeight = target.offsetHeight;
+            const availableHeight = window.innerHeight - navHeight;
+            let targetY = targetRect.top + window.pageYOffset - navHeight;
+            if (targetHeight < availableHeight) {
+              targetY -= Math.round((availableHeight - targetHeight) / 2);
+            }
             window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
             history.pushState(null, '', href);
           }
