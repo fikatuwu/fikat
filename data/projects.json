@@ -9,7 +9,13 @@
     "status": "active",
     "featured": true,
     "shortDesc": "Phần mềm chuyên dụng tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.",
-    "techStack": [".NET 8.0 LTS", "WPF", "WebView2", "FFmpeg", "Native JS Injector"],
+    "techStack": [
+      ".NET 8.0 LTS",
+      "WPF",
+      "WebView2",
+      "FFmpeg",
+      "Native JS Injector"
+    ],
     "badge": "Bản mới nhất",
     "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.5/Suno_Bulk_Downloader.zip",
     "hasLiveUpdates": true,
@@ -34,7 +40,12 @@
     "status": "active",
     "featured": true,
     "shortDesc": "Công cụ xáo trộn và ghép playlist nhạc ngẫu nhiên thông minh (nhạc hay ở đầu, nhạc tổng ở sau không trùng lặp) và tự động thay nhạc vào video hàng loạt bằng FFmpeg Native.",
-    "techStack": [".NET 10 LTS", "WPF C#", "FFmpeg Native", "HWID Cloud Auth"],
+    "techStack": [
+      ".NET 10 LTS",
+      "WPF C#",
+      "FFmpeg Native",
+      "HWID Cloud Auth"
+    ],
     "badge": "Mới ra mắt",
     "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.0/TOOL_RANDOM_NHAC.zip",
     "hasLiveUpdates": true,
@@ -56,7 +67,13 @@
     "status": "active",
     "featured": true,
     "shortDesc": "Hệ thống phát trực tiếp HLS / RTMP tự động lên YouTube 24/7 từ Google Drive qua Service Account, điều khiển cụm VPS đa điểm và phát trực tiếp từ máy cục bộ hoàn toàn miễn phí.",
-    "techStack": ["Python FastAPI", "FFmpeg HLS/RTMP", "Google Drive API", "Cloudflare Worker", "Tailwind CSS"],
+    "techStack": [
+      "Python FastAPI",
+      "FFmpeg HLS/RTMP",
+      "Google Drive API",
+      "Cloudflare Worker",
+      "Tailwind CSS"
+    ],
     "badge": "Mới ra mắt",
     "webUrl": "/livestream",
     "actionText": "Truy cập ➔",
@@ -80,7 +97,13 @@
     "status": "active",
     "featured": true,
     "shortDesc": "Extension Chrome chuyên dụng tự động quét và bóc tách toàn bộ chỉ số video (Views, CTR, Đề xuất 24h/48h, Retention 45s, AVD, APV, RPM, Quốc gia, Thiết bị) từ YouTube Studio và đồng bộ một chạm sang HALO Records.",
-    "techStack": ["Chrome Extension MV3", "Vanilla JS", "DOM Engine", "HALO API", "Studio Analytics"],
+    "techStack": [
+      "Chrome Extension MV3",
+      "Vanilla JS",
+      "DOM Engine",
+      "HALO API",
+      "Studio Analytics"
+    ],
     "badge": "Mới phát hành",
     "downloadUrl": "downloads/BiThuat.zip",
     "hasLiveUpdates": true,
@@ -94,4 +117,3 @@
     ]
   }
 ]
-
