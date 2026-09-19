@@ -702,15 +702,15 @@
               </div>
             </div>
 
-            <!-- Card 2: KÊNH MẠNH NHẤT (thay thế cho PACKAGE) -->
+            <!-- Card 2: TOP TĂNG TRƯỞNG 7 NGÀY -->
             <div class="stat-card">
               <div class="stat-icon-wrap icon-pink">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               </div>
               <div class="stat-info">
-                <span class="stat-lbl">KÊNH MẠNH NHẤT</span>
-                <span class="stat-val" id="topChannelName" style="font-size: 19px; color: #fff;">TopGlow Music</span>
-                <span class="stat-note" id="topChannelSubnote" style="color: #FB7185;">70.846 views/ngày · Top 1</span>
+                <span class="stat-lbl">TĂNG TRƯỞNG 7 NGÀY</span>
+                <span class="stat-val" id="topChannelName" style="font-size: 19px; color: #fff;">VELU MUSIC</span>
+                <span class="stat-note" id="topChannelSubnote" style="color: #FB7185;">+347.615 views/7 ngày · Top 1</span>
               </div>
             </div>
 
@@ -1097,24 +1097,36 @@
           snapMap[cid].sort((a, b) => parseSnapDate(a.snapshot_date) - parseSnapDate(b.snapshot_date));
         });
 
-        // 1. Tìm Kênh mạnh nhất (Top 1 mạng lưới theo tổng lượt xem và quy mô)
-        // channels đã sắp xếp DESC theo views_all: Top 1 là VELU MUSIC (23+ triệu views)
-        const topChannel = channels[0];
-        let topGrowthTotal = 0;
-        if (topChannel) {
-          const chSnaps = snapMap[topChannel.id] || [];
+        // 1. Tìm Kênh có lượt xem tăng trưởng nhiều nhất 7 ngày qua
+        const allUniqueDates = Array.from(new Set(snapshots.map(s => s.snapshot_date).filter(Boolean)));
+        allUniqueDates.sort((a, b) => parseSnapDate(a) - parseSnapDate(b));
+        const last7Dates = new Set(allUniqueDates.slice(-7));
+
+        let topGrowthChannel = channels[0];
+        let max7DayGrowth = -1;
+
+        channels.forEach(c => {
+          const chSnaps = snapMap[c.id] || [];
+          let growth7d = 0;
           chSnaps.forEach(s => {
-            const dv = parseInt(s.daily_views || 0);
-            if (!isNaN(dv) && dv > 0) topGrowthTotal += dv;
+            if (last7Dates.has(s.snapshot_date)) {
+              const dv = parseInt(s.daily_views || 0);
+              if (!isNaN(dv) && dv > 0) growth7d += dv;
+            }
           });
-        }
+          if (growth7d > max7DayGrowth) {
+            max7DayGrowth = growth7d;
+            topGrowthChannel = c;
+          }
+        });
 
         const elTopName = document.getElementById('topChannelName');
         const elTopNote = document.getElementById('topChannelSubnote');
-        if (elTopName && topChannel) elTopName.textContent = topChannel.title;
-        if (elTopNote && topChannel) {
-          const totalV = Number(topChannel.views_all || 0).toLocaleString('vi-VN');
-          elTopNote.textContent = `${totalV} views · Top 1 Mạng Lưới`;
+        if (elTopName && topGrowthChannel) elTopName.textContent = topGrowthChannel.title;
+        if (elTopNote && topGrowthChannel) {
+          elTopNote.textContent = max7DayGrowth > 0
+            ? `+${Number(max7DayGrowth).toLocaleString('vi-VN')} views/7 ngày · Top 1`
+            : `${Number(topGrowthChannel.views_all || 0).toLocaleString('vi-VN')} views · Top 1`;
         }
 
         // 2. Tổng video thu thập
