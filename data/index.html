@@ -788,6 +788,26 @@
       loadTursoData();
     }
 
+    function showToast(msg, isError = false) {
+      let toast = document.getElementById('floatingToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'floatingToast';
+        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);transition:opacity 0.3s, transform 0.3s;pointer-events:none;';
+        document.body.appendChild(toast);
+      }
+      toast.style.background = isError ? '#ef4444' : '#10b981';
+      toast.style.color = '#ffffff';
+      toast.innerHTML = msg;
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+      }, 2500);
+    }
+
     function logout() {
       localStorage.removeItem('fikat_data_admin_unlocked');
       localStorage.removeItem('fikat_session_token');
@@ -1135,14 +1155,14 @@
 
         await loadTursoData();
         switchTab('tracking');
-        alert(`✅ Đã lưu thành công kênh "${title}" vào hệ thống Cloud!`);
+        showToast(`✅ Đã thêm kênh <b>${title}</b> vào hệ thống!`);
       } catch (err) {
         console.error("Lỗi thêm kênh:", err);
         if (statusEl) {
           statusEl.style.color = '#f87171';
           statusEl.textContent = `❌ ${err.message}`;
         }
-        alert("Lỗi thêm kênh: " + err.message);
+        showToast(`❌ Lỗi thêm kênh: ${err.message}`, true);
       }
     }
 
@@ -1156,7 +1176,7 @@
       const avatar = document.getElementById('manualAvatar').value.trim() || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
 
       if (!title) {
-        alert("Vui lòng nhập Tên kênh!");
+        showToast("⚠️ Vui lòng nhập Tên kênh!", true);
         return;
       }
 
@@ -1176,11 +1196,11 @@
           `, [pk, todayStr, subs, views, vids]);
         }
 
-        alert(`Đã lưu kênh "${title}" thành công vào Turso Cloud!`);
         await loadTursoData();
         switchTab('tracking');
+        showToast(`✅ Đã lưu kênh <b>${title}</b> thủ công!`);
       } catch (err) {
-        alert("Lỗi lưu kênh: " + err.message);
+        showToast(`❌ Lỗi lưu kênh: ${err.message}`, true);
       }
     }
 
