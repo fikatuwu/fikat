@@ -2506,21 +2506,42 @@
       const btn = document.getElementById('btnTriggerRtScan');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `⏳ Đang quét video 12 kênh...`;
+        btn.innerHTML = `⏳ Đang chuẩn bị quét...`;
       }
-      showToast("⏳ Đang bắt đầu quét toàn bộ video 12 kênh, vui lòng đợi trong giây lát...");
+      showToast("⏳ Bắt đầu quét video 12 kênh, tiến trình sẽ được cập nhật liên tục...");
 
       try {
-        const res = await fetch('/api/video-tracker/snapshot', { method: 'POST' });
-        const data = await res.json();
-        if (data.ok) {
-          showToast(`✅ Đã quét xong ${data.count} kênh (${data.totalVideos} videos)!`);
-          await loadRealtimeVideoData();
-        } else {
-          showToast(`❌ Lỗi quét: ${data.message}`, true);
+        const channels = await queryTurso("SELECT id, title FROM channels ORDER BY id ASC");
+        if (!channels || !channels.length) {
+          showToast("❌ Không tìm thấy kênh nào để quét!", true);
+          return;
         }
+
+        let completed = 0;
+        let totalVidsScanned = 0;
+
+        for (let i = 0; i < channels.length; i++) {
+          const ch = channels[i];
+          const progressTxt = `[${i + 1}/${channels.length}] ${ch.title}`;
+          if (btn) btn.innerHTML = `⏳ Đang quét ${progressTxt}...`;
+          showToast(`⏳ Đang quét video kênh ${progressTxt}...`);
+
+          try {
+            const res = await fetch(`/api/video-tracker/scan-channel?channel_id=${ch.id}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.ok) {
+              completed++;
+              totalVidsScanned += (data.video_count || 0);
+            }
+          } catch (e) {
+            console.warn(`Lỗi quét kênh ${ch.title}:`, e);
+          }
+        }
+
+        showToast(`✅ Đã quét xong ${completed}/${channels.length} kênh (${totalVidsScanned} videos)! Đang làm mới giao diện...`);
+        await loadRealtimeVideoData();
       } catch (err) {
-        showToast(`❌ Không thể kết nối quét video: ${err.message}`, true);
+        showToast(`❌ Không thể quét video: ${err.message}`, true);
       } finally {
         if (btn) {
           btn.disabled = false;
