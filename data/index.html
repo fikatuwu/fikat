@@ -1085,26 +1085,36 @@
         if (document.getElementById('sidebarChannelCount')) document.getElementById('sidebarChannelCount').textContent = channels.length;
         if (document.getElementById('trackingCountHeader')) document.getElementById('trackingCountHeader').textContent = channels.length;
 
-        // 1. Tìm Kênh mạnh nhất (Top 1 theo view tăng trong ngày hoặc tổng view)
-        let topChannel = channels[0];
-        let maxGrowth = 0;
-        channels.forEach(c => {
-          const chSnaps = snapMap[c.id] || [];
-          if (chSnaps.length > 0) {
-            const latest = chSnaps[chSnaps.length - 1];
-            const dv = parseInt(latest.daily_views || 0);
-            if (dv > maxGrowth) {
-              maxGrowth = dv;
-              topChannel = c;
-            }
-          }
+        function parseSnapDate(dStr) {
+          if (!dStr) return 0;
+          const parts = dStr.split('/').map(Number);
+          if (parts.length === 3) return new Date(parts[2], parts[1] - 1, parts[0]).getTime();
+          return 0;
+        }
+
+        // Sắp xếp snapshot chuẩn theo dòng thời gian thực tế
+        Object.keys(snapMap).forEach(cid => {
+          snapMap[cid].sort((a, b) => parseSnapDate(a.snapshot_date) - parseSnapDate(b.snapshot_date));
         });
-        if (!topChannel && channels.length) topChannel = channels[0];
+
+        // 1. Tìm Kênh mạnh nhất (Top 1 mạng lưới theo tổng lượt xem và quy mô)
+        // channels đã sắp xếp DESC theo views_all: Top 1 là VELU MUSIC (23+ triệu views)
+        const topChannel = channels[0];
+        let topGrowthTotal = 0;
+        if (topChannel) {
+          const chSnaps = snapMap[topChannel.id] || [];
+          chSnaps.forEach(s => {
+            const dv = parseInt(s.daily_views || 0);
+            if (!isNaN(dv) && dv > 0) topGrowthTotal += dv;
+          });
+        }
+
         const elTopName = document.getElementById('topChannelName');
         const elTopNote = document.getElementById('topChannelSubnote');
         if (elTopName && topChannel) elTopName.textContent = topChannel.title;
         if (elTopNote && topChannel) {
-          elTopNote.textContent = maxGrowth > 0 ? `+${Number(maxGrowth).toLocaleString('vi-VN')} views/ngày · Top 1` : 'Dẫn đầu mạng lưới';
+          const totalV = Number(topChannel.views_all || 0).toLocaleString('vi-VN');
+          elTopNote.textContent = `${totalV} views · Top 1 Mạng Lưới`;
         }
 
         // 2. Tổng video thu thập
