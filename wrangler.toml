@@ -4,8 +4,8 @@ compatibility_date = "2024-09-23"
 
 [assets]
 directory = "."
-exclude = ["node_modules/**", "worker.js", "wrangler.toml", ".git/**", "package*.json", "bun.lockb"]
 binding = "ASSETS"
+
 
 [[kv_namespaces]]
 binding = "DOWNLOAD_LOGS"

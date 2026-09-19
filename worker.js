@@ -1137,6 +1137,8 @@ export default {
       } catch (err) {
         return jsonRes({ ok: false, status: "error", message: "Lỗi xác thực: " + err.message }, 500);
       }
+    }
+
     // 3.8 GET/POST /api/video-tracker/snapshot - Kích hoạt quét video 30 phút thủ công
     if (pathname === "/api/video-tracker/snapshot" && (request.method === "POST" || request.method === "GET")) {
       try {

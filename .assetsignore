@@ -1,0 +1,8 @@
+﻿downloads/**
+node_modules/**
+worker.js
+wrangler.toml
+.git/**
+*.zip
+*.rar
+*.exe
