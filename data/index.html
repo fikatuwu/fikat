@@ -1083,16 +1083,16 @@
         }
 
         const ch = data.channel;
-        const cid = ch.id;
-        const title = ch.title;
-        const avatar = ch.avatar;
-        const subs = ch.subscribers || 0;
-        const views = ch.views_all || 0;
-        const vids = ch.video_count || 0;
+        const cid = ch.id || (`custom_${Date.now()}`);
+        const title = ch.title || inputRef;
+        const avatar = ch.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120";
+        const subs = parseInt(ch.subscribers) || 0;
+        const views = parseInt(ch.views_all) || 0;
+        const vids = parseInt(ch.video_count) || 0;
 
         // Lưu vào Turso Cloud
         await queryTurso(`
-          INSERT INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
+          INSERT OR REPLACE INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
           VALUES (?, ?, ?, ?, ?, ?, ?, 1)
         `, [cid, title, avatar, subs, views, vids, "#E45A3C"]);
 
@@ -1100,7 +1100,8 @@
         const created = await queryTurso(`SELECT id FROM channels WHERE custom_id = ?`, [cid]);
         if (created.length > 0) {
           const pk = created[0].id;
-          const todayStr = new Date().toLocaleDateString('vi-VN');
+          const d = new Date();
+          const todayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
           await queryTurso(`
             INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
             VALUES (?, ?, ?, ?, ?, 0, 0, 0)
@@ -1109,11 +1110,12 @@
 
         if (statusEl) {
           statusEl.style.color = 'var(--green)';
-          statusEl.textContent = `✅ Đã thêm thành công kênh "${title}" (${subs.toLocaleString('vi-VN')} subs, ${views.toLocaleString('vi-VN')} views)!`;
+          statusEl.textContent = `✅ Đã thêm thành công kênh "${title}" (${Number(subs).toLocaleString('vi-VN')} subs, ${Number(views).toLocaleString('vi-VN')} views)!`;
         }
 
         await loadTursoData();
         switchTab('tracking');
+        alert(`✅ Đã lưu thành công kênh "${title}" vào hệ thống Cloud!`);
       } catch (err) {
         console.error("Lỗi thêm kênh:", err);
         if (statusEl) {

@@ -1188,7 +1188,14 @@
           if (btn) btn.classList.toggle('active', t === tab);
           if (pane) pane.style.display = t === tab ? 'block' : 'none';
         });
+        try { localStorage.setItem('admin_active_tab', tab); } catch(e){}
         if (tab === 'pending') renderPendingTable();
+        if (tab === 'sfsData') {
+          const ifr = document.querySelector('#paneSfsData iframe');
+          if (ifr && ifr.contentWindow && ifr.contentWindow.loadTursoData) {
+            ifr.contentWindow.loadTursoData();
+          }
+        }
       };
 
       // ── Pending Users ──
@@ -1348,6 +1355,14 @@
         } catch (e) {
           console.error(e);
         }
+
+        // Tự động khôi phục tab đang mở khi F5
+        try {
+          const savedTab = localStorage.getItem('admin_active_tab');
+          if (savedTab && savedTab !== 'users') {
+            switchAdminTab(savedTab);
+          }
+        } catch(e){}
       }
 
       // Render Bảng Người Dùng & Phân Quyền
