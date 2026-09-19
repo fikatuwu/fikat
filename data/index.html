@@ -36,7 +36,7 @@
     }
     a { color: var(--p); text-decoration: none; }
 
-    /* AUTH OVERLAY (LOCKED SCREEN) */
+    /* AUTH OVERLAY */
     #authShield {
       position: fixed;
       inset: 0;
@@ -181,25 +181,22 @@
       transition: all .15s;
     }
     .nav-btn:hover {
-      background: rgba(255,255,255,0.04);
+      background: rgba(255, 255, 255, 0.03);
       color: #fff;
     }
     .nav-btn.active {
-      background: rgba(228, 90, 60, 0.15);
+      background: rgba(228, 90, 60, 0.12);
       color: var(--p);
-      font-weight: 700;
-      border: 1px solid rgba(228, 90, 60, 0.3);
+      border-left: 3px solid var(--p);
+      border-radius: 0 12px 12px 0;
     }
     .sidebar-foot {
-      margin-top: auto;
-      padding: 18px 20px;
+      padding: 16px;
       border-top: 1px solid var(--line);
       font-size: 11px;
       color: var(--text-3);
-      line-height: 1.5;
     }
 
-    /* MAIN CONTENT */
     .main-body {
       flex: 1;
       display: flex;
@@ -210,66 +207,50 @@
     .topbar {
       height: 70px;
       padding: 0 32px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--line);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      border-bottom: 1px solid var(--line);
     }
-    .topbar-title {
-      font-size: 17px;
+    .top-title {
+      font-size: 18px;
       font-weight: 700;
       color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .user-pill {
       display: flex;
       align-items: center;
       gap: 10px;
-      background: rgba(228, 90, 60, 0.1);
-      border: 1px solid rgba(228, 90, 60, 0.25);
-      padding: 5px 14px 5px 6px;
-      border-radius: 999px;
-    }
-    .user-pill img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-    .user-pill span {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      font-size: 13px;
     }
     .badge-qtv {
-      font-size: 10px;
-      padding: 2px 7px;
-      border-radius: 6px;
-      background: var(--p);
+      background: linear-gradient(135deg, var(--p), var(--p2));
       color: #fff;
-      font-weight: 800;
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 10px;
     }
 
     .content-area {
       padding: 28px 32px;
-      overflow-y: auto;
       flex: 1;
     }
 
-    /* STATS CARDS */
-    .stats-grid {
+    .stats-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(4, 1fr);
       gap: 16px;
       margin-bottom: 24px;
     }
     .stat-card {
-      background: var(--surface);
+      background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 18px;
+      border-radius: 16px;
       padding: 20px;
       display: flex;
       flex-direction: column;
@@ -277,29 +258,26 @@
     }
     .stat-lbl {
       font-size: 12px;
-      font-weight: 600;
       color: var(--text-2);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.04em;
     }
     .stat-val {
       font-size: 26px;
       font-weight: 800;
-      color: #fff;
       font-family: var(--mono);
+      color: #fff;
     }
     .stat-note {
       font-size: 11.5px;
       color: var(--green);
-      font-weight: 600;
     }
 
-    /* CARD BOX */
     .card-box {
-      background: var(--surface);
+      background: var(--card);
       border: 1px solid var(--line);
-      border-radius: 20px;
-      padding: 24px;
+      border-radius: 16px;
+      padding: 22px;
       margin-bottom: 24px;
     }
     .card-header {
@@ -307,6 +285,8 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 12px;
     }
     .card-title {
       font-size: 16px;
@@ -314,31 +294,29 @@
       color: #fff;
     }
 
-    /* TABLE */
     .data-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 13.5px;
+      font-size: 13px;
     }
     .data-table th {
       text-align: left;
       padding: 12px 14px;
-      color: var(--text-3);
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
+      color: var(--text-2);
+      font-weight: 600;
       border-bottom: 1px solid var(--line);
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
       white-space: nowrap;
     }
     .data-table td {
       padding: 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.03);
-      color: var(--text-2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       vertical-align: middle;
     }
     .data-table tr:hover td {
-      background: rgba(255,255,255,0.02);
-      color: #fff;
+      background: rgba(255, 255, 255, 0.02);
     }
     .ch-row {
       display: flex;
@@ -346,8 +324,8 @@
       gap: 12px;
     }
     .ch-av {
-      width: 36px;
-      height: 36px;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       object-fit: cover;
       border: 1px solid var(--line);
@@ -355,26 +333,28 @@
     .ch-title {
       font-weight: 700;
       color: #fff;
+      font-size: 13.5px;
     }
     .mono-cell {
       font-family: var(--mono);
-      font-weight: 600;
+      font-size: 12.5px;
+      white-space: nowrap;
     }
 
-    /* SEARCH BAR */
     .search-row {
       display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
+      gap: 10px;
+      margin-bottom: 16px;
     }
     .search-inp {
       flex: 1;
       height: 44px;
       padding: 0 16px;
-      background: var(--surface);
+      background: #18130d;
       border: 1px solid var(--line);
-      border-radius: 12px;
+      border-radius: 10px;
       color: #fff;
+      font-family: inherit;
       font-size: 13.5px;
       outline: none;
     }
@@ -382,24 +362,60 @@
       border-color: var(--p);
     }
     .action-btn {
+      height: 44px;
       padding: 0 20px;
-      background: linear-gradient(180deg, var(--p), #c84327);
+      background: linear-gradient(135deg, var(--p), var(--p2));
       border: none;
-      border-radius: 12px;
+      border-radius: 10px;
       color: #fff;
       font-weight: 700;
       font-size: 13.5px;
       cursor: pointer;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity .15s;
+    }
+    .action-btn:hover {
+      opacity: 0.92;
+    }
+    .action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    /* TABS */
     .tab-view { display: none; }
     .tab-view.active { display: block; }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+    }
+    .empty-icon {
+      font-size: 3.5rem;
+      margin-bottom: 14px;
+      display: inline-block;
+    }
+    .empty-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .empty-desc {
+      font-size: 13.5px;
+      color: var(--text-2);
+      max-width: 520px;
+      margin: 0 auto 24px;
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
 
-  <!-- ======================== MÀN HÌNH BẢO MẬT (CHỈ TÀI KHOẢN ADMIN FIKAT MỚI ĐƯỢC VÀO) ======================== -->
+  <!-- ======================== MÀN HÌNH BẢO MẬT ADMIN ======================== -->
   <div id="authShield">
     <div class="auth-box">
       <div class="auth-icon">
@@ -444,15 +460,15 @@
           <div class="nav-label">CÔNG CỤ PHÂN TÍCH</div>
           <button class="nav-btn" onclick="switchTab('tracking')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
-            Theo dõi kênh (45 kênh)
+            Theo dõi kênh (<span id="sidebarChannelCount">0</span> kênh)
           </button>
           <button class="nav-btn" onclick="switchTab('leaderboard')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            Bảng xếp hạng bứt tốc
+            Bảng xếp hạng lượt xem
           </button>
           <button class="nav-btn" onclick="switchTab('market')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            Nghiên cứu thị trường
+            ➕ Thêm Kênh YouTube
           </button>
         </div>
 
@@ -460,7 +476,7 @@
           <div class="nav-label">HỆ THỐNG</div>
           <button class="nav-btn" onclick="switchTab('admin')">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Quản trị & Cụm API Key
+            Cấu hình Database Cloud
           </button>
           <button class="nav-btn" onclick="logout()" style="color:#ef4444;margin-top:10px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -478,46 +494,51 @@
     <!-- MAIN BODY -->
     <main class="main-body">
       <header class="topbar">
-        <div class="topbar-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
-        <div class="user-pill">
-          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&auto=format&fit=crop&q=80" alt="Admin">
-          <span id="currentUserName">fikat</span>
-          <span class="badge-qtv">QUẢN TRỊ VIÊN</span>
+        <div class="top-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="user-pill">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span>
+            <span id="currentUserName">Admin</span>
+            <span class="badge-qtv">QUẢN TRỊ VIÊN</span>
+          </div>
+          <button class="action-btn" style="height:36px;padding:0 14px;font-size:12.5px;" onclick="loadTursoData()">
+            🔄 Làm mới
+          </button>
         </div>
       </header>
 
       <div class="content-area">
         <!-- TAB 1: DASHBOARD -->
         <section id="tab-dashboard" class="tab-view active">
-          <div class="stats-grid">
+          <div class="stats-row">
             <div class="stat-card">
               <span class="stat-lbl">Tổng kênh theo dõi</span>
-              <span class="stat-val" id="totalChannels">45</span>
-              <span class="stat-note">Đồng bộ đám mây Turso</span>
+              <span class="stat-val" id="totalChannels">0</span>
+              <span class="stat-note">Đồng bộ Turso Cloud</span>
             </div>
             <div class="stat-card">
               <span class="stat-lbl">Tổng lượt xem mạng lưới</span>
-              <span class="stat-val" id="totalViews">--</span>
-              <span class="stat-note">▲ Tăng trưởng ổn định</span>
+              <span class="stat-val" id="totalViews">0</span>
+              <span class="stat-note">Lượt xem thật</span>
             </div>
             <div class="stat-card">
               <span class="stat-lbl">Tổng số Subscribers</span>
-              <span class="stat-val" id="totalSubs">--</span>
-              <span class="stat-note">Toàn bộ 45 kênh</span>
+              <span class="stat-val" id="totalSubs">0</span>
+              <span class="stat-note">Toàn bộ kênh thật</span>
             </div>
             <div class="stat-card">
               <span class="stat-lbl">Snapshots lịch sử</span>
-              <span class="stat-val" id="totalSnapshots">157</span>
-              <span class="stat-note">Theo dõi theo ngày</span>
+              <span class="stat-val" id="totalSnapshots">0</span>
+              <span class="stat-note">Điểm theo dõi ngày</span>
             </div>
           </div>
 
           <div class="card-box">
             <div class="card-header">
-              <span class="card-title">Biểu đồ Biến động Lượt xem (30 Ngày qua)</span>
+              <span class="card-title">Biểu đồ Biến động Lượt xem (Lịch sử thật)</span>
               <div style="font-size:12px;color:var(--text-2);">Realtime Turso Cloud Sync</div>
             </div>
-            <div style="height:320px;position:relative;">
+            <div id="chartContainer" style="height:320px;position:relative;">
               <canvas id="growthChart"></canvas>
             </div>
           </div>
@@ -527,27 +548,35 @@
         <section id="tab-tracking" class="tab-view">
           <div class="card-box">
             <div class="card-header">
-              <span class="card-title">Danh sách 45 kênh đang theo dõi trực tiếp</span>
-              <button class="action-btn" onclick="syncAllChannels()">⚡ Đồng bộ tất cả</button>
+              <span class="card-title">Danh sách kênh đang theo dõi (<span id="trackingCountHeader">0</span> kênh)</span>
+              <div style="display:flex;gap:10px;">
+                <button class="action-btn" onclick="switchTab('market')">➕ Thêm kênh mới</button>
+                <button class="action-btn" style="background:#261d15;border:1px solid var(--line);" onclick="loadTursoData()">🔄 Đồng bộ</button>
+              </div>
             </div>
+
+            <!-- Quick Add Input Bar -->
+            <div class="search-row">
+              <input type="text" id="quickAddInput" class="search-inp" placeholder="Nhập nhanh link kênh YouTube hoặc @handle (vd: https://youtube.com/@MixiGaming3 hoặc @MrBeast)...">
+              <button class="action-btn" id="btnQuickAdd" onclick="quickAddChannel()">➕ Thêm Kênh</button>
+            </div>
+
             <div style="overflow-x:auto;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>STT</th>
+                    <th style="width:40px;">#</th>
                     <th>Kênh YouTube</th>
-                    <th>Gói thị trường</th>
                     <th>Subscribers</th>
                     <th>Lượt xem tổng</th>
-                    <th>Traffic 24h</th>
-                    <th>Traffic 48h</th>
-                    <th>CTR 24h</th>
-                    <th>Giữ 45s</th>
-                    <th>Thao tác</th>
+                    <th>Số Video</th>
+                    <th>Xem TB / Video</th>
+                    <th>Biến động 24h</th>
+                    <th style="width:130px;text-align:center;">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody id="channelsTableBody">
-                  <tr><td colspan="10" style="text-align:center;padding:30px;">Đang tải dữ liệu từ Turso Cloud...</td></tr>
+                  <tr><td colspan="8" style="text-align:center;padding:30px;">Đang kết nối Turso Cloud...</td></tr>
                 </tbody>
               </table>
             </div>
@@ -558,18 +587,18 @@
         <section id="tab-leaderboard" class="tab-view">
           <div class="card-box">
             <div class="card-header">
-              <span class="card-title">🚀 Bảng xếp hạng bứt tốc lượt xem (Top Tăng Trưởng)</span>
+              <span class="card-title">🚀 Bảng xếp hạng Lượt xem & Quy mô Kênh</span>
             </div>
             <div style="overflow-x:auto;">
               <table class="data-table">
                 <thead>
                   <tr>
-                    <th>Hạng</th>
+                    <th style="width:50px;">Hạng</th>
                     <th>Kênh</th>
                     <th>Subscribers</th>
                     <th>Views tổng</th>
-                    <th>Tăng trưởng 24h</th>
-                    <th>Tỷ lệ tăng</th>
+                    <th>Số Video</th>
+                    <th>Xem TB / Video</th>
                   </tr>
                 </thead>
                 <tbody id="leaderboardBody"></tbody>
@@ -578,37 +607,57 @@
           </div>
         </section>
 
-        <!-- TAB 4: MARKET -->
+        <!-- TAB 4: MARKET / ADD CHANNEL -->
         <section id="tab-market" class="tab-view">
           <div class="card-box">
             <div class="card-header">
-              <span class="card-title">Thêm Kênh YouTube Mới Vào Hệ Thống Cloud</span>
+              <span class="card-title">➕ Thêm Kênh YouTube Mới Vào Hệ Thống Cloud</span>
             </div>
-            <div class="search-row">
-              <input type="text" id="newChannelInput" class="search-inp" placeholder="Dán link kênh YouTube (vd: https://youtube.com/@handle hoặc ID kênh)...">
-              <button class="action-btn" onclick="addNewChannel()">★ Lưu vào Cloud</button>
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:18px;">
+              Dán đường link kênh YouTube (hoặc thẻ <code>@handle</code>, mã <code>UC...</code>). Hệ thống sẽ tự động gọi Cloudflare Worker kéo Avatar HD, Tên kênh, Subscribers, Lượt xem và Video thật 100% lưu vĩnh viễn vào Turso Cloud.
+            </p>
+
+            <div class="search-row" style="max-width:800px;">
+              <input type="text" id="newChannelInput" class="search-inp" placeholder="Dán link kênh (vd: https://youtube.com/@MixiGaming3 hoặc @MrBeast)...">
+              <button class="action-btn" id="btnAddNewChannel" onclick="addNewChannel()">★ Kéo dữ liệu & Lưu Cloud</button>
             </div>
-            <p style="font-size:12px;color:var(--text-2);">Hệ thống sẽ kéo thông tin kênh, ảnh avatar HD và 15 video mới nhất kèm ID thật lưu vĩnh viễn lên Turso Cloud.</p>
+
+            <div id="addStatusMsg" style="margin-top:10px;font-size:13px;display:none;"></div>
+
+            <!-- Manual Add Accordion (Option) -->
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--line);">
+              <details style="color:var(--text-2);font-size:13px;">
+                <summary style="cursor:pointer;color:var(--p);font-weight:600;">🛠️ Hoặc tự nhập thông tin kênh thủ công</summary>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;max-width:800px;">
+                  <input type="text" id="manualTitle" class="search-inp" placeholder="Tên kênh...">
+                  <input type="text" id="manualCid" class="search-inp" placeholder="ID kênh (vd: UC_... hoặc @tenkenh)">
+                  <input type="number" id="manualSubs" class="search-inp" placeholder="Số người đăng ký (Subscribers)...">
+                  <input type="number" id="manualViews" class="search-inp" placeholder="Tổng số lượt xem...">
+                  <input type="number" id="manualVideos" class="search-inp" placeholder="Số video đã đăng...">
+                  <input type="text" id="manualAvatar" class="search-inp" placeholder="Link ảnh Avatar (tùy chọn)...">
+                </div>
+                <button class="action-btn" style="margin-top:14px;" onclick="saveManualChannel()">💾 Lưu kênh thủ công</button>
+              </details>
+            </div>
           </div>
         </section>
 
-        <!-- TAB 5: ADMIN -->
+        <!-- TAB 5: ADMIN / CLOUD STATUS -->
         <section id="tab-admin" class="tab-view">
           <div class="card-box">
             <div class="card-header">
-              <span class="card-title">Cấu hình Cụm API Key & Gemini AI</span>
+              <span class="card-title">Cấu hình Cơ sở dữ liệu & Cụm Server</span>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
               <div style="background:rgba(0,0,0,0.2);padding:18px;border-radius:14px;border:1px solid var(--line);">
-                <h4 style="margin-bottom:8px;">YouTube Data API Keys</h4>
-                <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;">Tự động xoay key khi chạm quota 10,000 requests/ngày.</p>
-                <div style="font-family:var(--mono);font-size:13px;color:var(--green);margin-bottom:10px;">🟢 Key 1: AIzaSy...7B9x (Active)</div>
-                <div style="font-family:var(--mono);font-size:13px;color:#38bdf8;margin-bottom:10px;">🔵 Key 2: AIzaSy...9M4k (Standby)</div>
-              </div>
-              <div style="background:rgba(0,0,0,0.2);padding:18px;border-radius:14px;border:1px solid var(--line);">
-                <h4 style="margin-bottom:8px;">Database Turso Cloud (Tokyo)</h4>
+                <h4 style="margin-bottom:8px;color:#fff;">Database Turso Cloud (Tokyo)</h4>
                 <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;">Trạng thái: Hoạt động ổn định (Pipeline v2 HTTPS).</p>
                 <div style="font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--p);">https://fikat-fikat.aws-ap-northeast-1.turso.io</div>
+              </div>
+              <div style="background:rgba(0,0,0,0.2);padding:18px;border-radius:14px;border:1px solid var(--line);">
+                <h4 style="margin-bottom:8px;color:#fff;">Cloudflare Edge API Scraper</h4>
+                <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;">Hỗ trợ tự động kéo metadata từ YouTube không bị chặn CORS.</p>
+                <div style="font-family:var(--mono);font-size:12px;color:var(--green);">🟢 fikat.cloud/api/youtube/channel-info</div>
               </div>
             </div>
           </div>
@@ -617,7 +666,7 @@
     </main>
   </div>
 
-  <!-- ======================== JAVASCRIPT XỬ LÝ AUTH & TURSO CLOUD ======================== -->
+  <!-- ======================== JAVASCRIPT ======================== -->
   <script>
     const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
     const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
@@ -625,18 +674,18 @@
     const ADMIN_USER = "fikat";
 
     let channelsData = [];
+    let snapshotsData = [];
     let chartInstance = null;
 
-    // 1. AUTH LOGIC - CHỈ TÀI KHOẢN CỦA BẠN MỚI XEM ĐƯỢC
+    // 1. AUTH LOGIC - CHỈ TÀI KHOẢN CỦA ADMIN MỚI XEM ĐƯỢC
     async function checkAuth() {
-      const token = localStorage.getItem('fikat_session_token');
       const pinAuth = localStorage.getItem('fikat_data_admin_unlocked');
-
       if (pinAuth === 'true') {
         unlockApp("fikat");
         return;
       }
 
+      const token = localStorage.getItem('fikat_session_token');
       if (token) {
         try {
           const res = await fetch('/api/auth/me', {
@@ -654,7 +703,7 @@
             }
           }
         } catch (e) {
-          console.warn("Auth check failed:", e);
+          console.warn("Auth check error:", e);
         }
       }
 
@@ -670,14 +719,12 @@
       btn.disabled = true;
       btn.textContent = "Đang kiểm tra...";
 
-      // Kiểm tra PIN trực tiếp
       if (p === DEFAULT_PIN && (u === 'fikat' || u === 'admin')) {
         localStorage.setItem('fikat_data_admin_unlocked', 'true');
         unlockApp("fikat (Quản trị viên)");
         return;
       }
 
-      // Hoặc xác thực qua API fikat.cloud
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
@@ -685,16 +732,15 @@
           body: JSON.stringify({ username: u, password: p })
         });
         const data = await res.json();
-        if (data.ok && data.token && data.user) {
-          if (data.user.username === ADMIN_USER || data.user.role === 'Quản trị viên' || data.user.isRootAdmin) {
+        if (data.ok && data.user) {
+          if (data.user.role === 'Quản trị viên' || data.user.isRootAdmin || data.user.username === ADMIN_USER) {
             localStorage.setItem('fikat_session_token', data.token);
             unlockApp(data.user.fullName || data.user.username);
-            return;
           } else {
-            showAuthError("Tài khoản này là Nhân viên, không có quyền truy cập dữ liệu SFS!");
+            showAuthError("Tài khoản này là Nhân viên, không có quyền vào Trung tâm Dữ liệu!");
           }
         } else {
-          showAuthError(data.message || "Tên đăng nhập hoặc mật khẩu/PIN không đúng!");
+          showAuthError(data.message || "Tên đăng nhập hoặc mật khẩu không đúng.");
         }
       } catch (err) {
         if (p === DEFAULT_PIN) {
@@ -702,7 +748,7 @@
           unlockApp("fikat");
           return;
         }
-        showAuthError("Không thể xác thực: " + err.message);
+        showAuthError("Không thể kết nối máy chủ xác thực: " + err.message);
       } finally {
         btn.disabled = false;
         btn.textContent = "Xác thực & Mở khóa";
@@ -728,7 +774,7 @@
       location.reload();
     }
 
-    // 2. QUERY TURSO CLOUD ONLINE DIRECTLY
+    // 2. QUERY TURSO CLOUD DIRECTLY
     async function queryTurso(sql, args = []) {
       const payload = {
         requests: [
@@ -738,7 +784,7 @@
               sql: sql,
               args: args.map(a => {
                 if (typeof a === 'number') return { type: Number.isInteger(a) ? "integer" : "float", value: String(a) };
-                if (a === null) return { type: "null" };
+                if (a === null || a === undefined) return { type: "null" };
                 return { type: "text", value: String(a) };
               })
             }
@@ -757,7 +803,11 @@
       });
 
       const data = await res.json();
+      if (!data.results || !data.results[0] || !data.results[0].response) {
+        throw new Error("Lỗi phản hồi từ Turso: " + JSON.stringify(data));
+      }
       const result = data.results[0].response.result;
+      if (!result) return [];
       const cols = result.cols.map(c => c.name);
       return result.rows.map(row => {
         const obj = {};
@@ -768,18 +818,37 @@
       });
     }
 
-    // 3. LOAD DATA & RENDER
+    // 3. LOAD DATA & RENDER REAL METRICS
     async function loadTursoData() {
       try {
         const channels = await queryTurso(`
-          SELECT c.*, m.name as market_name 
-          FROM channels c 
-          LEFT JOIN markets m ON c.market_id = m.id 
-          ORDER BY c.views_all DESC
+          SELECT * FROM channels ORDER BY views_all DESC
         `);
         channelsData = channels;
 
+        let snapshots = [];
+        try {
+          snapshots = await queryTurso(`
+            SELECT * FROM snapshots ORDER BY channel_id, id ASC
+          `);
+        } catch (err) {
+          console.warn("Snapshots query error:", err);
+        }
+        snapshotsData = snapshots;
+
+        // Group snapshots by channel_id
+        const snapMap = {};
+        snapshots.forEach(s => {
+          const cid = s.channel_id;
+          if (!snapMap[cid]) snapMap[cid] = [];
+          snapMap[cid].push(s);
+        });
+
+        // Header statistics
         document.getElementById('totalChannels').textContent = channels.length;
+        document.getElementById('sidebarChannelCount').textContent = channels.length;
+        document.getElementById('trackingCountHeader').textContent = channels.length;
+
         let sumViews = 0;
         let sumSubs = 0;
         channels.forEach(c => {
@@ -788,79 +857,166 @@
         });
         document.getElementById('totalViews').textContent = Number(sumViews).toLocaleString('vi-VN');
         document.getElementById('totalSubs').textContent = Number(sumSubs).toLocaleString('vi-VN');
+        document.getElementById('totalSnapshots').textContent = snapshots.length;
 
-        renderChannelsTable(channels);
+        renderChannelsTable(channels, snapMap);
         renderLeaderboard(channels);
-        initChart(channels);
+        renderChart(channels, snapMap);
       } catch (e) {
         console.error("Error loading Turso data:", e);
+        document.getElementById('channelsTableBody').innerHTML = `
+          <tr><td colspan="8" style="text-align:center;color:#f87171;padding:30px;">
+            Lỗi nạp dữ liệu: ${escapeHtml(e.message)}
+          </td></tr>
+        `;
       }
     }
 
-    function renderChannelsTable(channels) {
+    // 4. RENDER TABLE WITH REAL METRICS
+    function renderChannelsTable(channels, snapMap) {
       const tbody = document.getElementById('channelsTableBody');
       if (!channels.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Chưa có dữ liệu</td></tr>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="8">
+              <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <div class="empty-title">Chưa có kênh YouTube nào trong hệ thống</div>
+                <div class="empty-desc">
+                  Toàn bộ dữ liệu mẫu ban đầu đã được xóa sạch. Hãy dán link kênh YouTube hoặc @handle vào ô bên trên để bắt đầu theo dõi dữ liệu thật 100%!
+                </div>
+              </div>
+            </td>
+          </tr>
+        `;
         return;
       }
+
       tbody.innerHTML = channels.map((c, i) => {
         const av = c.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
         const cid = c.custom_id || c.id;
-        const ytLink = cid.startsWith('UC') ? `https://www.youtube.com/channel/${cid}` : (cid.startsWith('@') ? `https://www.youtube.com/${cid}` : `https://www.youtube.com/@${cid}`);
+        const ytLink = String(cid).startsWith('UC') ? `https://www.youtube.com/channel/${cid}` : (String(cid).startsWith('@') ? `https://www.youtube.com/${cid}` : `https://www.youtube.com/@${cid}`);
+        
+        const views = parseInt(c.views_all || 0);
+        const vids = parseInt(c.video_count || 0);
+        const avgViews = vids > 0 ? Math.round(views / vids) : 0;
+
+        // Tính toán biến động 24h thật từ snapshot
+        let deltaHtml = `<span style="color:var(--text-3);font-size:12px;">Mới theo dõi</span>`;
+        const chSnaps = snapMap[c.id] || [];
+        if (chSnaps.length >= 2) {
+          const latest = parseInt(chSnaps[chSnaps.length - 1].views_all || 0);
+          const prev = parseInt(chSnaps[chSnaps.length - 2].views_all || 0);
+          const diff = latest - prev;
+          if (diff > 0) {
+            deltaHtml = `<span style="color:var(--green);font-weight:700;">+${Number(diff).toLocaleString('vi-VN')}</span>`;
+          } else if (diff < 0) {
+            deltaHtml = `<span style="color:#f87171;font-weight:700;">${Number(diff).toLocaleString('vi-VN')}</span>`;
+          } else {
+            deltaHtml = `<span style="color:var(--text-2);">0</span>`;
+          }
+        }
+
         return `
           <tr>
             <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
             <td>
               <div class="ch-row">
-                <img src="${av}" class="ch-av" alt="">
+                <img src="${escapeHtml(av)}" class="ch-av" alt="">
                 <div>
                   <div class="ch-title">${escapeHtml(c.title || 'Kênh')}</div>
-                  <a href="${ytLink}" target="_blank" style="font-size:11px;color:var(--p);">Mở kênh ↗</a>
+                  <a href="${ytLink}" target="_blank" style="font-size:11px;color:var(--p);">Mở trên YouTube ↗</a>
                 </div>
               </div>
             </td>
-            <td><span style="background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:6px;font-size:12px;">${escapeHtml(c.market_name || 'Mặc định')}</span></td>
             <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
-            <td class="mono-cell" style="font-weight:700;color:#fff;">${Number(c.views_all || 0).toLocaleString('vi-VN')}</td>
-            <td class="mono-cell" style="color:var(--green);">+35.000</td>
-            <td class="mono-cell">+72.500</td>
-            <td class="mono-cell" style="color:#f59e0b;">9.4%</td>
-            <td class="mono-cell">71.5%</td>
-            <td><a href="${ytLink}" target="_blank" class="badge-qtv" style="text-decoration:none;">Xem</a></td>
+            <td class="mono-cell" style="font-weight:700;color:#fff;">${views.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell">${vids.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell" style="color:#f59e0b;">${avgViews > 0 ? avgViews.toLocaleString('vi-VN') : '--'}</td>
+            <td class="mono-cell">${deltaHtml}</td>
+            <td style="text-align:center;white-space:nowrap;">
+              <a href="${ytLink}" target="_blank" class="badge-qtv" style="text-decoration:none;margin-right:6px;">Xem ↗</a>
+              <button onclick="deleteChannel(${c.id}, '${escapeHtml(c.title || '')}')" style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#f87171;padding:4px 9px;border-radius:6px;cursor:pointer;font-size:11.5px;font-weight:600;">
+                🗑️ Xóa
+              </button>
+            </td>
           </tr>
         `;
       }).join('');
     }
 
+    // 5. RENDER LEADERBOARD
     function renderLeaderboard(channels) {
       const tbody = document.getElementById('leaderboardBody');
-      const sorted = [...channels].sort((a,b) => parseInt(b.views_all||0) - parseInt(a.views_all||0)).slice(0, 10);
-      tbody.innerHTML = sorted.map((c, i) => `
-        <tr>
-          <td style="font-weight:800;color:var(--p);font-size:15px;">#${i + 1}</td>
-          <td><b>${escapeHtml(c.title)}</b></td>
-          <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
-          <td class="mono-cell">${Number(c.views_all || 0).toLocaleString('vi-VN')}</td>
-          <td class="mono-cell" style="color:var(--green);font-weight:700;">+35.000</td>
-          <td class="mono-cell" style="color:var(--p);">▲ 14.8%</td>
-        </tr>
-      `).join('');
+      if (!channels.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-2);">Chưa có kênh để xếp hạng.</td></tr>';
+        return;
+      }
+
+      const sorted = [...channels].sort((a,b) => parseInt(b.views_all||0) - parseInt(a.views_all||0));
+      tbody.innerHTML = sorted.map((c, i) => {
+        const views = parseInt(c.views_all || 0);
+        const vids = parseInt(c.video_count || 0);
+        const avg = vids > 0 ? Math.round(views / vids) : 0;
+        return `
+          <tr>
+            <td style="font-weight:800;color:var(--p);font-size:15px;">#${i + 1}</td>
+            <td><b>${escapeHtml(c.title)}</b></td>
+            <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
+            <td class="mono-cell" style="font-weight:700;color:#fff;">${views.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell">${vids.toLocaleString('vi-VN')}</td>
+            <td class="mono-cell" style="color:var(--green);">${avg > 0 ? avg.toLocaleString('vi-VN') : '--'}</td>
+          </tr>
+        `;
+      }).join('');
     }
 
-    function initChart(channels) {
+    // 6. RENDER REAL CHART
+    function renderChart(channels, snapMap) {
+      const container = document.getElementById('chartContainer');
+      if (!channels.length) {
+        container.innerHTML = `
+          <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-2);font-size:13.5px;">
+            <div style="font-size:2rem;margin-bottom:8px;">📈</div>
+            <div>Biểu đồ tăng trưởng sẽ tự động vẽ ngay khi bạn thêm kênh YouTube và có số liệu theo dõi!</div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '<canvas id="growthChart"></canvas>';
       const ctx = document.getElementById('growthChart').getContext('2d');
-      const labels = ["05/09", "07/09", "09/09", "11/09", "13/09", "15/09", "17/09", "19/09"];
-      const datasets = channels.slice(0, 5).map((c, idx) => {
-        const colors = ['#E45A3C', '#38BDF8', '#22C55E', '#F59E0B', '#A855F7'];
-        const base = parseInt(c.views_all || 100000);
+
+      const colors = ['#E45A3C', '#38BDF8', '#22C55E', '#F59E0B', '#A855F7', '#EC4899'];
+      const topChannels = channels.slice(0, 5);
+
+      // Collect dates
+      const dateSet = new Set();
+      topChannels.forEach(c => {
+        const snaps = snapMap[c.id] || [];
+        snaps.forEach(s => dateSet.add(s.snapshot_date || "Hôm nay"));
+      });
+
+      let labels = Array.from(dateSet);
+      if (!labels.length) labels = ["Hiện tại"];
+
+      const datasets = topChannels.map((c, idx) => {
+        const snaps = snapMap[c.id] || [];
+        let dataPoints = [];
+        if (snaps.length > 0) {
+          dataPoints = snaps.map(s => parseInt(s.views_all || 0));
+        } else {
+          dataPoints = [parseInt(c.views_all || 0)];
+        }
+
         return {
           label: c.title,
-          data: labels.map((_, i) => Math.max(0, base - (labels.length - 1 - i) * 35000)),
+          data: dataPoints,
           borderColor: colors[idx % colors.length],
           backgroundColor: 'transparent',
           borderWidth: 2.2,
-          tension: 0.35,
-          pointRadius: 3
+          tension: 0.25,
+          pointRadius: 4
         };
       });
 
@@ -882,18 +1038,163 @@
       });
     }
 
+    // 7. THÊM KÊNH YOUTUBE THẬT
+    async function quickAddChannel() {
+      const inp = document.getElementById('quickAddInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      const btn = document.getElementById('btnQuickAdd');
+      btn.disabled = true;
+      btn.textContent = "Đang kéo...";
+      await doAddChannel(val);
+      btn.disabled = false;
+      btn.textContent = "➕ Thêm Kênh";
+      inp.value = "";
+    }
+
+    async function addNewChannel() {
+      const inp = document.getElementById('newChannelInput');
+      const val = inp.value.trim();
+      if (!val) return;
+      const btn = document.getElementById('btnAddNewChannel');
+      btn.disabled = true;
+      btn.textContent = "Đang xử lý...";
+      await doAddChannel(val);
+      btn.disabled = false;
+      btn.textContent = "★ Kéo dữ liệu & Lưu Cloud";
+      inp.value = "";
+    }
+
+    async function doAddChannel(inputRef) {
+      const statusEl = document.getElementById('addStatusMsg');
+      if (statusEl) {
+        statusEl.style.display = 'block';
+        statusEl.style.color = '#38bdf8';
+        statusEl.textContent = '⏳ Đang kéo dữ liệu thật từ YouTube...';
+      }
+
+      try {
+        // Gọi Cloudflare Worker Scraper
+        const res = await fetch(`/api/youtube/channel-info?q=${encodeURIComponent(inputRef)}`);
+        const data = await res.json();
+
+        if (!data.ok || !data.channel) {
+          throw new Error(data.message || "Không tìm thấy thông tin kênh từ YouTube.");
+        }
+
+        const ch = data.channel;
+        const cid = ch.id;
+        const title = ch.title;
+        const avatar = ch.avatar;
+        const subs = ch.subscribers || 0;
+        const views = ch.views_all || 0;
+        const vids = ch.video_count || 0;
+
+        // Lưu vào Turso Cloud
+        await queryTurso(`
+          INSERT INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `, [cid, title, avatar, subs, views, vids, "#E45A3C"]);
+
+        // Tạo snapshot đầu tiên
+        const created = await queryTurso(`SELECT id FROM channels WHERE custom_id = ?`, [cid]);
+        if (created.length > 0) {
+          const pk = created[0].id;
+          const todayStr = new Date().toLocaleDateString('vi-VN');
+          await queryTurso(`
+            INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
+            VALUES (?, ?, ?, ?, ?, 0, 0, 0)
+          `, [pk, todayStr, subs, views, vids]);
+        }
+
+        if (statusEl) {
+          statusEl.style.color = 'var(--green)';
+          statusEl.textContent = `✅ Đã thêm thành công kênh "${title}" (${subs.toLocaleString('vi-VN')} subs, ${views.toLocaleString('vi-VN')} views)!`;
+        }
+
+        await loadTursoData();
+        switchTab('tracking');
+      } catch (err) {
+        console.error("Lỗi thêm kênh:", err);
+        if (statusEl) {
+          statusEl.style.color = '#f87171';
+          statusEl.textContent = `❌ ${err.message}`;
+        }
+        alert("Lỗi thêm kênh: " + err.message);
+      }
+    }
+
+    // 8. LƯU KÊNH THỦ CÔNG
+    async function saveManualChannel() {
+      const title = document.getElementById('manualTitle').value.trim();
+      const cid = document.getElementById('manualCid').value.trim() || `custom_${Date.now()}`;
+      const subs = parseInt(document.getElementById('manualSubs').value) || 0;
+      const views = parseInt(document.getElementById('manualViews').value) || 0;
+      const vids = parseInt(document.getElementById('manualVideos').value) || 0;
+      const avatar = document.getElementById('manualAvatar').value.trim() || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
+
+      if (!title) {
+        alert("Vui lòng nhập Tên kênh!");
+        return;
+      }
+
+      try {
+        await queryTurso(`
+          INSERT INTO channels (custom_id, title, avatar, subscribers, views_all, video_count, color, market_id)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+        `, [cid, title, avatar, subs, views, vids, "#E45A3C"]);
+
+        const created = await queryTurso(`SELECT id FROM channels WHERE custom_id = ?`, [cid]);
+        if (created.length > 0) {
+          const pk = created[0].id;
+          const todayStr = new Date().toLocaleDateString('vi-VN');
+          await queryTurso(`
+            INSERT INTO snapshots (channel_id, snapshot_date, subs, views_all, video_count, daily_views, drop_views, relist_views)
+            VALUES (?, ?, ?, ?, ?, 0, 0, 0)
+          `, [pk, todayStr, subs, views, vids]);
+        }
+
+        alert(`Đã lưu kênh "${title}" thành công vào Turso Cloud!`);
+        await loadTursoData();
+        switchTab('tracking');
+      } catch (err) {
+        alert("Lỗi lưu kênh: " + err.message);
+      }
+    }
+
+    // 9. XÓA KÊNH
+    async function deleteChannel(channelId, title) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa kênh "${title}" khỏi hệ thống theo dõi?`)) {
+        return;
+      }
+
+      try {
+        await queryTurso(`DELETE FROM snapshots WHERE channel_id = ?`, [channelId]);
+        await queryTurso(`DELETE FROM videos WHERE channel_id = ?`, [channelId]);
+        await queryTurso(`DELETE FROM watchlist_channels WHERE channel_id = ?`, [channelId]);
+        await queryTurso(`DELETE FROM channels WHERE id = ?`, [channelId]);
+        
+        await loadTursoData();
+      } catch (err) {
+        alert("Lỗi khi xóa kênh: " + err.message);
+      }
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-      event.currentTarget.classList.add('active');
+      const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-      document.getElementById('tab-' + tabId).classList.add('active');
+      const targetView = document.getElementById('tab-' + tabId);
+      if (targetView) targetView.classList.add('active');
 
       const titles = {
         'dashboard': 'Trang chủ & Biểu đồ Tăng trưởng',
-        'tracking': 'Theo dõi 45 Kênh YouTube (Dữ liệu đám mây)',
-        'leaderboard': 'Bảng xếp hạng Bứt tốc & Viral',
-        'market': 'Nghiên cứu Thị trường & Thêm Kênh',
-        'admin': 'Cấu hình Cụm API Key & Gemini AI'
+        'tracking': 'Theo dõi Kênh YouTube (Dữ liệu Đám Mây)',
+        'leaderboard': 'Bảng xếp hạng Lượt xem & Quy mô',
+        'market': 'Thêm Kênh YouTube Mới Vào Hệ Thống',
+        'admin': 'Cấu hình Cơ sở dữ liệu Cloud'
       };
       document.getElementById('tabTitle').textContent = titles[tabId] || 'SFS Metrics';
     }
@@ -902,7 +1203,6 @@
       return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
-    // Khởi chạy kiểm tra quyền khi mở trang
     window.addEventListener('DOMContentLoaded', checkAuth);
   </script>
 </body>

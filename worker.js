@@ -180,6 +180,81 @@ export default {
       });
     }
 
+    // ── YouTube Channel Scraper API ───────────────────────────────────────────
+    if (pathname === "/api/youtube/channel-info" && request.method === "GET") {
+      const q = (url.searchParams.get("q") || "").trim();
+      if (!q) return jsonRes({ ok: false, message: "Vui lòng nhập link hoặc tên kênh YouTube." }, 400);
+
+      try {
+        let targetUrl = q;
+        if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+          if (targetUrl.startsWith("@")) targetUrl = `https://www.youtube.com/${targetUrl}`;
+          else if (targetUrl.startsWith("UC") && targetUrl.length >= 24) targetUrl = `https://www.youtube.com/channel/${targetUrl}`;
+          else targetUrl = `https://www.youtube.com/@${targetUrl}`;
+        }
+
+        const ytResp = await fetch(targetUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+            "Accept-Language": "vi-VN,vi;q=0.9,en;q=0.8"
+          }
+        });
+
+        if (!ytResp.ok) {
+          return jsonRes({ ok: false, message: `YouTube phản hồi HTTP ${ytResp.status}` }, 400);
+        }
+
+        const html = await ytResp.text();
+
+        // 1. Channel ID
+        let cid = "";
+        const mCid = html.match(/itemprop="channelId"\s+content="([^"]+)"/) || html.match(/"channelId":"(UC[a-zA-Z0-9_-]{22})"/);
+        if (mCid) cid = mCid[1];
+
+        // 2. Title
+        let title = "";
+        const mTitle = html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || html.match(/<title>([^<]+)<\/title>/i);
+        if (mTitle) title = mTitle[1].replace(" - YouTube", "").trim();
+
+        // 3. Avatar
+        let avatar = "";
+        const mAvatar = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i);
+        if (mAvatar) avatar = mAvatar[1];
+
+        // 4. Subscribers
+        let subs = 0;
+        const mSubLabel = html.match(/"subscriberCountText":\{"accessibility":\{"accessibilityData":\{"label":"([^"]+)"/);
+        const mSubSimple = html.match(/"subscriberCountText":\{"simpleText":"([^"]+)"/);
+        if (mSubLabel) subs = parseYtStat(mSubLabel[1]);
+        else if (mSubSimple) subs = parseYtStat(mSubSimple[1]);
+
+        // 5. Views
+        let views = 0;
+        const mView = html.match(/"viewCountText":\{"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s+lượt xem/);
+        if (mView) views = parseInt(mView[1].replace(/[^\d]/g, "")) || 0;
+
+        // 6. Videos
+        let videos = 0;
+        const mVid = html.match(/"videoCountText":\{"runs":\[\{"text":"([^"]+)"/) || html.match(/([\d.,]+)\s+video/);
+        if (mVid) videos = parseYtStat(mVid[1]);
+
+        return jsonRes({
+          ok: true,
+          channel: {
+            id: cid || `custom_${Date.now()}`,
+            title: title || q,
+            avatar: avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=120",
+            subscribers: subs,
+            views_all: views,
+            video_count: videos,
+            url: targetUrl
+          }
+        });
+      } catch (err) {
+        return jsonRes({ ok: false, message: "Lỗi kéo thông tin kênh: " + err.message }, 500);
+      }
+    }
+
     // ── Version Info API ──────────────────────────────────────────────────────
     if (pathname === "/api/version" && request.method === "GET") {
       return jsonRes({
@@ -1157,6 +1232,24 @@ function sanitizeUser(user) {
   if (!user) return null;
   const { passwordHash, salt, ...safe } = user;
   return safe;
+}
+
+function parseYtStat(str) {
+  if (!str) return 0;
+  const s = String(str).toLowerCase().trim();
+  if (s.includes("triệu") || s.includes(" tr") || s.includes("m")) {
+    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
+    return Math.round((num || 0) * 1000000);
+  }
+  if (s.includes("nghìn") || s.includes(" ngàn") || s.includes("k") || s.includes(" n")) {
+    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
+    return Math.round((num || 0) * 1000);
+  }
+  if (s.includes("tỷ") || s.includes("b")) {
+    const num = parseFloat(s.replace(/,/g, ".").replace(/[^\d.]/g, ""));
+    return Math.round((num || 0) * 1000000000);
+  }
+  return parseInt(s.replace(/[^\d]/g, "")) || 0;
 }
 
 async function hashPassword(password, salt) {
