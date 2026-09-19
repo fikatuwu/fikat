@@ -1149,14 +1149,21 @@ export default {
         if (!chRows || !chRows.length) return jsonRes({ ok: false, message: "Không tìm thấy kênh" }, 404);
         const ch = chRows[0];
 
-        const vids = await scanChannelPublicVideos(ch.custom_id);
+        const cid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
+        let vids = [];
+        if (cid) {
+          vids = await fetchChannelRssVideos(cid);
+        }
+        if (!vids || !vids.length) {
+          vids = await scanChannelPublicVideos(ch.custom_id);
+        }
 
         const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
         const minute = vnNow.getMinutes() >= 30 ? 30 : 0;
         const timeMark = `${String(vnNow.getDate()).padStart(2, '0')}/${String(vnNow.getMonth() + 1).padStart(2, '0')}/${vnNow.getFullYear()} ${String(vnNow.getHours()).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
         const isoNow = vnNow.toISOString().replace("T", " ").substring(0, 19);
 
-        // Lưu chi tiết tất cả video bằng 1 BATCH DUY NHẤT
+        // Lưu chi tiết tất cả video bằng 1 BATCH DUY NHẤT (Chỉ cập nhật tăng, KHÔNG BAO GIỜ giảm)
         if (vids.length > 0) {
           const batchStmts = vids.map(v => ({
             sql: `
@@ -1164,9 +1171,9 @@ export default {
               VALUES (?, ?, ?, ?, ?, 0, ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 prev_views = CASE WHEN video_items.views > 0 THEN video_items.views ELSE excluded.views END,
-                delta_views = CASE WHEN video_items.views > 0 THEN excluded.views - video_items.views ELSE 0 END,
-                views = excluded.views,
-                title = excluded.title,
+                delta_views = CASE WHEN excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
+                views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
+                title = CASE WHEN excluded.title != '' THEN excluded.title ELSE video_items.title END,
                 last_scraped_at = excluded.last_scraped_at
             `,
             args: [v.id, ch.id, v.title || '', v.views || 0, v.views || 0, v.time || '', isoNow]
@@ -1180,11 +1187,11 @@ export default {
         `, [ch.id]);
 
         const videoCount = (statRows && statRows.length && parseInt(statRows[0].cnt)) || vids.length;
-        const totalVideoViews = (statRows && statRows.length && parseInt(statRows[0].tot_views)) || vids.reduce((sum, v) => sum + (v.views || 0), 0);
+        const totalVideoViews = (statRows && statRows.length && parseInt(statRows[0].tot_views)) || 0;
 
         // Lấy video tăng view nhiều nhất trong kênh
         const topGainRows = await queryTursoWorker(`
-          SELECT title, delta_views FROM video_items WHERE channel_id = ? ORDER BY delta_views DESC, views DESC LIMIT 1
+          SELECT title, delta_views FROM video_items WHERE channel_id = ? AND delta_views > 0 ORDER BY delta_views DESC LIMIT 1
         `, [ch.id]);
         const topVid = (topGainRows && topGainRows.length) ? topGainRows[0] : (vids[0] || {});
 
@@ -1199,6 +1206,7 @@ export default {
         if (prevSnaps && prevSnaps.length > 0) {
           const prevTot = parseInt(prevSnaps[0].total_video_views) || 0;
           delta30m = Math.max(0, totalVideoViews - prevTot);
+          if (delta30m > 100000) delta30m = 0; // Chống đột biến do lệch baseline
         }
 
         await queryTursoWorker(`
@@ -1546,6 +1554,57 @@ async function runDailySnapshotJob(env) {
   }
 }
 
+const CHANNEL_CID_MAP = {
+  100: "UCTndVAXVr8p2lF1wDz-LKSg", // TopBeat Music
+  101: "UCM-XT_vM8HKwnD9KFtkgJMw", // TopGlow Music
+  102: "UCMSoyXgiTclo_urz2WWn7hg", // Top Hits Studio
+  103: "UChaXOWYKCQFyaY-9yjE8Mbg", // VELU MUSIC
+  104: "UCRZLwOrC02HQO9mzzIVoAUQ", // Acoustic Therapy
+  105: "UCQXFoHWmqwIhy13sYQyJFHA", // Pure Tracks
+  106: "UCZnMji47f7CGRowcYSrnGFA", // Cynthia PoP Acoustic
+  107: "UCdguZvvmY0IU0jiFmii1Wyg", // TopWave Music
+  108: "UC4bYOCZNw0GosZQ598Hp5iw", // LoFi Chill Music
+  110: "UCfpIKaaqQyFA6XNoq7gFkAQ", // Tune Top Music
+  111: "UCcYS1a9E2n3C5pieN9azLig", // GlowBeat
+  112: "UCfObHH4zc3qlYd6E5FAWOkA", // PoP Infinity 2026!
+};
+
+async function fetchChannelRssVideos(cid) {
+  if (!cid) return [];
+  try {
+    const res = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${cid}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
+    const vids = [];
+    for (const e of entries) {
+      const mId = e.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
+      const mTitle = e.match(/<title>([^<]+)<\/title>/);
+      const mViews = e.match(/views="(\d+)"/);
+      const mPub = e.match(/<published>([^<]+)<\/published>/);
+      if (mId) {
+        let pubDate = '';
+        if (mPub && mPub[1]) {
+          const d = new Date(mPub[1]);
+          if (!isNaN(d)) pubDate = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        }
+        vids.push({
+          id: mId[1],
+          title: mTitle ? mTitle[1] : '',
+          views: mViews ? parseInt(mViews[1]) : 0,
+          time: pubDate || 'Mới phát hành'
+        });
+      }
+    }
+    return vids;
+  } catch (err) {
+    console.warn("fetchChannelRssVideos error for", cid, err.message);
+    return [];
+  }
+}
+
 // ── QUÉT TOÀN BỘ VIDEO PUBLIC & CHỐT SNAPSHOT REAL-TIME 30 PHÚT ──────────────
 async function run30mVideoSnapshotJob(env) {
   try {
@@ -1557,75 +1616,103 @@ async function run30mVideoSnapshotJob(env) {
     const channels = await queryTursoWorker("SELECT id, title, custom_id FROM channels ORDER BY id ASC");
     if (!channels || !channels.length) return { ok: true, count: 0, message: "Không có kênh nào." };
 
-    let count = 0;
-    let totalVideosAll = 0;
-
+    // 1. Quét RSS cho tất cả 12 kênh (12 fetch subrequests, cực nhanh và chính xác 100%)
+    const allVideoBatch = [];
     for (const ch of channels) {
-      const vids = await scanChannelPublicVideos(ch.custom_id);
-      if (vids && vids.length > 0) {
-        totalVideosAll += vids.length;
-
-        // Lưu chi tiết từng video vào video_items bằng BATCH duy nhất
-        const batchStmts = vids.map(v => ({
-          sql: `
-            INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, published_time, last_scraped_at)
-            VALUES (?, ?, ?, ?, ?, 0, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              prev_views = CASE WHEN video_items.views > 0 THEN video_items.views ELSE excluded.views END,
-              delta_views = CASE WHEN video_items.views > 0 THEN excluded.views - video_items.views ELSE 0 END,
-              views = excluded.views,
-              title = excluded.title,
-              last_scraped_at = excluded.last_scraped_at
-          `,
-          args: [v.id, ch.id, v.title || '', v.views || 0, v.views || 0, v.time || '', isoNow]
-        }));
-        await executeTursoBatch(batchStmts);
+      const cid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
+      if (!cid) continue;
+      const vids = await fetchChannelRssVideos(cid);
+      for (const v of vids) {
+        if (v.views > 0) {
+          allVideoBatch.push({
+            sql: `
+              INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, published_time, last_scraped_at)
+              VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET
+                prev_views = CASE WHEN video_items.views > 0 THEN video_items.views ELSE excluded.views END,
+                delta_views = CASE WHEN excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
+                views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
+                title = CASE WHEN excluded.title != '' THEN excluded.title ELSE video_items.title END,
+                last_scraped_at = excluded.last_scraped_at
+            `,
+            args: [v.id, ch.id, v.title || '', v.views, v.views, v.time || '', isoNow]
+          });
+        }
       }
-
-      // Đọc tổng số video chuẩn và tổng views chuẩn từ video_items
-      const statRows = await queryTursoWorker(`
-        SELECT count(*) as cnt, sum(views) as tot_views FROM video_items WHERE channel_id = ?
-      `, [ch.id]);
-
-      const videoCount = (statRows && statRows.length && parseInt(statRows[0].cnt)) || (vids ? vids.length : 0);
-      const totalVideoViews = (statRows && statRows.length && parseInt(statRows[0].tot_views)) || 0;
-
-      // Lấy video tăng view nhiều nhất trong kênh
-      const topGainRows = await queryTursoWorker(`
-        SELECT title, delta_views FROM video_items WHERE channel_id = ? ORDER BY delta_views DESC, views DESC LIMIT 1
-      `, [ch.id]);
-      const topVid = (topGainRows && topGainRows.length) ? topGainRows[0] : (vids ? vids[0] : {});
-
-      // Lấy snapshot 30m trước đó để tính delta_30m
-      const prevSnaps = await queryTursoWorker(`
-        SELECT total_video_views FROM video_view_snapshots
-        WHERE channel_id = ? AND captured_at != ?
-        ORDER BY id DESC LIMIT 1
-      `, [ch.id, timeMark]);
-
-      let delta30m = 0;
-      if (prevSnaps && prevSnaps.length > 0) {
-        const prevTot = parseInt(prevSnaps[0].total_video_views) || 0;
-        delta30m = Math.max(0, totalVideoViews - prevTot);
-      }
-
-      await queryTursoWorker(`
-        INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(channel_id, captured_at) DO UPDATE SET
-          total_video_views = excluded.total_video_views,
-          video_count = excluded.video_count,
-          delta_30m = excluded.delta_30m,
-          top_growing_video_title = excluded.top_growing_video_title,
-          top_growing_video_delta = excluded.top_growing_video_delta
-      `, [ch.id, timeMark, totalVideoViews, videoCount, delta30m, topVid.title || '', parseInt(topVid.delta_views) || delta30m]);
-
-      count++;
     }
 
-    const msg = `✅ [Cron 30m] Đã chốt snapshot video real-time thành công cho ${count} kênh (${totalVideosAll} videos) lúc ${timeMark}!`;
+    // 2. Ghi toàn bộ video RSS vào Turso trong 1 Batch duy nhất
+    if (allVideoBatch.length > 0) {
+      await executeTursoBatch(allVideoBatch);
+    }
+
+    // 3. Lấy tổng số video và tổng view hiện tại của từng kênh từ video_items
+    const statRows = await queryTursoWorker(`
+      SELECT channel_id, count(*) as vid_count, sum(views) as total_views
+      FROM video_items
+      GROUP BY channel_id
+    `);
+    const countMap = {};
+    (statRows || []).forEach(r => {
+      countMap[r.channel_id] = {
+        count: parseInt(r.vid_count) || 0,
+        views: parseInt(r.total_views) || 0
+      };
+    });
+
+    // 4. Lấy snapshot gần nhất trước đó để tính delta_30m
+    const prevSnaps = await queryTursoWorker(`
+      SELECT channel_id, total_video_views
+      FROM video_view_snapshots
+      WHERE captured_at != ?
+      ORDER BY id DESC
+    `, [timeMark]);
+    const prevMap = {};
+    (prevSnaps || []).forEach(s => {
+      if (!prevMap[s.channel_id]) prevMap[s.channel_id] = parseInt(s.total_video_views) || 0;
+    });
+
+    // 5. Lấy video tăng view nhiều nhất của từng kênh
+    const topVids = await queryTursoWorker(`
+      SELECT channel_id, title, delta_views
+      FROM video_items
+      WHERE delta_views > 0
+      ORDER BY delta_views DESC
+    `);
+    const topMap = {};
+    (topVids || []).forEach(t => {
+      if (!topMap[t.channel_id]) topMap[t.channel_id] = t;
+    });
+
+    // 6. Ghi snapshot 30m cho TẤT CẢ 12 KÊNH trong 1 Batch duy nhất
+    const snapBatch = channels.map(ch => {
+      const cur = countMap[ch.id] || { count: 0, views: 0 };
+      const prevTot = prevMap[ch.id] || cur.views;
+      let delta30m = Math.max(0, cur.views - prevTot);
+      if (delta30m > 100000) delta30m = 0; // Chống đột biến do lệch baseline
+
+      const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: delta30m };
+
+      return {
+        sql: `
+          INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(channel_id, captured_at) DO UPDATE SET
+            total_video_views = excluded.total_video_views,
+            video_count = excluded.video_count,
+            delta_30m = excluded.delta_30m,
+            top_growing_video_title = excluded.top_growing_video_title,
+            top_growing_video_delta = excluded.top_growing_video_delta
+        `,
+        args: [ch.id, timeMark, cur.views, cur.count, delta30m, top.title || '', parseInt(top.delta_views) || delta30m]
+      };
+    });
+
+    await executeTursoBatch(snapBatch);
+
+    const msg = `✅ [Cron 30m] Đã chốt snapshot video real-time thành công cho toàn bộ ${channels.length} kênh lúc ${timeMark}!`;
     console.log(msg);
-    return { ok: true, message: msg, timeMark, count, totalVideos: totalVideosAll };
+    return { ok: true, message: msg, timeMark, count: channels.length };
   } catch (err) {
     console.error("[Cron 30m] Lỗi snapshot video:", err);
     return { ok: false, message: err.message };
