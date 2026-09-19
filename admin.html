@@ -585,6 +585,9 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="/data" target="_blank" class="btn-primary" style="padding: 8px 16px; font-size: 0.84rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #E45A3C, #F08A5B); border-color: transparent;">
+          <span>📊 SFS Metrics (Dữ liệu)</span>
+        </a>
         <button id="btnRefresh" class="btn-ghost" style="padding: 8px 14px; font-size: 0.84rem;" onclick="refreshCurrentView()">
           <span>Làm mới</span>
         </button>
@@ -613,6 +616,9 @@
         </button>
         <button class="nav-tab-btn" id="tabBtnTelemetry" onclick="switchAdminTab('telemetry')">
           <span>Lịch Sử Tải Nhạc Realtime</span>
+        </button>
+        <button class="nav-tab-btn" id="tabBtnSfsData" onclick="switchAdminTab('sfsData')" style="background:linear-gradient(135deg,rgba(228,90,60,0.18),rgba(240,138,91,0.08));border:1px solid rgba(228,90,60,0.4);color:#F08A5B;font-weight:700;">
+          <span>📊 Dữ Liệu Thị Trường (SFS Metrics)</span>
         </button>
       </nav>
 
@@ -795,6 +801,15 @@
               <tr><td colspan="8" style="text-align: center; color: var(--text-dim); padding: 30px;">Đang tải lịch sử...</td></tr>
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <!-- ================================================================== -->
+      <!-- TAB 4: TRUNG TÂM DỮ LIỆU SFS METRICS (CHỈ ADMIN XEM ĐƯỢC) -->
+      <!-- ================================================================== -->
+      <section id="paneSfsData" style="display:none;">
+        <div style="background:#0f0c08;border:1px solid rgba(228,90,60,0.3);border-radius:18px;overflow:hidden;height:88vh;position:relative;">
+          <iframe src="/data/index.html" style="width:100%;height:100%;border:none;" title="SFS Data Metrics"></iframe>
         </div>
       </section>
 
@@ -1167,7 +1182,7 @@
       };
 
       window.switchAdminTab = function (tab) {
-        ['users','machines','telemetry','pending'].forEach(t => {
+        ['users','machines','telemetry','pending','sfsData'].forEach(t => {
           const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
           const pane = document.getElementById('pane' + t.charAt(0).toUpperCase() + t.slice(1));
           if (btn) btn.classList.toggle('active', t === tab);

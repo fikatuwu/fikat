@@ -167,6 +167,18 @@ export default {
         headers: newHeaders
       });
     }
+    if (pathname === "/data" || pathname === "/data/" || pathname === "/data/index.html") {
+      const assetResp = await env.ASSETS.fetch(new Request(new URL("/data/index.html", request.url), request));
+      const newHeaders = new Headers(assetResp.headers);
+      newHeaders.set("Cache-Control", "no-cache, no-store, must-revalidate");
+      newHeaders.set("Pragma", "no-cache");
+      newHeaders.set("Expires", "0");
+      return new Response(assetResp.body, {
+        status: assetResp.status,
+        statusText: assetResp.statusText,
+        headers: newHeaders
+      });
+    }
 
     // ── Version Info API ──────────────────────────────────────────────────────
     if (pathname === "/api/version" && request.method === "GET") {

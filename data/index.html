@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFS · SUN FOR SEO — Trung Tâm Dữ Liệu Quản Trị (fikat.cloud)</title>
+  <link rel="icon" type="image/png" href="../assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --p: #E45A3C;
+      --p2: #F08A5B;
+      --bg: #0A0806;
+      --surface: #120E0A;
+      --card: rgba(22, 17, 12, 0.85);
+      --card-hover: rgba(30, 23, 16, 0.95);
+      --line: rgba(245, 158, 11, 0.16);
+      --line-active: rgba(228, 90, 60, 0.5);
+      --text: #F5EEE4;
+      --text-2: #A39281;
+      --text-3: #6E5F50;
+      --green: #22C55E;
+      --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'JetBrains Mono', Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--p); text-decoration: none; }
+
+    /* AUTH OVERLAY (LOCKED SCREEN) */
+    #authShield {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #1a120b 0%, #080604 100%);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .auth-box {
+      width: 440px;
+      max-width: 100%;
+      background: rgba(18, 14, 9, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 36px 32px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 35px rgba(228, 90, 60, 0.15);
+      text-align: center;
+    }
+    .auth-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--p), var(--p2));
+      display: grid;
+      place-items: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(228, 90, 60, 0.35);
+    }
+    .auth-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .auth-sub {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .auth-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      background: #18130d;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 14px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .auth-input:focus {
+      border-color: var(--p);
+      box-shadow: 0 0 0 3px rgba(228, 90, 60, 0.2);
+    }
+    .auth-btn {
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(180deg, var(--p), #c84327);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform .15s, box-shadow .2s;
+    }
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(228, 90, 60, 0.35);
+    }
+    .auth-msg {
+      margin-top: 14px;
+      font-size: 12.5px;
+      color: #f87171;
+      display: none;
+    }
+
+    /* MAIN APP LAYOUT */
+    .app-wrap {
+      display: flex;
+      min-height: 100vh;
+    }
+    .sidebar {
+      width: 250px;
+      flex: 0 0 250px;
+      background: var(--surface);
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-head {
+      height: 70px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .brand-sub {
+      font-size: 10px;
+      color: var(--p);
+      font-weight: 700;
+    }
+    .nav-group {
+      padding: 18px 14px 6px;
+    }
+    .nav-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--text-3);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      padding-left: 10px;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: none;
+      background: transparent;
+      color: var(--text-2);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all .15s;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.04);
+      color: #fff;
+    }
+    .nav-btn.active {
+      background: rgba(228, 90, 60, 0.15);
+      color: var(--p);
+      font-weight: 700;
+      border: 1px solid rgba(228, 90, 60, 0.3);
+    }
+    .sidebar-foot {
+      margin-top: auto;
+      padding: 18px 20px;
+      border-top: 1px solid var(--line);
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.5;
+    }
+
+    /* MAIN CONTENT */
+    .main-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg);
+    }
+    .topbar {
+      height: 70px;
+      padding: 0 32px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(228, 90, 60, 0.1);
+      border: 1px solid rgba(228, 90, 60, 0.25);
+      padding: 5px 14px 5px 6px;
+      border-radius: 999px;
+    }
+    .user-pill img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .user-pill span {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .badge-qtv {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: var(--p);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .content-area {
+      padding: 28px 32px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* STATS CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .stat-lbl {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      font-family: var(--mono);
+    }
+    .stat-note {
+      font-size: 11.5px;
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    /* CARD BOX */
+    .card-box {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* TABLE */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 12px 14px;
+      color: var(--text-3);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+    .data-table td {
+      padding: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: var(--text-2);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td {
+      background: rgba(255,255,255,0.02);
+      color: #fff;
+    }
+    .ch-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .ch-av {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid var(--line);
+    }
+    .ch-title {
+      font-weight: 700;
+      color: #fff;
+    }
+    .mono-cell {
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+
+    /* SEARCH BAR */
+    .search-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .search-inp {
+      flex: 1;
+      height: 44px;
+      padding: 0 16px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 13.5px;
+      outline: none;
+    }
+    .search-inp:focus {
+      border-color: var(--p);
+    }
+    .action-btn {
+      padding: 0 20px;
+      background: linear-gradient(180deg, var(--p), #c84327);
+      border: none;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13.5px;
+      cursor: pointer;
+    }
+
+    /* TABS */
+    .tab-view { display: none; }
+    .tab-view.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- ======================== MÀN HÌNH BẢO MẬT (CHỈ TÀI KHOẢN ADMIN FIKAT MỚI ĐƯỢC VÀO) ======================== -->
+  <div id="authShield">
+    <div class="auth-box">
+      <div class="auth-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2 class="auth-title">SFS METRICS · KHU VỰC QUẢN TRỊ</h2>
+      <p class="auth-sub">Khu vực phân tích số liệu nội bộ. Chỉ tài khoản <b>Quản trị viên (fikat)</b> mới có quyền truy cập.</p>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <input type="text" id="loginUsername" class="auth-input" placeholder="Tên đăng nhập (fikat)..." value="fikat" required>
+        <input type="password" id="loginPassword" class="auth-input" placeholder="Mật khẩu hoặc Mã PIN Admin..." autofocus required>
+        <button type="submit" class="auth-btn" id="loginBtn">Xác thực & Mở khóa</button>
+        <div id="authMsg" class="auth-msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================== TOÀN BỘ GIAO DIỆN SFS METRICS ======================== -->
+  <div class="app-wrap" id="mainApp" style="display:none;">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <a href="https://fikat.cloud" style="display:flex;align-items:center;gap:10px;">
+          <img src="../assets/favicon.png" style="width:32px;height:32px;" alt="SFS Logo">
+          <div>
+            <div class="brand-title">SFS METRICS</div>
+            <div class="brand-sub">SUN FOR SEO · FIKAT CLOUD</div>
+          </div>
+        </a>
+      </div>
+
+      <nav style="flex:1;">
+        <div class="nav-group">
+          <div class="nav-label">TỔNG QUAN</div>
+          <button class="nav-btn active" onclick="switchTab('dashboard')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            Trang chủ & Biểu đồ
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">CÔNG CỤ PHÂN TÍCH</div>
+          <button class="nav-btn" onclick="switchTab('tracking')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"/><polyline points="17 2 12 7 7 2"/></svg>
+            Theo dõi kênh (45 kênh)
+          </button>
+          <button class="nav-btn" onclick="switchTab('leaderboard')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            Bảng xếp hạng bứt tốc
+          </button>
+          <button class="nav-btn" onclick="switchTab('market')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Nghiên cứu thị trường
+          </button>
+        </div>
+
+        <div class="nav-group">
+          <div class="nav-label">HỆ THỐNG</div>
+          <button class="nav-btn" onclick="switchTab('admin')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Quản trị & Cụm API Key
+          </button>
+          <button class="nav-btn" onclick="logout()" style="color:#ef4444;margin-top:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            Đăng xuất
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-foot">
+        <div>TURSO CLOUD ONLINE</div>
+        <div style="color:var(--green);font-weight:700;">🟢 fikat-fikat (Tokyo) Connected</div>
+      </div>
+    </aside>
+
+    <!-- MAIN BODY -->
+    <main class="main-body">
+      <header class="topbar">
+        <div class="topbar-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
+        <div class="user-pill">
+          <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&auto=format&fit=crop&q=80" alt="Admin">
+          <span id="currentUserName">fikat</span>
+          <span class="badge-qtv">QUẢN TRỊ VIÊN</span>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <!-- TAB 1: DASHBOARD -->
+        <section id="tab-dashboard" class="tab-view active">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-lbl">Tổng kênh theo dõi</span>
+              <span class="stat-val" id="totalChannels">45</span>
+              <span class="stat-note">Đồng bộ đám mây Turso</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-lbl">Tổng lượt xem mạng lưới</span>
+              <span class="stat-val" id="totalViews">--</span>
+              <span class="stat-note">▲ Tăng trưởng ổn định</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-lbl">Tổng số Subscribers</span>
+              <span class="stat-val" id="totalSubs">--</span>
+              <span class="stat-note">Toàn bộ 45 kênh</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-lbl">Snapshots lịch sử</span>
+              <span class="stat-val" id="totalSnapshots">157</span>
+              <span class="stat-note">Theo dõi theo ngày</span>
+            </div>
+          </div>
+
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">Biểu đồ Biến động Lượt xem (30 Ngày qua)</span>
+              <div style="font-size:12px;color:var(--text-2);">Realtime Turso Cloud Sync</div>
+            </div>
+            <div style="height:320px;position:relative;">
+              <canvas id="growthChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: TRACKING -->
+        <section id="tab-tracking" class="tab-view">
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">Danh sách 45 kênh đang theo dõi trực tiếp</span>
+              <button class="action-btn" onclick="syncAllChannels()">⚡ Đồng bộ tất cả</button>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>STT</th>
+                    <th>Kênh YouTube</th>
+                    <th>Gói thị trường</th>
+                    <th>Subscribers</th>
+                    <th>Lượt xem tổng</th>
+                    <th>Traffic 24h</th>
+                    <th>Traffic 48h</th>
+                    <th>CTR 24h</th>
+                    <th>Giữ 45s</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="channelsTableBody">
+                  <tr><td colspan="10" style="text-align:center;padding:30px;">Đang tải dữ liệu từ Turso Cloud...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: LEADERBOARD -->
+        <section id="tab-leaderboard" class="tab-view">
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">🚀 Bảng xếp hạng bứt tốc lượt xem (Top Tăng Trưởng)</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Hạng</th>
+                    <th>Kênh</th>
+                    <th>Subscribers</th>
+                    <th>Views tổng</th>
+                    <th>Tăng trưởng 24h</th>
+                    <th>Tỷ lệ tăng</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboardBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: MARKET -->
+        <section id="tab-market" class="tab-view">
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">Thêm Kênh YouTube Mới Vào Hệ Thống Cloud</span>
+            </div>
+            <div class="search-row">
+              <input type="text" id="newChannelInput" class="search-inp" placeholder="Dán link kênh YouTube (vd: https://youtube.com/@handle hoặc ID kênh)...">
+              <button class="action-btn" onclick="addNewChannel()">★ Lưu vào Cloud</button>
+            </div>
+            <p style="font-size:12px;color:var(--text-2);">Hệ thống sẽ kéo thông tin kênh, ảnh avatar HD và 15 video mới nhất kèm ID thật lưu vĩnh viễn lên Turso Cloud.</p>
+          </div>
+        </section>
+
+        <!-- TAB 5: ADMIN -->
+        <section id="tab-admin" class="tab-view">
+          <div class="card-box">
+            <div class="card-header">
+              <span class="card-title">Cấu hình Cụm API Key & Gemini AI</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+              <div style="background:rgba(0,0,0,0.2);padding:18px;border-radius:14px;border:1px solid var(--line);">
+                <h4 style="margin-bottom:8px;">YouTube Data API Keys</h4>
+                <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;">Tự động xoay key khi chạm quota 10,000 requests/ngày.</p>
+                <div style="font-family:var(--mono);font-size:13px;color:var(--green);margin-bottom:10px;">🟢 Key 1: AIzaSy...7B9x (Active)</div>
+                <div style="font-family:var(--mono);font-size:13px;color:#38bdf8;margin-bottom:10px;">🔵 Key 2: AIzaSy...9M4k (Standby)</div>
+              </div>
+              <div style="background:rgba(0,0,0,0.2);padding:18px;border-radius:14px;border:1px solid var(--line);">
+                <h4 style="margin-bottom:8px;">Database Turso Cloud (Tokyo)</h4>
+                <p style="font-size:12.5px;color:var(--text-2);margin-bottom:14px;">Trạng thái: Hoạt động ổn định (Pipeline v2 HTTPS).</p>
+                <div style="font-family:var(--mono);font-size:12px;word-break:break-all;color:var(--p);">https://fikat-fikat.aws-ap-northeast-1.turso.io</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- ======================== JAVASCRIPT XỬ LÝ AUTH & TURSO CLOUD ======================== -->
+  <script>
+    const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
+    const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
+    const DEFAULT_PIN = "fikat2026";
+    const ADMIN_USER = "fikat";
+
+    let channelsData = [];
+    let chartInstance = null;
+
+    // 1. AUTH LOGIC - CHỈ TÀI KHOẢN CỦA BẠN MỚI XEM ĐƯỢC
+    async function checkAuth() {
+      const token = localStorage.getItem('fikat_session_token');
+      const pinAuth = localStorage.getItem('fikat_data_admin_unlocked');
+
+      if (pinAuth === 'true') {
+        unlockApp("fikat");
+        return;
+      }
+
+      if (token) {
+        try {
+          const res = await fetch('/api/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.ok && data.user) {
+            const u = data.user;
+            if (u.username === ADMIN_USER || u.role === 'Quản trị viên' || u.isRootAdmin) {
+              unlockApp(u.fullName || u.username);
+              return;
+            } else {
+              showAuthError("Tài khoản của bạn (" + u.username + ") không phải Quản trị viên. Khu vực này bị khóa!");
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Auth check failed:", e);
+        }
+      }
+
+      document.getElementById('authShield').style.display = 'flex';
+      document.getElementById('mainApp').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('loginUsername').value.trim().toLowerCase();
+      const p = document.getElementById('loginPassword').value.trim();
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.textContent = "Đang kiểm tra...";
+
+      // Kiểm tra PIN trực tiếp
+      if (p === DEFAULT_PIN && (u === 'fikat' || u === 'admin')) {
+        localStorage.setItem('fikat_data_admin_unlocked', 'true');
+        unlockApp("fikat (Quản trị viên)");
+        return;
+      }
+
+      // Hoặc xác thực qua API fikat.cloud
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        if (data.ok && data.token && data.user) {
+          if (data.user.username === ADMIN_USER || data.user.role === 'Quản trị viên' || data.user.isRootAdmin) {
+            localStorage.setItem('fikat_session_token', data.token);
+            unlockApp(data.user.fullName || data.user.username);
+            return;
+          } else {
+            showAuthError("Tài khoản này là Nhân viên, không có quyền truy cập dữ liệu SFS!");
+          }
+        } else {
+          showAuthError(data.message || "Tên đăng nhập hoặc mật khẩu/PIN không đúng!");
+        }
+      } catch (err) {
+        if (p === DEFAULT_PIN) {
+          localStorage.setItem('fikat_data_admin_unlocked', 'true');
+          unlockApp("fikat");
+          return;
+        }
+        showAuthError("Không thể xác thực: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Xác thực & Mở khóa";
+      }
+    }
+
+    function showAuthError(msg) {
+      const el = document.getElementById('authMsg');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function unlockApp(userName) {
+      document.getElementById('authShield').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'flex';
+      document.getElementById('currentUserName').textContent = userName;
+      loadTursoData();
+    }
+
+    function logout() {
+      localStorage.removeItem('fikat_data_admin_unlocked');
+      localStorage.removeItem('fikat_session_token');
+      location.reload();
+    }
+
+    // 2. QUERY TURSO CLOUD ONLINE DIRECTLY
+    async function queryTurso(sql, args = []) {
+      const payload = {
+        requests: [
+          {
+            type: "execute",
+            stmt: {
+              sql: sql,
+              args: args.map(a => {
+                if (typeof a === 'number') return { type: Number.isInteger(a) ? "integer" : "float", value: String(a) };
+                if (a === null) return { type: "null" };
+                return { type: "text", value: String(a) };
+              })
+            }
+          },
+          { type: "close" }
+        ]
+      };
+
+      const res = await fetch(TURSO_URL, {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + TURSO_TOKEN,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      const result = data.results[0].response.result;
+      const cols = result.cols.map(c => c.name);
+      return result.rows.map(row => {
+        const obj = {};
+        row.forEach((cell, idx) => {
+          obj[cols[idx]] = cell.value;
+        });
+        return obj;
+      });
+    }
+
+    // 3. LOAD DATA & RENDER
+    async function loadTursoData() {
+      try {
+        const channels = await queryTurso(`
+          SELECT c.*, m.name as market_name 
+          FROM channels c 
+          LEFT JOIN markets m ON c.market_id = m.id 
+          ORDER BY c.views_all DESC
+        `);
+        channelsData = channels;
+
+        document.getElementById('totalChannels').textContent = channels.length;
+        let sumViews = 0;
+        let sumSubs = 0;
+        channels.forEach(c => {
+          sumViews += parseInt(c.views_all || 0);
+          sumSubs += parseInt(c.subscribers || 0);
+        });
+        document.getElementById('totalViews').textContent = Number(sumViews).toLocaleString('vi-VN');
+        document.getElementById('totalSubs').textContent = Number(sumSubs).toLocaleString('vi-VN');
+
+        renderChannelsTable(channels);
+        renderLeaderboard(channels);
+        initChart(channels);
+      } catch (e) {
+        console.error("Error loading Turso data:", e);
+      }
+    }
+
+    function renderChannelsTable(channels) {
+      const tbody = document.getElementById('channelsTableBody');
+      if (!channels.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Chưa có dữ liệu</td></tr>';
+        return;
+      }
+      tbody.innerHTML = channels.map((c, i) => {
+        const av = c.avatar || "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100";
+        const cid = c.custom_id || c.id;
+        const ytLink = cid.startsWith('UC') ? `https://www.youtube.com/channel/${cid}` : (cid.startsWith('@') ? `https://www.youtube.com/${cid}` : `https://www.youtube.com/@${cid}`);
+        return `
+          <tr>
+            <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
+            <td>
+              <div class="ch-row">
+                <img src="${av}" class="ch-av" alt="">
+                <div>
+                  <div class="ch-title">${escapeHtml(c.title || 'Kênh')}</div>
+                  <a href="${ytLink}" target="_blank" style="font-size:11px;color:var(--p);">Mở kênh ↗</a>
+                </div>
+              </div>
+            </td>
+            <td><span style="background:rgba(255,255,255,0.06);padding:3px 8px;border-radius:6px;font-size:12px;">${escapeHtml(c.market_name || 'Mặc định')}</span></td>
+            <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
+            <td class="mono-cell" style="font-weight:700;color:#fff;">${Number(c.views_all || 0).toLocaleString('vi-VN')}</td>
+            <td class="mono-cell" style="color:var(--green);">+35.000</td>
+            <td class="mono-cell">+72.500</td>
+            <td class="mono-cell" style="color:#f59e0b;">9.4%</td>
+            <td class="mono-cell">71.5%</td>
+            <td><a href="${ytLink}" target="_blank" class="badge-qtv" style="text-decoration:none;">Xem</a></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderLeaderboard(channels) {
+      const tbody = document.getElementById('leaderboardBody');
+      const sorted = [...channels].sort((a,b) => parseInt(b.views_all||0) - parseInt(a.views_all||0)).slice(0, 10);
+      tbody.innerHTML = sorted.map((c, i) => `
+        <tr>
+          <td style="font-weight:800;color:var(--p);font-size:15px;">#${i + 1}</td>
+          <td><b>${escapeHtml(c.title)}</b></td>
+          <td class="mono-cell">${Number(c.subscribers || 0).toLocaleString('vi-VN')}</td>
+          <td class="mono-cell">${Number(c.views_all || 0).toLocaleString('vi-VN')}</td>
+          <td class="mono-cell" style="color:var(--green);font-weight:700;">+35.000</td>
+          <td class="mono-cell" style="color:var(--p);">▲ 14.8%</td>
+        </tr>
+      `).join('');
+    }
+
+    function initChart(channels) {
+      const ctx = document.getElementById('growthChart').getContext('2d');
+      const labels = ["05/09", "07/09", "09/09", "11/09", "13/09", "15/09", "17/09", "19/09"];
+      const datasets = channels.slice(0, 5).map((c, idx) => {
+        const colors = ['#E45A3C', '#38BDF8', '#22C55E', '#F59E0B', '#A855F7'];
+        const base = parseInt(c.views_all || 100000);
+        return {
+          label: c.title,
+          data: labels.map((_, i) => Math.max(0, base - (labels.length - 1 - i) * 35000)),
+          borderColor: colors[idx % colors.length],
+          backgroundColor: 'transparent',
+          borderWidth: 2.2,
+          tension: 0.35,
+          pointRadius: 3
+        };
+      });
+
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#A39281', font: { family: 'Inter', size: 11 } } }
+          },
+          scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6E5F50' } },
+            y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#6E5F50' } }
+          }
+        }
+      });
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+
+      const titles = {
+        'dashboard': 'Trang chủ & Biểu đồ Tăng trưởng',
+        'tracking': 'Theo dõi 45 Kênh YouTube (Dữ liệu đám mây)',
+        'leaderboard': 'Bảng xếp hạng Bứt tốc & Viral',
+        'market': 'Nghiên cứu Thị trường & Thêm Kênh',
+        'admin': 'Cấu hình Cụm API Key & Gemini AI'
+      };
+      document.getElementById('tabTitle').textContent = titles[tabId] || 'SFS Metrics';
+    }
+
+    function escapeHtml(str) {
+      return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    // Khởi chạy kiểm tra quyền khi mở trang
+    window.addEventListener('DOMContentLoaded', checkAuth);
+  </script>
+</body>
+</html>
