@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
@@ -70,19 +70,24 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 75px;
+  scroll-padding-top: 85px;
 }
 
 section[id] {
-  scroll-margin-top: 75px;
+  scroll-margin-top: 85px;
 }
 
-#featured, #random-nhac {
+#featured, #random-nhac, #bithuat, #packages {
   min-height: calc(100vh - 75px);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
+}
+
+#featured > .container, #random-nhac > .container, #bithuat > .container, #packages > .container {
+  width: 100%;
 }
 
 body {
@@ -1845,7 +1850,7 @@ button {
   </section>
 
   <!-- ════════════════════════ BÍ THUẬT (STUDIO TO HALO) SPOTLIGHT ════════════════════════ -->
-  <section id="bithuat" class="hero-section" style="border-top: 1px solid var(--border-subtle); padding: 50px 0;">
+  <section id="bithuat" class="hero-section" style="border-top: 1px solid var(--border-subtle);">
     <div class="container hero-grid">
       
       <!-- Left Column: Info & Actions -->
@@ -1967,7 +1972,7 @@ button {
       </div>
 
       <!-- Dynamic Projects Grid (Rendered by app.js & Static Fallback) -->
-      <div id="projectsGrid" class="projects-grid" style="max-width: 960px; margin: 0 auto;">
+      <div id="projectsGrid" class="projects-grid" style="max-width: 1100px; margin: 0 auto; width: 100%;">
         <!-- Card 1: Suno Bulk Studio -->
         <div class="project-card featured-card" id="pkgCard_suno">
           <div>
@@ -2649,18 +2654,19 @@ window.__INITIAL_PROJECTS__ = {"value":[{"id":"suno-bulk-studio","name":"Suno Bu
       });
     }
 
-    // Smooth scroll for nav links & active indicator
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
+    // Smooth scroll for all internal anchors with accurate navbar offset
+    document.querySelectorAll('a[href^="#"]').forEach(link => {
       link.addEventListener('click', (e) => {
         const href = link.getAttribute('href');
-        if (href && href.startsWith('#')) {
+        if (href && href.length > 1 && href.startsWith('#')) {
           const target = document.querySelector(href);
           if (target) {
             e.preventDefault();
-            navLinks.forEach(l => l.classList.remove('active'));
-            link.classList.add('active');
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+            if (link.classList.contains('nav-link')) link.classList.add('active');
+            const navHeight = document.querySelector('.navbar')?.offsetHeight || 75;
+            const targetY = target.getBoundingClientRect().top + window.pageYOffset - navHeight;
+            window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
             history.pushState(null, '', href);
           }
         }
