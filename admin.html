@@ -623,7 +623,7 @@
       </nav>
 
       <!-- Stat Cards -->
-      <section class="stat-grid">
+      <section class="stat-grid" id="adminStatGrid">
         <div class="stat-card-admin">
           <div class="stat-card-label">TỔNG TÀI KHOẢN</div>
           <div id="statUsers" class="stat-card-num" style="color: #38bdf8;">0</div>
@@ -1188,6 +1188,13 @@
           if (btn) btn.classList.toggle('active', t === tab);
           if (pane) pane.style.display = t === tab ? 'block' : 'none';
         });
+
+        // Ẩn bảng thống kê tải nhạc của HaloTo khi xem Dữ liệu thị trường SFS Metrics
+        const statGrid = document.getElementById('adminStatGrid');
+        if (statGrid) {
+          statGrid.style.display = (tab === 'sfsData') ? 'none' : 'grid';
+        }
+
         try { localStorage.setItem('admin_active_tab', tab); } catch(e){}
         if (tab === 'pending') renderPendingTable();
         if (tab === 'sfsData') {

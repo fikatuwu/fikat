@@ -51,17 +51,17 @@
 
     /* CUSTOM MULTI-CHANNEL CHART TOOLTIP */
     .sfs-chart-tooltip {
-      position: absolute;
-      z-index: 1000;
+      position: fixed;
+      z-index: 99999;
       background: #FFFFFF;
       border: 1px solid #E2E8F0;
       border-radius: 14px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28), 0 2px 8px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.1);
       padding: 12px 16px;
       pointer-events: none;
-      transition: opacity 0.12s ease;
-      min-width: 230px;
-      max-width: 290px;
+      transition: opacity 0.08s ease;
+      min-width: 290px;
+      max-width: 380px;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
     .sfs-tooltip-date {
@@ -71,17 +71,20 @@
       margin-bottom: 8px;
       padding-bottom: 6px;
       border-bottom: 1px solid #F1F5F9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
     .sfs-tooltip-list {
       display: flex;
       flex-direction: column;
-      gap: 4.5px;
+      gap: 4px;
     }
     .sfs-tooltip-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 12.5px;
+      font-size: 12px;
       line-height: 1.35;
     }
     .sfs-tooltip-left {
@@ -91,7 +94,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      padding-right: 12px;
+      padding-right: 10px;
     }
     .sfs-tooltip-dot {
       width: 8px;
@@ -101,19 +104,49 @@
     }
     .sfs-tooltip-name {
       color: #334155;
-      font-weight: 500;
+      font-weight: 600;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       max-width: 140px;
     }
+    .sfs-tooltip-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
     .sfs-tooltip-val {
       color: #0F172A;
       font-weight: 700;
       font-family: 'JetBrains Mono', Consolas, monospace;
-      font-size: 13px;
+      font-size: 12.5px;
       white-space: nowrap;
-      flex-shrink: 0;
+      min-width: 54px;
+      text-align: right;
+    }
+    .sfs-tooltip-diff {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      min-width: 65px;
+      justify-content: flex-end;
+    }
+    .sfs-tooltip-diff.diff-up {
+      color: #16A34A; /* Xanh lá khi tăng */
+    }
+    .sfs-tooltip-diff.diff-down {
+      color: #DC2626; /* Đỏ khi giảm */
+    }
+    .sfs-tooltip-diff.diff-same {
+      color: #94A3B8; /* Xám khi bằng */
+    }
+    #growthChart {
+      touch-action: pan-y;
     }
 
     /* AUTH OVERLAY */
@@ -728,11 +761,9 @@
               Đơn vị: view tăng / ngày · Bấm vào chip kênh phía trên để bật/tắt hiển thị từng kênh trên biểu đồ
             </div>
           </div>
-        </section>
 
-        <!-- TAB 2: TRACKING -->
-        <section id="tab-tracking" class="tab-view">
-          <div class="card-box">
+          <!-- DANH SÁCH KÊNH THEO DÕI TRỰC TIẾP TRÊN DASHBOARD -->
+          <div class="card-box" id="channelTrackingCard">
             <div class="card-header">
               <span class="card-title">Danh sách kênh đang theo dõi (<span id="trackingCountHeader">0</span> kênh)</span>
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -768,11 +799,9 @@
               </table>
             </div>
           </div>
-        </section>
 
-        <!-- TAB 3: LEADERBOARD -->
-        <section id="tab-leaderboard" class="tab-view">
-          <div class="card-box">
+          <!-- BẢNG XẾP HẠNG TRỰC TIẾP TRÊN DASHBOARD -->
+          <div class="card-box" id="leaderboardCard">
             <div class="card-header">
               <span class="card-title">🚀 Bảng xếp hạng Lượt xem & Quy mô Kênh</span>
             </div>
@@ -1432,7 +1461,7 @@
                   tooltipEl = document.createElement('div');
                   tooltipEl.id = 'sfsCustomTooltip';
                   tooltipEl.className = 'sfs-chart-tooltip';
-                  container.appendChild(tooltipEl);
+                  document.body.appendChild(tooltipEl);
                 }
 
                 const tooltipModel = context.tooltip;
@@ -1444,60 +1473,92 @@
                 const dataIndex = tooltipModel.dataPoints[0].dataIndex;
                 const fullDate = sortedDates[dataIndex] || tooltipModel.title?.[0] || '';
 
-                // Trích xuất toàn bộ kênh tại ngày này và sắp xếp giảm dần theo lượt xem (từ cao xuống thấp)
+                // Trích xuất toàn bộ kênh tại ngày này và tính biến động so với ngày trước đó
                 const points = [];
                 tooltipModel.dataPoints.forEach(dp => {
                   const raw = dp.raw;
                   if (raw !== null && raw !== undefined && !isNaN(raw)) {
+                    const dataset = dp.dataset;
+                    let prevVal = null;
+                    if (dataIndex > 0 && dataset.data && dataset.data.length > dataIndex - 1) {
+                      const pRaw = dataset.data[dataIndex - 1];
+                      if (pRaw !== null && pRaw !== undefined && !isNaN(pRaw)) {
+                        prevVal = Number(pRaw);
+                      }
+                    }
                     points.push({
-                      label: dp.dataset.label,
-                      color: dp.dataset.borderColor,
-                      val: Number(raw)
+                      label: dataset.label,
+                      color: dataset.borderColor,
+                      val: Number(raw),
+                      prevVal: prevVal
                     });
                   }
                 });
 
-                // Sắp xếp lượt xem cao nhất lên đầu
+                // Sắp xếp kênh theo lượt xem cao nhất lên đầu
                 points.sort((a, b) => b.val - a.val);
 
                 let rowsHtml = '';
                 points.forEach(p => {
                   const formattedVal = Number(p.val).toLocaleString('vi-VN');
+                  let diffHtml = '';
+                  if (p.prevVal !== null) {
+                    const diff = p.val - p.prevVal;
+                    if (diff > 0) {
+                      diffHtml = `<span class="sfs-tooltip-diff diff-up">▲ +${Number(diff).toLocaleString('vi-VN')}</span>`;
+                    } else if (diff < 0) {
+                      diffHtml = `<span class="sfs-tooltip-diff diff-down">▼ ${Number(diff).toLocaleString('vi-VN')}</span>`;
+                    } else {
+                      diffHtml = `<span class="sfs-tooltip-diff diff-same">― 0</span>`;
+                    }
+                  } else {
+                    diffHtml = `<span class="sfs-tooltip-diff diff-same" style="font-size:10px;">Ngày đầu</span>`;
+                  }
+
                   rowsHtml += `
                     <div class="sfs-tooltip-row">
                       <div class="sfs-tooltip-left">
                         <span class="sfs-tooltip-dot" style="background:${p.color};"></span>
                         <span class="sfs-tooltip-name" title="${escapeHtml(p.label)}">${escapeHtml(p.label)}</span>
                       </div>
-                      <span class="sfs-tooltip-val">${formattedVal}</span>
+                      <div class="sfs-tooltip-right">
+                        <span class="sfs-tooltip-val">${formattedVal}</span>
+                        ${diffHtml}
+                      </div>
                     </div>
                   `;
                 });
 
                 tooltipEl.innerHTML = `
-                  <div class="sfs-tooltip-date">${escapeHtml(fullDate)}</div>
+                  <div class="sfs-tooltip-date">
+                    <span>${escapeHtml(fullDate)}</span>
+                    <span style="font-size:11px;font-weight:600;color:#64748B;">So với hôm trước</span>
+                  </div>
                   <div class="sfs-tooltip-list">${rowsHtml}</div>
                 `;
 
                 tooltipEl.style.opacity = '1';
 
-                const containerRect = container.getBoundingClientRect();
-                const ttWidth = tooltipEl.offsetWidth || 240;
-                const ttHeight = tooltipEl.offsetHeight || 260;
+                const canvasEl = document.getElementById('growthChart');
+                if (!canvasEl) return;
+                const canvasRect = canvasEl.getBoundingClientRect();
+                const ttWidth = tooltipEl.offsetWidth || 310;
+                const ttHeight = tooltipEl.offsetHeight || 340;
 
-                let left = tooltipModel.caretX + 16;
-                if (left + ttWidth > containerRect.width - 10) {
-                  left = tooltipModel.caretX - ttWidth - 16;
+                let left = canvasRect.left + tooltipModel.caretX + 16;
+                if (left + ttWidth > window.innerWidth - 12) {
+                  left = canvasRect.left + tooltipModel.caretX - ttWidth - 16;
                 }
                 if (left < 10) left = 10;
 
-                let top = 14;
-                if (containerRect.height > ttHeight + 25) {
-                  top = Math.max(10, Math.min(tooltipModel.caretY - 30, containerRect.height - ttHeight - 12));
+                let top = canvasRect.top + tooltipModel.caretY - 30;
+                if (top + ttHeight > window.innerHeight - 12) {
+                  top = window.innerHeight - ttHeight - 12;
                 }
+                if (top < 10) top = 10;
 
-                tooltipEl.style.left = left + 'px';
-                tooltipEl.style.top = top + 'px';
+                tooltipEl.style.left = Math.round(left) + 'px';
+                tooltipEl.style.top = Math.round(top) + 'px';
               }
             }
           },
@@ -1796,10 +1857,6 @@
       const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick')?.includes(tabId));
       if (activeBtn) activeBtn.classList.add('active');
 
-      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-      const targetView = document.getElementById('tab-' + tabId);
-      if (targetView) targetView.classList.add('active');
-
       const titles = {
         'dashboard': 'Trang chủ & Biểu đồ Tăng trưởng',
         'tracking': 'Theo dõi Kênh YouTube (Dữ liệu Đám Mây)',
@@ -1808,11 +1865,39 @@
         'admin': 'Cấu hình Cơ sở dữ liệu Cloud'
       };
       document.getElementById('tabTitle').textContent = titles[tabId] || 'SFS Metrics';
+
+      if (tabId === 'dashboard' || tabId === 'tracking' || tabId === 'leaderboard') {
+        document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+        const dash = document.getElementById('tab-dashboard');
+        if (dash) dash.classList.add('active');
+
+        if (tabId === 'dashboard') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else if (tabId === 'tracking') {
+          const el = document.getElementById('channelTrackingCard');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (tabId === 'leaderboard') {
+          const el = document.getElementById('leaderboardCard');
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        return;
+      }
+
+      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
+      const targetView = document.getElementById('tab-' + tabId);
+      if (targetView) targetView.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function escapeHtml(str) {
       return String(str||'').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
+
+    // Ẩn tooltip biểu đồ khi cuộn trang để thao tác mượt mà tuyệt đối
+    window.addEventListener('scroll', () => {
+      const tt = document.getElementById('sfsCustomTooltip');
+      if (tt) tt.style.opacity = '0';
+    }, { passive: true });
 
     window.addEventListener('DOMContentLoaded', checkAuth);
   </script>
