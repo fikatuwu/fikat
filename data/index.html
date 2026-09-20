@@ -2245,7 +2245,7 @@
       try {
         const [channels, videoCounts, snapshots] = await Promise.all([
           queryTurso("SELECT id, title, custom_id, avatar, color FROM channels ORDER BY views_all DESC"),
-          queryTurso("SELECT channel_id, count(*) as vid_count, sum(views) as total_views FROM video_items GROUP BY channel_id"),
+          queryTurso("SELECT channel_id, count(*) as vid_count, sum(views) as total_views, sum(delta_views) as live_delta FROM video_items GROUP BY channel_id"),
           queryTurso("SELECT * FROM video_view_snapshots ORDER BY id ASC")
         ]);
 
@@ -2253,7 +2253,8 @@
         videoCounts.forEach(r => {
           countMap[r.channel_id] = {
             count: parseInt(r.vid_count) || 0,
-            views: parseInt(r.total_views) || 0
+            views: parseInt(r.total_views) || 0,
+            live_delta: parseInt(r.live_delta) || 0
           };
         });
 
@@ -2386,11 +2387,9 @@
           return (val !== undefined && val !== null) ? Number(val) : null;
         });
 
-        // Điểm Live đang chạy trong chu kỳ hiện tại
-        const info = (countMap && countMap[c.id]) || { count: 0, views: 0 };
-        const lastSnap = chSnaps.length ? chSnaps[chSnaps.length - 1] : null;
-        const lastTotalViews = lastSnap ? (parseInt(lastSnap.total_video_views) || info.views) : info.views;
-        const liveGain = Math.min(10000, Math.max(0, info.views - lastTotalViews));
+        // Điểm Live đang chạy trong chu kỳ hiện tại (tính chuẩn từ tổng delta_views của video_items, không bị spike do phát hiện video mới)
+        const info = (countMap && countMap[c.id]) || { count: 0, views: 0, live_delta: 0 };
+        const liveGain = Math.max(0, parseInt(info.live_delta) || 0);
         dataPoints.push(liveGain);
 
         return {
