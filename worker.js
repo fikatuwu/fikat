@@ -1835,7 +1835,56 @@ async function run30mVideoSnapshotJob(env) {
     const existingMap = {};
     (existingVidRows || []).forEach(ev => { existingMap[ev.id] = ev; });
 
-    // 1. Quét 100% video của tất cả 12 kênh (maxPages=4 đủ phủ đến 130 video, bao phủ 100% video của mọi kênh)
+    // ── BƯỚC 1: YouTube Data API v3 (PRIMARY - Số chính xác từng view) ──────────
+    // Nếu có API key: dùng API lấy số view chính xác 100% cho tất cả video đã biết
+    // Nếu không / lỗi / hết quota: tự động fallback sang cào HTML ở Bước 2
+    const ytApiKey = env.YT_API_KEY;
+    let apiSucceeded = false;
+
+    if (ytApiKey && Object.keys(existingMap).length > 0) {
+      try {
+        const allVideoIds = Object.keys(existingMap);
+        const apiResults = await fetchExactViewsFromYtApi(allVideoIds, ytApiKey);
+        if (apiResults && Object.keys(apiResults).length > 0) {
+          const apiUpdateBatch = [];
+          for (const [videoId, exactViews] of Object.entries(apiResults)) {
+            const existing = existingMap[videoId];
+            if (!existing) continue;
+            const cv = DataSanitizer.cleanVideo(
+              { id: videoId, views: exactViews, title: existing.title, time: existing.published_time },
+              existing,
+              existing.channel_id
+            );
+            if (!cv || cv.views <= 0) continue;
+            apiUpdateBatch.push({
+              sql: `
+                INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, last_scraped_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                  prev_views = CASE 
+                    WHEN video_items.prev_views IS NULL OR video_items.prev_views = 0 THEN video_items.views
+                    ELSE video_items.prev_views 
+                  END,
+                  views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
+                  delta_views = CASE WHEN excluded.delta_views > 0 THEN excluded.delta_views ELSE video_items.delta_views END,
+                  last_scraped_at = excluded.last_scraped_at
+              `,
+              args: [cv.id, cv.channel_id, cv.title, cv.views, cv.prev_views, cv.delta_views, isoNow]
+            });
+          }
+          if (apiUpdateBatch.length > 0) {
+            await executeTursoBatch(apiUpdateBatch);
+            apiSucceeded = true;
+            console.log(`[YT API v3] Cap nhat chinh xac ${apiUpdateBatch.length}/${allVideoIds.length} video`);
+          }
+        }
+      } catch (apiErr) {
+        console.warn('[YT API v3] Loi, tu dong fallback sang HTML scraping:', apiErr.message);
+      }
+    }
+
+    // ── BƯỚC 2: HTML Scraping (FALLBACK - Backup khi API lỗi/không có key) ──────
+    // Vẫn chạy để: (a) phát hiện video MỚI chưa có trong DB, (b) backup khi API hết quota
     const allVideoBatch = [];
     for (const ch of channels) {
       let vids = [];
@@ -1850,8 +1899,10 @@ async function run30mVideoSnapshotJob(env) {
         }
       }
 
-      // Làm sạch từng video qua DataSanitizer
       for (const v of vids) {
+        // Nếu API đã cập nhật video này rồi: chỉ giữ lại nếu là video MỚI chưa có trong DB
+        if (apiSucceeded && existingMap[v.id]) continue;
+
         const cv = DataSanitizer.cleanVideo(v, existingMap[v.id], ch.id);
         if (cv && cv.views > 0) {
           allVideoBatch.push({
@@ -1972,6 +2023,40 @@ async function run30mVideoSnapshotJob(env) {
     console.error("[Cron 30m] Lỗi snapshot video:", err);
     return { ok: false, message: err.message };
   }
+}
+
+// ── YOUTUBE DATA API v3: LẤY VIEW CHÍNH XÁC TỪNG VIEW (KHÔNG LÀM TRÒN) ────────
+// Nhận vào mảng videoIds (tối đa hàng trăm), tự chia batch 50 video/request
+// Trả về { videoId: exactViewCount } cho toàn bộ video hợp lệ
+// Khi lỗi (quota hết, network, key sai): throw để caller bắt và fallback sang HTML scraping
+async function fetchExactViewsFromYtApi(videoIds, apiKey) {
+  if (!videoIds || !videoIds.length || !apiKey) return {};
+  const BATCH = 50; // YouTube API giới hạn 50 video/request (tiêu 1 quota unit/request)
+  const resultMap = {};
+  const chunks = [];
+  for (let i = 0; i < videoIds.length; i += BATCH) {
+    chunks.push(videoIds.slice(i, i + BATCH));
+  }
+  for (const chunk of chunks) {
+    const ids = chunk.join(',');
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${apiKey}&fields=items(id,statistics/viewCount)`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      const errBody = await resp.text().catch(() => '');
+      throw new Error(`YT API ${resp.status}: ${errBody.slice(0, 200)}`);
+    }
+    const data = await resp.json();
+    if (data.error) {
+      throw new Error(`YT API error ${data.error.code}: ${data.error.message}`);
+    }
+    for (const item of (data.items || [])) {
+      const vc = item.statistics && item.statistics.viewCount;
+      if (vc !== undefined && vc !== null) {
+        resultMap[item.id] = parseInt(vc, 10) || 0;
+      }
+    }
+  }
+  return resultMap;
 }
 
 async function scanChannelPublicVideos(customId, maxPages = 8, budgetRef = null) {
