@@ -1735,12 +1735,7 @@ class DataSanitizer {
     if (!existingVid || prevViews === 0) {
       delta = 0; // Video mới: không cộng view lịch sử vào delta
     } else if (finalViews > baselineViews) {
-      delta = finalViews - baselineViews;
-      // Khử bước nhảy lượng tử của YouTube CDN (chỉ áp dụng cho HTML scraping, không cho API v3)
-      // API v3 trả về số chính xác nên không cần — nhưng giữ guard phòng trường hợp fallback
-      if (delta >= 1000 && baselineViews >= 10000) {
-        delta = Math.min(delta, 180);
-      }
+      delta = finalViews - baselineViews; // Tính đúng 100% chênh lệch thực tế, tuyệt đối không áp trần giả lập
     }
     // Nếu finalViews <= baselineViews: delta = 0 (view giảm hoặc không đổi → không âm)
 
