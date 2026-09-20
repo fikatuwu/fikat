@@ -1041,32 +1041,6 @@
             </div>
           </div>
 
-          <!-- BẢNG THỐNG KÊ CHI TIẾT 12 KÊNH THEO VIEW VIDEO -->
-          <div class="card-box">
-            <div class="card-header">
-              <span class="card-title">🚀 Bảng Xếp Hạng Lượt Xem Video Public (12 Kênh)</span>
-              <span style="font-size:12px;color:var(--text-3);" id="rtLastUpdatedText">Cập nhật lúc: --:--</span>
-            </div>
-            <div style="overflow-x:auto;">
-              <table class="data-table">
-                <thead>
-                  <tr>
-                    <th style="width:40px;">#</th>
-                    <th>Kênh YouTube</th>
-                    <th>Video Quét Được</th>
-                    <th>Tổng View Video Public</th>
-                    <th>Tăng Trưởng 30 Phút</th>
-                    <th>Video Đang Tăng Nhanh Nhất</th>
-                    <th style="width:170px;text-align:center;">Chi Tiết Video</th>
-                  </tr>
-                </thead>
-                <tbody id="rtTableBody">
-                  <tr><td colspan="7" style="text-align:center;padding:30px;">Đang tải dữ liệu video...</td></tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
           <!-- PANEL: VIDEO BỊ ẨN / XÓA -->
           <div class="card-box" id="hiddenVideosPanel" style="margin-top:18px;">
             <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
@@ -2318,7 +2292,6 @@
           document.getElementById('rtLastUpdatedText').textContent = `Cập nhật lúc: ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
         }
 
-        renderRealtimeTable(channels, countMap, snapMap);
         renderRealtimeChart(channels, snapshots, countMap);
 
       } catch (err) {
@@ -2380,60 +2353,6 @@
             <tbody>${rows}</tbody>
           </table>
         </div>`;
-    }
-
-    function renderRealtimeTable(channels, countMap, snapMap) {
-      const tbody = document.getElementById('rtTableBody');
-      if (!tbody) return;
-
-      tbody.innerHTML = channels.map((c, i) => {
-        const info = countMap[c.id] || { count: 0, views: 0 };
-        const chSnaps = snapMap[c.id] || [];
-        const lastSnap = chSnaps.length ? chSnaps[chSnaps.length - 1] : null;
-        const delta = lastSnap ? (parseInt(lastSnap.delta_30m) || 0) : 0;
-        const topTitle = lastSnap?.top_growing_video_title ? escapeHtml(lastSnap.top_growing_video_title) : 'Đang theo dõi';
-        const ytLink = getChannelLink(c);
-
-        return `
-          <tr>
-            <td style="color:var(--text-3);font-family:var(--mono);">${i + 1}</td>
-            <td>
-              <div class="ch-row">
-                <a href="${ytLink}" target="_blank" rel="noopener noreferrer">
-                  <img src="${escapeHtml(c.avatar || '')}" class="ch-av" alt="${escapeHtml(c.title || '')}">
-                </a>
-                <div>
-                  <div class="ch-title">
-                    <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="color:#fff;text-decoration:none;font-weight:600;">
-                      ${escapeHtml(c.title || 'Kênh')}
-                    </a>
-                  </div>
-                  <a href="${ytLink}" target="_blank" rel="noopener noreferrer" style="font-size:11px;color:#38bdf8;font-weight:500;">YouTube ↗</a>
-                </div>
-              </div>
-            </td>
-            <td class="mono-cell" style="font-weight:600;">
-              <span style="background:rgba(56,189,248,0.12);color:#38bdf8;padding:3px 9px;border-radius:6px;font-size:12px;border:1px solid rgba(56,189,248,0.25);">
-                🎬 ${info.count} video
-              </span>
-            </td>
-            <td class="mono-cell" style="font-weight:700;color:#fff;">${info.views.toLocaleString('vi-VN')}</td>
-            <td class="mono-cell">
-              <span style="color:var(--green);font-weight:700;background:rgba(34,197,94,0.12);padding:3px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.25);">
-                +${delta.toLocaleString('vi-VN')}
-              </span>
-            </td>
-            <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2);" title="${topTitle}">
-              🔥 ${topTitle}
-            </td>
-            <td style="text-align:center;">
-              <button onclick="openChannelVideosModal(${c.id}, '${escapeHtml(c.title || '')}')" style="background:rgba(56,189,248,0.16);border:1px solid #38bdf8;color:#38bdf8;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:700;transition:all .15s;">
-                📂 Xem ${info.count} Video ↗
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
     }
 
     function renderRealtimeChart(channels, snapshots, countMap) {
