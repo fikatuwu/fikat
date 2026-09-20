@@ -1776,8 +1776,8 @@ async function run30mVideoSnapshotJob(env) {
     const channels = await queryTursoWorker("SELECT id, title, custom_id FROM channels ORDER BY id ASC");
     if (!channels || !channels.length) return { ok: true, count: 0, message: "Không có kênh nào." };
 
-    // Ngân sách subrequest nghiêm ngặt: giới hạn 42 request để không bao giờ vi phạm trần 50 của Cloudflare
-    const budget = { count: 0, max: 42 };
+    // Ngân sách subrequest nghiêm ngặt: giới hạn 35 request để không bao giờ vi phạm trần 50 của Cloudflare
+    const budget = { count: 0, max: 35 };
 
     // 0. Nạp dữ liệu video hiện tại từ DB để DataSanitizer đối soát và khử nhiễu
     const existingVidRows = await queryTursoWorker(
@@ -1786,13 +1786,12 @@ async function run30mVideoSnapshotJob(env) {
     const existingMap = {};
     (existingVidRows || []).forEach(ev => { existingMap[ev.id] = ev; });
 
-    // 1. Quét 100% video của tất cả 12 kênh
+    // 1. Quét 100% video của tất cả 12 kênh (maxPages=4 đủ phủ đến 130 video, bao phủ 100% video của mọi kênh)
     const allVideoBatch = [];
     for (const ch of channels) {
       let vids = [];
       if (budget.count < budget.max) {
-        // Quét video public (maxPages=6 đủ bao phủ toàn bộ video của các kênh)
-        vids = await scanChannelPublicVideos(ch.custom_id, 6, budget);
+        vids = await scanChannelPublicVideos(ch.custom_id, 4, budget);
       }
       if (!vids || !vids.length) {
         const cid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
@@ -2018,35 +2017,6 @@ async function scanChannelPublicVideos(customId, maxPages = 8, budgetRef = null)
     }
   } catch (err) {
     console.warn("Scan videos warning:", customId, err.message);
-  }
-
-  // RSS Feed Enrichment for real-time exact views (số view chính xác tới hàng đơn vị)
-  if (resolvedCid && (!budgetRef || budgetRef.count < budgetRef.max)) {
-    if (budgetRef) budgetRef.count++;
-    try {
-      const rssRes = await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${resolvedCid}`, {
-        headers: { 'User-Agent': 'Mozilla/5.0' }
-      });
-      const xml = await rssRes.text();
-      const entries = xml.match(/<entry>[\s\S]*?<\/entry>/g) || [];
-      for (const entry of entries) {
-        const mId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/);
-        const mTitle = entry.match(/<title>([^<]+)<\/title>/);
-        const mViews = entry.match(/views="(\d+)"/);
-        if (mId) {
-          const vidId = mId[1];
-          const exactViews = mViews ? parseInt(mViews[1]) : 0;
-          const title = mTitle ? mTitle[1] : '';
-          if (vidsMap[vidId]) {
-            vidsMap[vidId].views = exactViews;
-          } else {
-            vidsMap[vidId] = { id: vidId, title, views: exactViews, time: 'Mới phát hành' };
-          }
-        }
-      }
-    } catch (e) {
-      console.warn("RSS enrichment warning:", resolvedCid, e.message);
-    }
   }
 
   return Object.values(vidsMap);
