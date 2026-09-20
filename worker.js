@@ -1884,7 +1884,10 @@ async function run30mVideoSnapshotJob(env) {
     }
 
     // ── BƯỚC 2: HTML Scraping (FALLBACK - Backup khi API lỗi/không có key) ──────
-    // Vẫn chạy để: (a) phát hiện video MỚI chưa có trong DB, (b) backup khi API hết quota
+    // QUAN TRỌNG: Khi API v3 thành công, tắt HTML scraping hoàn toàn để không vượt giới hạn
+    // 50 subrequest của Cloudflare (17 API batch + 8 Turso = 25, còn dư 25 buffer)
+    // Khi API lỗi (apiSucceeded=false): chạy HTML scraping bình thường (max 35 budget)
+    if (apiSucceeded) budget.max = 0; // Tắt HTML scraping khi API đã xử lý đủ
     const allVideoBatch = [];
     for (const ch of channels) {
       let vids = [];
