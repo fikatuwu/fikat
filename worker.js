@@ -1358,6 +1358,18 @@ async function fetchYouTubeChannelData(inputRef) {
   let views = 0;
   let videos = 0;
 
+  function findChannelViews(obj) {
+    if (!obj || typeof obj !== "object") return 0;
+    if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
+      return parseYtStat(obj.aboutChannelViewModel.viewCountText);
+    }
+    for (const key of Object.keys(obj)) {
+      const found = findChannelViews(obj[key]);
+      if (found) return found;
+    }
+    return 0;
+  }
+
   // 3. Parse ytInitialData JSON for modern YouTube (2024–2026)
   const mData = html.match(/var ytInitialData = ({.*?});<\/script>/);
   if (mData) {
@@ -1385,22 +1397,6 @@ async function fetchYouTubeChannelData(inputRef) {
           }
         }
       }
-
-  function findChannelViews(obj) {
-    if (!obj || typeof obj !== "object") return 0;
-    if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
-      return parseYtStat(obj.aboutChannelViewModel.viewCountText);
-    }
-    for (const key of Object.keys(obj)) {
-      const found = findChannelViews(obj[key]);
-      if (found) return found;
-    }
-    return 0;
-  }
-
-  if (mData) {
-    try {
-      const data = JSON.parse(mData[1]);
       views = findChannelViews(data);
     } catch (jsonErr) {
       console.warn("ytInitialData parse error:", jsonErr);
