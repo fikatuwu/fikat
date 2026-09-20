@@ -2104,7 +2104,10 @@
           count++;
         }
 
-        await loadTursoData();
+        await Promise.all([
+          loadTursoData(),
+          loadRealtimeVideoData()
+        ]);
         if (!silent) showToast(`✅ Đã chốt snapshot thành công cho ${count} kênh!`);
         else console.log(`✅ [Auto 6h Sáng] Đã tự động chốt snapshot cho ${count} kênh ngày mới!`);
       } catch (err) {
@@ -2608,8 +2611,10 @@
           }
         }
 
-        showToast(`✅ Đã quét xong ${completed}/${channels.length} kênh (${totalVidsScanned} videos)! Đang làm mới giao diện...`);
-        await loadRealtimeVideoData();
+        await Promise.all([
+          loadRealtimeVideoData(),
+          loadTursoData()
+        ]);
       } catch (err) {
         showToast(`❌ Không thể quét video: ${err.message}`, true);
       } finally {
