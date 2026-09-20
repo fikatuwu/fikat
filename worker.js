@@ -1171,7 +1171,7 @@ export default {
               VALUES (?, ?, ?, ?, ?, 0, ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 prev_views = CASE WHEN video_items.views > 0 THEN video_items.views ELSE excluded.views END,
-                delta_views = CASE WHEN excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
+                delta_views = CASE WHEN video_items.views > 0 AND excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
                 views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
                 title = CASE WHEN excluded.title != '' THEN excluded.title ELSE video_items.title END,
                 last_scraped_at = excluded.last_scraped_at
@@ -1195,18 +1195,23 @@ export default {
         `, [ch.id]);
         const topVid = (topGainRows && topGainRows.length) ? topGainRows[0] : (vids[0] || {});
 
-        // Lấy snapshot 30m trước đó để tính delta_30m
+        // Lấy snapshot 30m trước đó
         const prevSnaps = await queryTursoWorker(`
           SELECT total_video_views FROM video_view_snapshots
           WHERE channel_id = ? AND captured_at != ?
           ORDER BY id DESC LIMIT 1
         `, [ch.id, timeMark]);
 
-        let delta30m = 0;
-        if (prevSnaps && prevSnaps.length > 0) {
+        // Tính delta_30m chuẩn từ tổng delta_views của các video trong kênh
+        const gainRows = await queryTursoWorker(`
+          SELECT sum(delta_views) as gained FROM video_items WHERE channel_id = ?
+        `, [ch.id]);
+        let delta30m = (gainRows && gainRows.length && parseInt(gainRows[0].gained)) || 0;
+
+        if (delta30m === 0 && prevSnaps && prevSnaps.length > 0) {
           const prevTot = parseInt(prevSnaps[0].total_video_views) || 0;
-          delta30m = Math.max(0, totalVideoViews - prevTot);
-          if (delta30m > 100000) delta30m = 0; // Chống đột biến do lệch baseline
+          const diff = Math.max(0, totalVideoViews - prevTot);
+          if (diff > 0 && diff < 8000) delta30m = diff;
         }
 
         await queryTursoWorker(`
@@ -1630,7 +1635,7 @@ async function run30mVideoSnapshotJob(env) {
               VALUES (?, ?, ?, ?, ?, 0, ?, ?)
               ON CONFLICT(id) DO UPDATE SET
                 prev_views = CASE WHEN video_items.views > 0 THEN video_items.views ELSE excluded.views END,
-                delta_views = CASE WHEN excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
+                delta_views = CASE WHEN video_items.views > 0 AND excluded.views > video_items.views THEN excluded.views - video_items.views ELSE 0 END,
                 views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
                 title = CASE WHEN excluded.title != '' THEN excluded.title ELSE video_items.title END,
                 last_scraped_at = excluded.last_scraped_at
@@ -1660,7 +1665,7 @@ async function run30mVideoSnapshotJob(env) {
       };
     });
 
-    // 4. Lấy snapshot gần nhất trước đó để tính delta_30m
+    // 4. Lấy snapshot gần nhất trước đó
     const prevSnaps = await queryTursoWorker(`
       SELECT channel_id, total_video_views
       FROM video_view_snapshots
@@ -1672,13 +1677,27 @@ async function run30mVideoSnapshotJob(env) {
       if (!prevMap[s.channel_id]) prevMap[s.channel_id] = parseInt(s.total_video_views) || 0;
     });
 
-    // 5. Lấy video tăng view nhiều nhất của từng kênh
-    const topVids = await queryTursoWorker(`
-      SELECT channel_id, title, delta_views
-      FROM video_items
-      WHERE delta_views > 0
-      ORDER BY delta_views DESC
-    `);
+    // 5. Lấy tổng delta_views và video tăng view nhiều nhất của từng kênh
+    const [gainRows, topVids] = await Promise.all([
+      queryTursoWorker(`
+        SELECT channel_id, sum(delta_views) as gained
+        FROM video_items
+        WHERE delta_views > 0
+        GROUP BY channel_id
+      `),
+      queryTursoWorker(`
+        SELECT channel_id, title, delta_views
+        FROM video_items
+        WHERE delta_views > 0
+        ORDER BY delta_views DESC
+      `)
+    ]);
+
+    const gainMap = {};
+    (gainRows || []).forEach(g => {
+      gainMap[g.channel_id] = parseInt(g.gained) || 0;
+    });
+
     const topMap = {};
     (topVids || []).forEach(t => {
       if (!topMap[t.channel_id]) topMap[t.channel_id] = t;
@@ -1688,8 +1707,11 @@ async function run30mVideoSnapshotJob(env) {
     const snapBatch = channels.map(ch => {
       const cur = countMap[ch.id] || { count: 0, views: 0 };
       const prevTot = prevMap[ch.id] || cur.views;
-      let delta30m = Math.max(0, cur.views - prevTot);
-      if (delta30m > 100000) delta30m = 0; // Chống đột biến do lệch baseline
+      let delta30m = gainMap[ch.id] || 0;
+      if (delta30m === 0 && cur.views > prevTot) {
+        const diff = cur.views - prevTot;
+        if (diff > 0 && diff < 8000) delta30m = diff;
+      }
 
       const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: delta30m };
 
