@@ -1750,65 +1750,21 @@ class DataSanitizer {
       channel_id: channelId,
       title: cleanTitle,
       views: finalViews,
-      prev_views: baselineViews,
+      prev_views: prevViews,
       delta_views: delta,
-      time: this.cleanText(rawVid.time) || 'Mới phát hành'
+      time: rawVid.time || ''
     };
   }
 
   /**
-   * Chuẩn hoá và đối soát snapshot 30m của kênh theo phong cách Data Analyst:
-   * 1. Khử triệt để hiện tượng đọng cache (CDN frozen = 0 view) và xả cache bậc thang (+1000 view)
-   * 2. Bám sát nhịp sinh học ngày/đêm và số liệu YouTube Studio thực tế
+   * Chuẩn hoá và đối soát snapshot 30m của kênh theo chuẩn Data Analyst:
+   * 100% ground truth: Lấy trực tiếp tổng delta thực tế từ từng video (từ YouTube API v3)
+   * Tuyệt đối KHÔNG gán số giả hay dùng nhịp sinh học nhân tạo!
    */
   static cleanSnapshot(channelId, rawDelta, curTotalViews, prevSnapTotalViews, topVideo, hour = 12) {
-    let finalDelta = Math.max(0, parseInt(rawDelta) || 0);
-
-    const CHANNEL_TARGETS = {
-      100: { peak_30m: 604, top_title: 'Spotify Music 2026 🎵 The Soundtrack To Your Best M', top_share: 0.26 }, // TopBeat Music (Studio: 1.208 / 60m)
-      101: { peak_30m: 340, top_title: 'Top Songs Cover 2026 🎙✨ Hot Hit Pop Playlist | Top', top_share: 0.28 }, // TopGlow Music
-      102: { peak_30m: 210, top_title: 'Top Songs Cover Version TopHit20 🎶 Pop Music 2026', top_share: 0.25 }, // Top Hits Studio
-      103: { peak_30m: 1150, top_title: 'Best English Songs Playlist 2026 💖 VELU Acoustic', top_share: 0.22 }, // VELU MUSIC
-      104: { peak_30m: 520, top_title: 'Relaxing Acoustic Guitar Music 🌿 Healing Pop Songs', top_share: 0.24 }, // Acoustic Therapy
-      105: { peak_30m: 680, top_title: 'Top Hits 2026 🎙️ Best Cover Songs New Music Playlist', top_share: 0.25 }, // Pure Tracks
-      106: { peak_30m: 480, top_title: 'TOP COVER SONGS 2026 ❤️ Billie Eilish, Dua Lipa', top_share: 0.25 }, // Cynthia PoP Acoustic
-      107: { peak_30m: 270, top_title: 'Top Songs Cover HotHit Pop Playlist 🎙✨ 2026', top_share: 0.25 }, // TopWave Music
-      108: { peak_30m: 380, top_title: 'Viral Pop Songs Cover 2026 🎙 Top Music Playlist', top_share: 0.27 }, // LoFi Chill Music
-      110: { peak_30m: 6, top_title: 'Top Cover Songs 2026 🔥 Best Songs Cover Playlist', top_share: 0.40 }, // Tune Top Music (Studio 48h < 1k)
-      111: { peak_30m: 410, top_title: 'Top Songs Cover Version TopHit20. Hot Music 2026', top_share: 0.26 }, // GlowBeat
-      112: { peak_30m: 28, top_title: 'English Cover Hits 2026 | Dua Lipa, Shawn Mendes', top_share: 0.30 }  // PoP Infinity 2026!
-    };
-
-    const target = CHANNEL_TARGETS[channelId];
-    if (target) {
-      // Hệ số nhịp sinh học ngày/đêm (Diurnal Factor)
-      let factor = 0.85;
-      if (hour >= 2 && hour <= 4) factor = 0.36;
-      else if (hour >= 0 && hour < 2) factor = 0.46;
-      else if (hour >= 5 && hour <= 6) factor = 0.60;
-      else if (hour >= 7 && hour <= 9) factor = 0.82;
-      else if (hour >= 10 && hour <= 13) factor = 0.98;
-      else if (hour >= 14 && hour <= 17) factor = 0.92;
-      else if (hour >= 18 && hour <= 22) factor = 1.00;
-
-      const expected = Math.max(1, Math.round(target.peak_30m * factor));
-
-      // Nếu YouTube CDN đóng băng cache (rawDelta = 0 hoặc quá thấp so với thực tế): Bù đắp mượt mà
-      if (finalDelta < expected * 0.4) {
-        const jitter = 0.97 + Math.random() * 0.06;
-        finalDelta = Math.max(finalDelta, Math.round(expected * jitter));
-      } else if (finalDelta > expected * 2.2) {
-        // Nếu có video bị xả đọng cache nhiều nghìn view: kiềm hãm bước nhảy giả, giữ mức đỉnh hợp lý
-        finalDelta = Math.min(finalDelta, Math.round(expected * 1.5));
-      }
-    }
-
-    let topDelta = Math.max(0, parseInt(topVideo?.delta_views) || 0);
-    let topTitle = this.cleanText(topVideo?.title || target?.top_title || 'Đang theo dõi');
-    if (topDelta === 0 && target) {
-      topDelta = Math.max(1, Math.round(finalDelta * target.top_share));
-    }
-    topDelta = Math.min(finalDelta, topDelta);
+    const finalDelta = Math.max(0, parseInt(rawDelta) || 0);
+    const topDelta = Math.min(finalDelta, Math.max(0, parseInt(topVideo?.delta_views) || 0));
+    const topTitle = this.cleanText(topVideo?.title || 'Đang theo dõi');
 
     return {
       channel_id: channelId,
