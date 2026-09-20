@@ -1583,21 +1583,35 @@ async function runDailySnapshotJob(env) {
 
       if (prevSnaps.length > 0) {
         const prevViews = parseInt(prevSnaps[0].views_all) || 0;
-        const prevDaily = parseInt(prevSnaps[0].daily_views) || 20000;
         if (views >= prevViews) {
           dailyViews = views - prevViews;
-          // Guard chống spike bất thường: nếu tăng đột ngột quá 150k hoặc chênh lệch quá lớn so với hôm qua
-          if (dailyViews > 150000 && prevViews < 10000000) {
-            dailyViews = Math.min(dailyViews, Math.max(prevDaily, Math.round(prevViews * 0.005)));
-          }
-        } else {
-          // Bảo vệ tính đơn điệu: Không chấp nhận tụt views do scraping lỗi
-          views = prevViews;
-          dailyViews = 0;
           dropViews = 0;
+        } else {
+          // Xử lý khi đối thủ ẩn/xóa video: views tổng bị tụt
+          // 1. Ghi nhận số view bị mất vào dropViews
+          dropViews = prevViews - views;
+          // 2. View tăng trưởng thực tế của các video còn lại vẫn được tính chuẩn xác từ tổng delta 30 phút trong 24h
+          const gain24h = await queryTursoWorker(`
+            SELECT sum(delta_30m) as g24
+            FROM (
+              SELECT delta_30m FROM video_view_snapshots
+              WHERE channel_id = ?
+              ORDER BY id DESC LIMIT 48
+            )
+          `, [ch.id]);
+          dailyViews = (gain24h && gain24h[0] && parseInt(gain24h[0].g24)) || 0;
         }
       } else {
-        dailyViews = Math.max(0, Math.round(views * 0.025));
+        // Nếu chưa có snapshot hôm trước: lấy tổng 24h thực tế từ video_view_snapshots thay vì gán số giả
+        const gain24h = await queryTursoWorker(`
+          SELECT sum(delta_30m) as g24
+          FROM (
+            SELECT delta_30m FROM video_view_snapshots
+            WHERE channel_id = ?
+            ORDER BY id DESC LIMIT 48
+          )
+        `, [ch.id]);
+        dailyViews = (gain24h && gain24h[0] && parseInt(gain24h[0].g24)) || 0;
       }
 
       // Chốt snapshot ngày hôm nay vào Turso

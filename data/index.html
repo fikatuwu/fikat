@@ -1377,7 +1377,24 @@
           elTNote.textContent = `view tăng ${distinctDays || 25} ngày · ${channels.length} kênh`;
         }
 
-        renderChannelsTable(channels, snapMap);
+        let rolling24hMap = {};
+        try {
+          const r24 = await queryTurso(`
+            SELECT s.channel_id, sum(s.delta_30m) as last_24h
+            FROM video_view_snapshots s
+            WHERE s.id IN (
+              SELECT id FROM video_view_snapshots WHERE channel_id = s.channel_id ORDER BY id DESC LIMIT 48
+            )
+            GROUP BY s.channel_id
+          `);
+          (r24 || []).forEach(r => {
+            rolling24hMap[r.channel_id] = parseInt(r.last_24h) || 0;
+          });
+        } catch (e) {
+          console.warn("Rolling 24h query error:", e);
+        }
+
+        renderChannelsTable(channels, snapMap, rolling24hMap);
         renderLeaderboard(channels);
         renderChart(channels, snapMap);
 
@@ -1416,7 +1433,7 @@
     }
 
     // 4. RENDER TABLE WITH REAL METRICS
-    function renderChannelsTable(channels, snapMap) {
+    function renderChannelsTable(channels, snapMap, rolling24hMap = {}) {
       const tbody = document.getElementById('channelsTableBody');
       if (!channels.length) {
         tbody.innerHTML = `
@@ -1443,19 +1460,30 @@
         const vids = parseInt(c.video_count || 0);
         const avgViews = vids > 0 ? Math.round(views / vids) : 0;
 
-        // Tính toán biến động 24h thật từ snapshot
+        // Tính toán biến động 24h thật từ tổng snapshot 30m của 24 giờ qua (hoặc snapshot ngày)
         let deltaHtml = `<span style="color:var(--text-3);font-size:12px;">Mới theo dõi</span>`;
-        const chSnaps = snapMap[c.id] || [];
-        if (chSnaps.length >= 2) {
-          const latest = parseInt(chSnaps[chSnaps.length - 1].views_all || 0);
-          const prev = parseInt(chSnaps[chSnaps.length - 2].views_all || 0);
-          const diff = latest - prev;
-          if (diff > 0) {
-            deltaHtml = `<span style="color:var(--green);font-weight:700;">+${Number(diff).toLocaleString('vi-VN')}</span>`;
-          } else if (diff < 0) {
-            deltaHtml = `<span style="color:#f87171;font-weight:700;">${Number(diff).toLocaleString('vi-VN')}</span>`;
+        const diff24h = rolling24hMap[c.id];
+        if (diff24h !== undefined && diff24h !== null) {
+          if (diff24h > 0) {
+            deltaHtml = `<span style="color:var(--green);font-weight:700;">+${Number(diff24h).toLocaleString('vi-VN')}</span>`;
+          } else if (diff24h < 0) {
+            deltaHtml = `<span style="color:#f87171;font-weight:700;">${Number(diff24h).toLocaleString('vi-VN')}</span>`;
           } else {
             deltaHtml = `<span style="color:var(--text-2);">0</span>`;
+          }
+        } else {
+          const chSnaps = snapMap[c.id] || [];
+          if (chSnaps.length >= 2) {
+            const latest = parseInt(chSnaps[chSnaps.length - 1].views_all || 0);
+            const prev = parseInt(chSnaps[chSnaps.length - 2].views_all || 0);
+            const diff = latest - prev;
+            if (diff > 0) {
+              deltaHtml = `<span style="color:var(--green);font-weight:700;">+${Number(diff).toLocaleString('vi-VN')}</span>`;
+            } else if (diff < 0) {
+              deltaHtml = `<span style="color:#f87171;font-weight:700;">${Number(diff).toLocaleString('vi-VN')}</span>`;
+            } else {
+              deltaHtml = `<span style="color:var(--text-2);">0</span>`;
+            }
           }
         }
 
@@ -2002,21 +2030,37 @@
 
       if (prevSnaps.length > 0) {
         const prevViews = parseInt(prevSnaps[0].views_all) || 0;
-        const prevDaily = parseInt(prevSnaps[0].daily_views) || 20000;
         if (views >= prevViews) {
           dailyViews = views - prevViews;
-          // Guard chống spike bất thường: nếu tăng đột ngột quá 150k hoặc chênh lệch quá lớn so với hôm qua
-          if (dailyViews > 150000 && prevViews < 10000000) {
-            dailyViews = Math.min(dailyViews, Math.max(prevDaily, Math.round(prevViews * 0.005)));
-          }
-        } else {
-          // Bảo vệ tính đơn điệu: Giữ views không tụt do lỗi scrape mạng
-          views = prevViews;
-          dailyViews = 0;
           dropViews = 0;
+        } else {
+          // Xử lý khi đối thủ ẩn/xóa video: views tổng bị tụt
+          dropViews = prevViews - views;
+          const gain24h = await queryTurso(`
+            SELECT sum(delta_30m) as g24 FROM (
+              SELECT delta_30m FROM video_view_snapshots WHERE channel_id = ? ORDER BY id DESC LIMIT 48
+            )
+          `, [channelPk]);
+          dailyViews = (gain24h && gain24h[0] && parseInt(gain24h[0].g24)) || 0;
         }
       } else {
-        dailyViews = Math.max(0, Math.round(views * 0.025));
+        const gain24h = await queryTurso(`
+          SELECT sum(delta_30m) as g24 FROM (
+            SELECT delta_30m FROM video_view_snapshots WHERE channel_id = ? ORDER BY id DESC LIMIT 48
+          )
+        `, [channelPk]);
+        dailyViews = (gain24h && gain24h[0] && parseInt(gain24h[0].g24)) || 0;
+      }
+
+      // Bảo vệ: không bao giờ ghi đè 0 nếu hôm nay đã có view tích lũy từ video_view_snapshots
+      if (dailyViews === 0) {
+        const snap30mToday = await queryTurso(`
+          SELECT sum(delta_30m) as today_sum FROM video_view_snapshots 
+          WHERE channel_id = ? AND captured_at LIKE ?
+        `, [channelPk, `${todayStr}%`]);
+        if (snap30mToday && snap30mToday[0] && parseInt(snap30mToday[0].today_sum) > 0) {
+          dailyViews = parseInt(snap30mToday[0].today_sum);
+        }
       }
 
       await queryTurso(`
@@ -2026,7 +2070,7 @@
           subs = excluded.subs,
           views_all = excluded.views_all,
           video_count = excluded.video_count,
-          daily_views = excluded.daily_views,
+          daily_views = CASE WHEN excluded.daily_views > 0 THEN excluded.daily_views ELSE snapshots.daily_views END,
           drop_views = excluded.drop_views
       `, [channelPk, todayStr, subs, views, vids, dailyViews, dropViews]);
     }
