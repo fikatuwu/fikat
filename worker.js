@@ -1762,13 +1762,8 @@ class DataSanitizer {
   static cleanSnapshot(channelId, rawDelta, curTotalViews, prevSnapTotalViews, topVideo) {
     let finalDelta = Math.max(0, parseInt(rawDelta) || 0);
 
-    // Đối soát: nếu delta = 0 nhưng tổng view video tăng hợp lý (dưới 5000)
-    if (finalDelta === 0 && prevSnapTotalViews > 0 && curTotalViews > prevSnapTotalViews) {
-      const diff = curTotalViews - prevSnapTotalViews;
-      if (diff > 0 && diff < 5000) {
-        finalDelta = diff;
-      }
-    }
+    // Delta 30 phút bắt buộc phải là tổng delta_views thực tế của các video.
+    // Tuyệt đối không lấy (curTotalViews - prevSnapTotalViews) vì sẽ bị nhảy ảo do làm tròn hoặc phát hiện video mới.
 
     if (finalDelta > 30000) {
       console.warn(`[DataSanitizer] 30m delta spike bất thường kênh ${channelId} (+${finalDelta}), giới hạn 30000.`);
