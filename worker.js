@@ -1155,7 +1155,7 @@ export default {
           vids = await fetchChannelRssVideos(cid);
         }
         if (!vids || !vids.length) {
-          vids = await scanChannelPublicVideos(ch.custom_id);
+          vids = await scanChannelPublicVideos(ch.custom_id, 3);
         }
 
         const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
@@ -1364,17 +1364,21 @@ async function fetchYouTubeChannelData(inputRef) {
         }
       }
 
-      function findChannelViews(obj) {
-        if (!obj || typeof obj !== "object") return 0;
-        if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
-          return parseYtStat(obj.aboutChannelViewModel.viewCountText);
-        }
-        for (const key of Object.keys(obj)) {
-          const found = findChannelViews(obj[key]);
-          if (found) return found;
-        }
-        return 0;
-      }
+  function findChannelViews(obj) {
+    if (!obj || typeof obj !== "object") return 0;
+    if (obj.aboutChannelViewModel && obj.aboutChannelViewModel.viewCountText) {
+      return parseYtStat(obj.aboutChannelViewModel.viewCountText);
+    }
+    for (const key of Object.keys(obj)) {
+      const found = findChannelViews(obj[key]);
+      if (found) return found;
+    }
+    return 0;
+  }
+
+  if (mInit) {
+    try {
+      const data = JSON.parse(mInit[1]);
       views = findChannelViews(data);
     } catch (jsonErr) {
       console.warn("ytInitialData parse error:", jsonErr);
@@ -1393,6 +1397,34 @@ async function fetchYouTubeChannelData(inputRef) {
   if (!views) {
     const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/"viewCountText":\{"runs":\[\{"text":"([^"]+)"/);
     if (mView) views = parseYtStat(mView[1]);
+  }
+
+  // 5. Continuation Token Fallback (YouTube About Panel modal API)
+  if (!views) {
+    const tokens = Array.from(html.matchAll(/"continuationCommand":\{"token":"([^"]+)"/g)).map(m => m[1]);
+    for (const t of tokens.slice(0, 4)) {
+      try {
+        const contRes = await fetch('https://www.youtube.com/youtubei/v1/browse?prettyPrint=false', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          },
+          body: JSON.stringify({
+            context: { client: { clientName: 'WEB', clientVersion: '2.20240901.01.00', hl: 'vi', gl: 'VN' } },
+            continuation: t
+          })
+        });
+        const contData = await contRes.json();
+        const vFound = findChannelViews(contData);
+        if (vFound && vFound > 0) {
+          views = vFound;
+          break;
+        }
+      } catch (e) {
+        // ignore and try next token
+      }
+    }
   }
 
   return {
@@ -1498,9 +1530,18 @@ async function runDailySnapshotJob(env) {
         try {
           const ytInfo = await fetchYouTubeChannelData(cid);
           if (ytInfo && ytInfo.views_all) {
-            subs = parseInt(ytInfo.subscribers) || subs;
-            views = parseInt(ytInfo.views_all) || views;
-            vids = parseInt(ytInfo.video_count) || vids;
+            const newViews = parseInt(ytInfo.views_all) || 0;
+            const newSubs = parseInt(ytInfo.subscribers) || 0;
+            const newVids = parseInt(ytInfo.video_count) || 0;
+
+            // An toàn tuyệt đối: Không bao giờ chấp nhận views tụt bất thường do scraping
+            if (newViews > views * 0.5) {
+              views = newViews;
+            } else if (newViews > 0) {
+              console.warn(`[DailyCron] Bỏ qua views bất thường cho kênh ${ch.title}: ${newViews} (hiện tại: ${views})`);
+            }
+            if (newSubs > 0) subs = newSubs;
+            if (newVids > 0) vids = newVids;
 
             await queryTursoWorker(`
               UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
@@ -1513,7 +1554,7 @@ async function runDailySnapshotJob(env) {
 
       // Lấy snapshot trước đó theo đúng thứ tự ngày tháng lịch thực tế
       const prevSnaps = await queryTursoWorker(`
-        SELECT views_all, snapshot_date FROM snapshots 
+        SELECT views_all, snapshot_date, daily_views FROM snapshots 
         WHERE channel_id = ? AND snapshot_date != ? 
         ORDER BY (substr(snapshot_date, 7, 4) || '-' || substr(snapshot_date, 4, 2) || '-' || substr(snapshot_date, 1, 2)) DESC 
         LIMIT 1
@@ -1524,8 +1565,13 @@ async function runDailySnapshotJob(env) {
 
       if (prevSnaps.length > 0) {
         const prevViews = parseInt(prevSnaps[0].views_all) || 0;
+        const prevDaily = parseInt(prevSnaps[0].daily_views) || 20000;
         if (views >= prevViews) {
           dailyViews = views - prevViews;
+          // Guard chống spike bất thường: nếu tăng đột ngột quá 150k hoặc chênh lệch quá lớn so với hôm qua
+          if (dailyViews > 150000 && prevViews < 10000000) {
+            dailyViews = Math.min(dailyViews, Math.max(prevDaily, Math.round(prevViews * 0.005)));
+          }
           dropViews = 0;
         } else {
           dropViews = prevViews - views;
@@ -1621,12 +1667,17 @@ async function run30mVideoSnapshotJob(env) {
     const channels = await queryTursoWorker("SELECT id, title, custom_id FROM channels ORDER BY id ASC");
     if (!channels || !channels.length) return { ok: true, count: 0, message: "Không có kênh nào." };
 
-    // 1. Quét RSS cho tất cả 12 kênh (12 fetch subrequests, cực nhanh và chính xác 100%)
+    // 1. Quét video cho tất cả 12 kênh (ưu tiên RSS, fallback sang 1 trang video public nếu RSS 404)
     const allVideoBatch = [];
     for (const ch of channels) {
       const cid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
-      if (!cid) continue;
-      const vids = await fetchChannelRssVideos(cid);
+      let vids = [];
+      if (cid) {
+        vids = await fetchChannelRssVideos(cid);
+      }
+      if (!vids || !vids.length) {
+        vids = await scanChannelPublicVideos(ch.custom_id, 1);
+      }
       for (const v of vids) {
         if (v.views > 0) {
           allVideoBatch.push({
@@ -1741,7 +1792,7 @@ async function run30mVideoSnapshotJob(env) {
   }
 }
 
-async function scanChannelPublicVideos(customId) {
+async function scanChannelPublicVideos(customId, maxPages = 1) {
   if (!customId) return [];
   const targetUrl = customId.startsWith('@') 
     ? `https://www.youtube.com/${customId}/videos`
@@ -1807,9 +1858,9 @@ async function scanChannelPublicVideos(customId) {
           }
         }
 
-        // Paginate up to 6 continuation pages
+        // Paginate up to maxPages
         let page = 2;
-        while (contToken && page <= 6) {
+        while (contToken && page <= maxPages) {
           try {
             const browseRes = await fetch('https://www.youtube.com/youtubei/v1/browse?prettyPrint=false', {
               method: 'POST',
