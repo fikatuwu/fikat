@@ -2011,11 +2011,11 @@
           if (dailyViews > 150000 && prevViews < 10000000) {
             dailyViews = Math.min(dailyViews, Math.max(prevDaily, Math.round(prevViews * 0.005)));
           }
-          dropViews = 0;
         } else {
-          // Kênh có video bị xóa / ẩn: đánh dấu drop, không tính âm
-          dropViews = prevViews - views;
-          dailyViews = null; // null để spanGaps: true nối mượt qua
+          // Bảo vệ tính đơn điệu: Giữ views không tụt do lỗi scrape mạng
+          views = prevViews;
+          dailyViews = 0;
+          dropViews = 0;
         }
       } else {
         dailyViews = Math.max(0, Math.round(views * 0.025));
@@ -2387,7 +2387,7 @@
         const info = (countMap && countMap[c.id]) || { count: 0, views: 0 };
         const lastSnap = chSnaps.length ? chSnaps[chSnaps.length - 1] : null;
         const lastTotalViews = lastSnap ? (parseInt(lastSnap.total_video_views) || info.views) : info.views;
-        const liveGain = Math.max(0, info.views - lastTotalViews);
+        const liveGain = Math.min(10000, Math.max(0, info.views - lastTotalViews));
         dataPoints.push(liveGain);
 
         return {
