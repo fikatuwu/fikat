@@ -2425,16 +2425,7 @@
       const uniqueTimes = Array.from(new Set(snapshots.map(s => s.captured_at).filter(Boolean)));
       if (uniqueTimes.length === 0) return;
 
-      const now = new Date();
-      const liveLabel = `⚡ ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (Live)`;
-
-      let hasAnyLiveGain = false;
-      channels.forEach(c => {
-        const liveGained = countMap[c.id]?.live_delta || 0;
-        if (liveGained > 0) hasAnyLiveGain = true;
-      });
-
-      const labels = hasAnyLiveGain ? [...uniqueTimes, liveLabel] : [...uniqueTimes];
+      const labels = uniqueTimes;
 
       const datasets = channels.map((c, idx) => {
         const chSnaps = snapshots.filter(s => s.channel_id === c.id);
@@ -2442,11 +2433,6 @@
         chSnaps.forEach(s => { snapTimeMap[s.captured_at] = parseInt(s.delta_30m) || 0; });
 
         const dataPoints = uniqueTimes.map(t => snapTimeMap[t] !== undefined ? snapTimeMap[t] : null);
-
-        if (hasAnyLiveGain) {
-          const liveGained = countMap[c.id]?.live_delta || 0;
-          dataPoints.push(liveGained);
-        }
 
         const color = c.color || '#38bdf8';
         return {
@@ -2687,36 +2673,17 @@
       const btn = document.getElementById('btnTriggerRtScan');
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = `⏳ Đang chuẩn bị quét...`;
+        btn.innerHTML = `⏳ Đang quét toàn bộ hệ thống...`;
       }
-      showToast("⏳ Bắt đầu quét video 12 kênh, tiến trình sẽ được cập nhật liên tục...");
+      showToast("⏳ Đang kích hoạt quét và chốt dữ liệu video chuẩn xác...");
 
       try {
-        const channels = await queryTurso("SELECT id, title FROM channels ORDER BY id ASC");
-        if (!channels || !channels.length) {
-          showToast("❌ Không tìm thấy kênh nào để quét!", true);
-          return;
-        }
-
-        let completed = 0;
-        let totalVidsScanned = 0;
-
-        for (let i = 0; i < channels.length; i++) {
-          const ch = channels[i];
-          const progressTxt = `[${i + 1}/${channels.length}] ${ch.title}`;
-          if (btn) btn.innerHTML = `⏳ Đang quét ${progressTxt}...`;
-          showToast(`⏳ Đang quét video kênh ${progressTxt}...`);
-
-          try {
-            const res = await fetch(`/api/video-tracker/scan-channel?channel_id=${ch.id}`, { method: 'POST' });
-            const data = await res.json();
-            if (data.ok) {
-              completed++;
-              totalVidsScanned += (data.video_count || 0);
-            }
-          } catch (e) {
-            console.warn(`Lỗi quét kênh ${ch.title}:`, e);
-          }
+        const res = await fetch('/api/video-tracker/snapshot', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`✅ Quét hoàn tất: ${data.message || 'Đã đồng bộ số liệu thành công!'}`);
+        } else {
+          showToast(`⚠️ Thông báo: ${data.message || 'Quá trình quét gặp vấn đề'}`, true);
         }
 
         await Promise.all([

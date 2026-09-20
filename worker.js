@@ -1215,36 +1215,11 @@ export default {
         const topGainRows = await queryTursoWorker(`
           SELECT title, delta_views FROM video_items WHERE channel_id = ? AND delta_views > 0 ORDER BY delta_views DESC LIMIT 1
         `, [ch.id]);
-        const topVid = (topGainRows && topGainRows.length) ? topGainRows[0] : (cleanedVids[0] || {});
-
-        // Lấy snapshot 30m trước đó
-        const prevSnaps = await queryTursoWorker(`
-          SELECT total_video_views FROM video_view_snapshots
-          WHERE channel_id = ? AND captured_at != ?
-          ORDER BY id DESC LIMIT 1
-        `, [ch.id, timeMark]);
-
-        // Tính delta_30m chuẩn từ tổng delta_views của tất cả video trong kênh
+        // Lấy thông tin tăng view trong video_items
         const gainRows = await queryTursoWorker(`
           SELECT sum(delta_views) as gained FROM video_items WHERE channel_id = ?
         `, [ch.id]);
         let rawDelta = (gainRows && gainRows.length && parseInt(gainRows[0].gained)) || 0;
-        const prevSnapViews = (prevSnaps && prevSnaps.length && parseInt(prevSnaps[0].total_video_views)) || 0;
-
-        // Chuẩn hoá snapshot qua DataSanitizer
-        const cleanSnap = DataSanitizer.cleanSnapshot(ch.id, rawDelta, totalVideoViews, prevSnapViews, topVid);
-
-        // Ghi nhận snapshot: KHÔNG BAO GIỜ ghi đè mất delta dương đã có trước đó!
-        await queryTursoWorker(`
-          INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(channel_id, captured_at) DO UPDATE SET
-            total_video_views = excluded.total_video_views,
-            video_count = excluded.video_count,
-            delta_30m = CASE WHEN excluded.delta_30m > 0 THEN excluded.delta_30m ELSE video_view_snapshots.delta_30m END,
-            top_growing_video_title = CASE WHEN excluded.delta_30m > 0 THEN excluded.top_growing_video_title ELSE video_view_snapshots.top_growing_video_title END,
-            top_growing_video_delta = CASE WHEN excluded.delta_30m > 0 THEN excluded.top_growing_video_delta ELSE video_view_snapshots.top_growing_video_delta END
-        `, [ch.id, timeMark, cleanSnap.total_video_views, videoCount, cleanSnap.delta_30m, cleanSnap.top_title, cleanSnap.top_delta]);
 
         return jsonRes({
           ok: true,
@@ -1252,8 +1227,8 @@ export default {
           channel_title: ch.title,
           video_count: videoCount,
           total_views: totalVideoViews,
-          delta_30m: cleanSnap.delta_30m,
-          top_growing_video: cleanSnap.top_title,
+          delta_views: rawDelta,
+          top_growing_video: topVid.title || '',
           timeMark
         });
       } catch (err) {
@@ -1300,16 +1275,24 @@ export default {
   },
 
   // Cron định kỳ 30 phút: Tự động quét tổng view video public của 12 kênh
-  // Lúc 06:00 sáng VN (23:00 UTC) chốt thêm snapshot ngày SFS
   async scheduled(event, env, ctx) {
-    const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
-    // 1. Quét real-time video 30 phút
-    ctx.waitUntil(run30mVideoSnapshotJob(env));
-
-    // 2. Chốt snapshot ngày lúc 06:00 AM VN
-    if (vnNow.getHours() === 6 && vnNow.getMinutes() < 30) {
-      ctx.waitUntil(runDailySnapshotJob(env));
-    }
+    ctx.waitUntil((async () => {
+      const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
+      // 1. Chốt snapshot ngày lúc 06:00 AM VN
+      if (vnNow.getHours() === 6 && vnNow.getMinutes() < 30) {
+        try {
+          await runDailySnapshotJob(env);
+        } catch (e) {
+          console.error("Daily snapshot job error:", e);
+        }
+      }
+      // 2. Quét real-time video 30 phút
+      try {
+        await run30mVideoSnapshotJob(env);
+      } catch (e) {
+        console.error("30m snapshot job error:", e);
+      }
+    })());
   },
 };
 
