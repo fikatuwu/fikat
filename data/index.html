@@ -2374,7 +2374,8 @@
 
       const now = new Date();
       const liveLabel = `⚡ ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (Live)`;
-      const displayTimes = [...uniqueTimes, liveLabel];
+      const hasAnyLiveGain = channels.some(c => (countMap && countMap[c.id] && parseInt(countMap[c.id].live_delta) > 0));
+      const displayTimes = hasAnyLiveGain ? [...uniqueTimes, liveLabel] : [...uniqueTimes];
 
       const datasets = channels.map(c => {
         const color = c.color || '#38bdf8';
@@ -2387,10 +2388,12 @@
           return (val !== undefined && val !== null) ? Number(val) : null;
         });
 
-        // Điểm Live đang chạy trong chu kỳ hiện tại (tính chuẩn từ tổng delta_views của video_items, không bị spike do phát hiện video mới)
-        const info = (countMap && countMap[c.id]) || { count: 0, views: 0, live_delta: 0 };
-        const liveGain = Math.max(0, parseInt(info.live_delta) || 0);
-        dataPoints.push(liveGain);
+        // Chỉ nối điểm Live nếu chu kỳ đang chạy có tích luỹ lượt xem (tránh tụt dốc về 0 ngay sau khi chốt snapshot)
+        if (hasAnyLiveGain) {
+          const info = (countMap && countMap[c.id]) || { count: 0, views: 0, live_delta: 0 };
+          const liveGain = Math.max(0, parseInt(info.live_delta) || 0);
+          dataPoints.push(liveGain);
+        }
 
         return {
           label: c.title,
