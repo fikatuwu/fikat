@@ -1883,11 +1883,73 @@ async function run30mVideoSnapshotJob(env) {
             apiSucceeded = true;
             console.log(`[YT API v3] Cap nhat chinh xac ${apiUpdateBatch.length}/${allVideoIds.length} video`);
           }
+
+          // ── PHÁT HIỆN VIDEO BỊ ẨN / XÓA ────────────────────────────────────────
+          // API v3 chỉ trả về video PUBLIC. Video không có trong response = bị ẩn / xóa / private.
+          // Logic: 2 lần liên tiếp không thấy → xác nhận ẩn/xóa (tránh false positive do API fluke)
+          const returnedIds = new Set(Object.keys(apiResults));
+          const hiddenEventBatch = [];
+
+          for (const videoId of allVideoIds) {
+            const existing = existingMap[videoId];
+            if (!existing || !existing.views || existing.views <= 0) continue; // Bỏ qua video chưa có views
+
+            if (!returnedIds.has(videoId)) {
+              // Video không xuất hiện trong API response lần này
+              const prevMisses = parseInt(existing.consecutive_misses) || 0;
+              const newMisses = prevMisses + 1;
+              const wasPublic = !existing.status || existing.status === 'public';
+
+              if (newMisses >= 2 && wasPublic) {
+                // Xác nhận: ẩn/xóa (2 lần liên tiếp không thấy)
+                console.warn(`[HIDDEN DETECTED] ch${existing.channel_id} video ${videoId} "${existing.title?.slice(0,40)}" last_views=${existing.views}`);
+                hiddenEventBatch.push({
+                  sql: `INSERT OR IGNORE INTO video_events (video_id, channel_id, event_type, video_title, last_known_views, detected_at)
+                        VALUES (?, ?, 'hidden_detected', ?, ?, ?)`,
+                  args: [videoId, existing.channel_id, existing.title || '', existing.views, timeMark]
+                });
+                // Cập nhật status = 'hidden' trong video_items
+                hiddenEventBatch.push({
+                  sql: `UPDATE video_items SET status='hidden', status_changed_at=?, consecutive_misses=? WHERE id=?`,
+                  args: [timeMark, newMisses, videoId]
+                });
+              } else {
+                // Lần đầu không thấy: chỉ tăng counter, chưa kết luận
+                hiddenEventBatch.push({
+                  sql: `UPDATE video_items SET consecutive_misses=? WHERE id=?`,
+                  args: [newMisses, videoId]
+                });
+              }
+            } else {
+              // Video xuất hiện lại → có thể đã được restore
+              const wasHidden = existing.status === 'hidden';
+              const prevMisses = parseInt(existing.consecutive_misses) || 0;
+              if (wasHidden || prevMisses > 0) {
+                if (wasHidden) {
+                  console.log(`[RESTORED] ch${existing.channel_id} video ${videoId} "${existing.title?.slice(0,40)}" restored`);
+                  hiddenEventBatch.push({
+                    sql: `INSERT OR IGNORE INTO video_events (video_id, channel_id, event_type, video_title, last_known_views, detected_at)
+                          VALUES (?, ?, 'restored', ?, ?, ?)`,
+                    args: [videoId, existing.channel_id, existing.title || '', existing.views, timeMark]
+                  });
+                }
+                hiddenEventBatch.push({
+                  sql: `UPDATE video_items SET status='public', consecutive_misses=0, status_changed_at=? WHERE id=?`,
+                  args: [timeMark, videoId]
+                });
+              }
+            }
+          }
+
+          if (hiddenEventBatch.length > 0) {
+            await executeTursoBatch(hiddenEventBatch);
+          }
         }
       } catch (apiErr) {
         console.warn('[YT API v3] Loi, tu dong fallback sang HTML scraping:', apiErr.message);
       }
     }
+
 
     // ── BƯỚC 2: HTML Scraping (FALLBACK - Backup khi API lỗi/không có key) ──────
     // QUAN TRỌNG: Khi API v3 thành công, tắt HTML scraping hoàn toàn để không vượt giới hạn
