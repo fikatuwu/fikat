@@ -999,9 +999,13 @@
                 </div>
               </div>
               <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                <span id="rtStatusBadge" style="font-size:11.5px;padding:4px 10px;border-radius:20px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:var(--green);font-weight:600;">
-                  🟢 Tự động chạy 30p/lần
+                <span id="rtStatusBadge" style="font-size:11.5px;padding:5px 12px;border-radius:20px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.3);color:var(--green);font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;display:inline-block;"></span>
+                  <span>Tự động đồng bộ sau: <b id="rtCountdownSec">30s</b></span>
                 </span>
+                <button class="action-btn" onclick="quickRefreshRealtime()" title="Cập nhật ngay lập tức không cần F5" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+                  ⚡ Làm Mới
+                </button>
                 <button class="action-btn" id="btnTriggerRtScan" onclick="triggerScanVideosNow()" style="background:rgba(56,189,248,0.18);border:1px solid #38bdf8;color:#38bdf8;font-weight:700;">
                   🔄 Quét Toàn Bộ Video Ngay
                 </button>
@@ -1184,6 +1188,7 @@
       document.getElementById('mainApp').style.display = 'flex';
       document.getElementById('currentUserName').textContent = userName;
       loadTursoData();
+      initAutoRefreshLoop();
     }
 
     function showToast(msg, isError = false) {
@@ -1711,6 +1716,14 @@
         }
       };
 
+      const existingCanvas = document.getElementById('growthChart');
+      if (chartInstance && existingCanvas) {
+        chartInstance.data.labels = labels;
+        chartInstance.data.datasets = datasets;
+        chartInstance.update();
+        return;
+      }
+
       container.innerHTML = '<canvas id="growthChart"></canvas>';
       const ctx = document.getElementById('growthChart').getContext('2d');
 
@@ -2040,9 +2053,18 @@
               const res = await fetch(`/api/youtube/channel-info?q=${encodeURIComponent(ch.custom_id)}`);
               const data = await res.json();
               if (data.ok && data.channel) {
-                s = parseInt(data.channel.subscribers) || s;
-                v = parseInt(data.channel.views_all) || v;
-                vi = parseInt(data.channel.video_count) || vi;
+                const newSubs = parseInt(data.channel.subscribers) || 0;
+                const newViews = parseInt(data.channel.views_all) || 0;
+                const newVids = parseInt(data.channel.video_count) || 0;
+
+                // An toàn tuyệt đối: Không bao giờ chấp nhận số views tụt đột ngột (do scraping trúng view của 1 video)
+                if (newViews > v * 0.5) {
+                  v = newViews;
+                } else if (newViews > 0) {
+                  console.warn(`[Snapshot] Bỏ qua views bất thường cho kênh ${ch.title}: ${newViews} (hiện tại: ${v})`);
+                }
+                if (newSubs > 0) s = newSubs;
+                if (newVids > 0) vi = newVids;
 
                 await queryTurso(`
                   UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
@@ -2346,7 +2368,12 @@
         };
       });
 
-      if (rtChartInstance) rtChartInstance.destroy();
+      if (rtChartInstance) {
+        rtChartInstance.data.labels = uniqueTimes;
+        rtChartInstance.data.datasets = datasets;
+        rtChartInstance.update();
+        return;
+      }
 
       const ctx = canvas.getContext('2d');
       rtChartInstance = new Chart(ctx, {
@@ -2548,6 +2575,65 @@
           btn.innerHTML = `🔄 Quét Toàn Bộ Video Ngay`;
         }
       }
+    }
+
+    // ==========================================
+    // TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU & BIỂU ĐỒ (KHÔNG CẦN F5)
+    // ==========================================
+    let autoRefreshTimer = null;
+    let autoRefreshCountdown = 30;
+    let isAutoRefreshing = false;
+
+    function initAutoRefreshLoop() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshCountdown = 30;
+
+      autoRefreshTimer = setInterval(async () => {
+        autoRefreshCountdown--;
+        const badgeSec = document.getElementById('rtCountdownSec');
+        if (badgeSec) {
+          badgeSec.textContent = `${autoRefreshCountdown}s`;
+        }
+
+        if (autoRefreshCountdown <= 0) {
+          autoRefreshCountdown = 30;
+          await triggerSilentSync();
+        }
+      }, 1000);
+
+      // Khi người dùng quay lại tab trình duyệt, tự động sync ngay
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+          triggerSilentSync();
+        }
+      });
+    }
+
+    async function triggerSilentSync() {
+      if (isAutoRefreshing) return;
+      isAutoRefreshing = true;
+      try {
+        const rtTab = document.getElementById('tab-video-realtime');
+        const isRtActive = rtTab && rtTab.classList.contains('active');
+        if (isRtActive) {
+          await loadRealtimeVideoData();
+        } else {
+          await loadTursoData();
+        }
+      } catch (e) {
+        console.warn("[AutoRefresh] Lỗi đồng bộ ngầm:", e);
+      } finally {
+        isAutoRefreshing = false;
+      }
+    }
+
+    async function quickRefreshRealtime() {
+      autoRefreshCountdown = 30;
+      const badgeSec = document.getElementById('rtCountdownSec');
+      if (badgeSec) badgeSec.textContent = '30s';
+      showToast("⚡ Đang làm mới biểu đồ và số liệu...");
+      await triggerSilentSync();
+      showToast("✅ Đã cập nhật số liệu mới nhất!");
     }
 
     function escapeHtml(str) {

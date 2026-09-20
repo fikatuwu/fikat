@@ -1386,7 +1386,7 @@ async function fetchYouTubeChannelData(inputRef) {
     if (mVid) videos = parseYtStat(mVid[1]);
   }
   if (!views) {
-    const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/([\d.,]+)\s*(?:views|lượt xem)/i);
+    const mView = html.match(/"viewCountText":\{.*?"simpleText":"([^"]+)"/) || html.match(/"viewCountText":\{"runs":\[\{"text":"([^"]+)"/);
     if (mView) views = parseYtStat(mView[1]);
   }
 
