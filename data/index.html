@@ -996,7 +996,7 @@
             </div>
 
             <!-- Card 4: KÊNH BỨT PHÁ 30P QUA -->
-            <div class="stat-card">
+            <div class="stat-card" id="rtCardTopGainer">
               <div class="stat-icon-wrap icon-pink">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               </div>
@@ -1066,8 +1066,17 @@
         </div>
         <button onclick="closeVideoModal()" style="background:transparent;border:none;color:var(--text-2);font-size:24px;cursor:pointer;line-height:1;padding:4px 10px;">&times;</button>
       </div>
-      <div style="padding:12px 24px;border-bottom:1px solid var(--line);display:flex;gap:12px;background:rgba(0,0,0,0.15);">
-        <input type="text" id="modalVideoSearch" class="search-inp" placeholder="Tìm kiếm tên bài hát / video..." oninput="filterModalVideos()" style="flex:1;">
+      <div style="padding:12px 24px;border-bottom:1px solid var(--line);display:flex;gap:12px;background:rgba(0,0,0,0.15);align-items:center;flex-wrap:wrap;">
+        <input type="text" id="modalVideoSearch" class="search-inp" placeholder="Tìm kiếm tên bài hát / video..." oninput="filterModalVideos()" style="flex:1;min-width:200px;">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <span style="font-size:11.5px;color:var(--text-3);">Sắp xếp:</span>
+          <button id="btnSortDelta" onclick="setModalSort('delta')" style="padding:5px 11px;border-radius:7px;background:rgba(34,197,94,0.18);border:1px solid #22c55e;color:#4ade80;font-size:11.5px;font-weight:700;cursor:pointer;">
+            🔥 Tăng nhiều nhất ↓
+          </button>
+          <button id="btnSortViews" onclick="setModalSort('views')" style="padding:5px 11px;border-radius:7px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text-2);font-size:11.5px;font-weight:600;cursor:pointer;">
+            👀 Tổng view ↓
+          </button>
+        </div>
       </div>
       <div style="overflow-y:auto;flex:1;padding:0;">
         <table class="data-table" style="margin:0;">
@@ -1075,8 +1084,12 @@
             <tr>
               <th style="width:40px;">#</th>
               <th>Tên Video / Bài Hát</th>
-              <th style="width:140px;">Lượt xem</th>
-              <th style="width:130px;">Tăng gần đây</th>
+              <th style="width:140px;cursor:pointer;user-select:none;" onclick="setModalSort('views')" title="Bấm để sắp xếp theo tổng view">
+                Lượt xem <span id="thSortViewsIcon" style="font-size:10px;color:var(--text-3);">↕</span>
+              </th>
+              <th style="width:130px;cursor:pointer;user-select:none;" onclick="setModalSort('delta')" title="Bấm để sắp xếp theo số tăng">
+                Tăng gần đây <span id="thSortDeltaIcon" style="font-size:10px;color:#4ade80;">▼</span>
+              </th>
               <th style="width:130px;">Thời gian</th>
               <th style="width:90px;text-align:center;">Link</th>
             </tr>
@@ -2285,7 +2298,13 @@
         
         if (topGainer && document.getElementById('rtTopChannel')) {
           document.getElementById('rtTopChannel').textContent = topGainer.channel.title;
-          document.getElementById('rtTopChannelGain').textContent = `+${topGainer.delta.toLocaleString('vi-VN')} views`;
+          document.getElementById('rtTopChannelGain').textContent = `+${topGainer.delta.toLocaleString('vi-VN')} views (Bấm để xem video)`;
+          const card4 = document.getElementById('rtCardTopGainer');
+          if (card4) {
+            card4.style.cursor = 'pointer';
+            card4.title = `Xem danh sách video của ${topGainer.channel.title}`;
+            card4.onclick = () => openChannelVideosModal(topGainer.channel.id, topGainer.channel.title);
+          }
         }
         if (document.getElementById('rtLastUpdatedText')) {
           const now = new Date();
@@ -2364,58 +2383,48 @@
 
       const now = new Date();
       const liveLabel = `⚡ ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (Live)`;
-      const hasAnyLiveGain = channels.some(c => (countMap && countMap[c.id] && parseInt(countMap[c.id].live_delta) > 0));
-      const displayTimes = hasAnyLiveGain ? [...uniqueTimes, liveLabel] : [...uniqueTimes];
 
-      const datasets = channels.map(c => {
-        const color = c.color || '#38bdf8';
+      let hasAnyLiveGain = false;
+      channels.forEach(c => {
+        const liveGained = countMap[c.id]?.live_delta || 0;
+        if (liveGained > 0) hasAnyLiveGain = true;
+      });
+
+      const labels = hasAnyLiveGain ? [...uniqueTimes, liveLabel] : [...uniqueTimes];
+
+      const datasets = channels.map((c, idx) => {
         const chSnaps = snapshots.filter(s => s.channel_id === c.id);
-        const snapByTime = {};
-        chSnaps.forEach(s => { snapByTime[s.captured_at] = s.delta_30m; });
+        const snapTimeMap = {};
+        chSnaps.forEach(s => { snapTimeMap[s.captured_at] = parseInt(s.delta_30m) || 0; });
 
-        const dataPoints = uniqueTimes.map(t => {
-          const val = snapByTime[t];
-          return (val !== undefined && val !== null) ? Number(val) : null;
-        });
+        const dataPoints = uniqueTimes.map(t => snapTimeMap[t] !== undefined ? snapTimeMap[t] : null);
 
-        // Chỉ nối điểm Live nếu chu kỳ đang chạy có tích luỹ lượt xem (tránh tụt dốc về 0 ngay sau khi chốt snapshot)
         if (hasAnyLiveGain) {
-          const info = (countMap && countMap[c.id]) || { count: 0, views: 0, live_delta: 0 };
-          const liveGain = Math.max(0, parseInt(info.live_delta) || 0);
-          dataPoints.push(liveGain);
+          const liveGained = countMap[c.id]?.live_delta || 0;
+          dataPoints.push(liveGained);
         }
 
+        const color = c.color || '#38bdf8';
         return {
           label: c.title,
           data: dataPoints,
           borderColor: color,
-          backgroundColor: color,
+          backgroundColor: color + '22',
           borderWidth: 2.2,
-          pointRadius: (ctx) => (ctx.dataIndex === dataPoints.length - 1 ? 5.5 : 3.5),
-          pointHoverRadius: 7.5,
-          pointBackgroundColor: (ctx) => (ctx.dataIndex === dataPoints.length - 1 ? '#ffffff' : color),
-          pointBorderColor: color,
-          pointBorderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 6,
           tension: 0.35,
-          fill: false,
-          spanGaps: true
+          fill: false
         };
       });
 
       if (rtChartInstance) {
-        rtChartInstance.data.labels = displayTimes;
-        rtChartInstance.data.datasets = datasets;
-        rtChartInstance.update();
-        return;
+        rtChartInstance.destroy();
       }
 
-      const ctx = canvas.getContext('2d');
-      rtChartInstance = new Chart(ctx, {
+      rtChartInstance = new Chart(canvas, {
         type: 'line',
-        data: {
-          labels: displayTimes,
-          datasets: datasets
-        },
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
@@ -2466,9 +2475,10 @@
         chipsEl.innerHTML = channels.map((c, i) => {
           const color = c.color || '#38bdf8';
           return `
-            <div class="chart-chip active" id="rtchip-${i}" onclick="toggleRtDataset(${i})" style="border:1px solid ${color};background:${color}22;color:#fff;font-size:11.5px;padding:4px 10px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:6px;">
-              <span style="width:8px;height:8px;border-radius:50%;background:${color};"></span>
-              <span>${escapeHtml(c.title)}</span>
+            <div class="chart-chip active" id="rtchip-${i}" style="border:1px solid ${color};background:${color}22;color:#fff;font-size:11.5px;padding:4px 10px;border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:6px;">
+              <span onclick="toggleRtDataset(${i})" style="width:8px;height:8px;border-radius:50%;background:${color};display:inline-block;"></span>
+              <span onclick="toggleRtDataset(${i})">${escapeHtml(c.title)}</span>
+              <span onclick="openChannelVideosModal(${c.id}, '${escapeHtml(c.title)}')" title="Xem chi tiết video kênh này" style="opacity:0.6;margin-left:4px;font-size:11px;padding:1px 4px;border-radius:4px;background:rgba(255,255,255,0.1);">📂</span>
             </div>
           `;
         }).join('');
@@ -2487,6 +2497,47 @@
       }
     }
 
+    let modalSortBy = 'delta'; // 'delta' (tăng nhiều nhất) hoặc 'views' (tổng view cao nhất)
+
+    function setModalSort(sortKey) {
+      modalSortBy = sortKey;
+      const btnDelta = document.getElementById('btnSortDelta');
+      const btnViews = document.getElementById('btnSortViews');
+      const iconDelta = document.getElementById('thSortDeltaIcon');
+      const iconViews = document.getElementById('thSortViewsIcon');
+
+      if (btnDelta && btnViews) {
+        if (sortKey === 'delta') {
+          btnDelta.style.background = 'rgba(34,197,94,0.18)';
+          btnDelta.style.borderColor = '#22c55e';
+          btnDelta.style.color = '#4ade80';
+          btnDelta.style.fontWeight = '700';
+
+          btnViews.style.background = 'rgba(255,255,255,0.06)';
+          btnViews.style.borderColor = 'var(--line)';
+          btnViews.style.color = 'var(--text-2)';
+          btnViews.style.fontWeight = '600';
+
+          if (iconDelta) { iconDelta.textContent = '▼'; iconDelta.style.color = '#4ade80'; }
+          if (iconViews) { iconViews.textContent = '↕'; iconViews.style.color = 'var(--text-3)'; }
+        } else {
+          btnViews.style.background = 'rgba(245,158,11,0.18)';
+          btnViews.style.borderColor = '#f59e0b';
+          btnViews.style.color = '#f59e0b';
+          btnViews.style.fontWeight = '700';
+
+          btnDelta.style.background = 'rgba(255,255,255,0.06)';
+          btnDelta.style.borderColor = 'var(--line)';
+          btnDelta.style.color = 'var(--text-2)';
+          btnDelta.style.fontWeight = '600';
+
+          if (iconViews) { iconViews.textContent = '▼'; iconViews.style.color = '#f59e0b'; }
+          if (iconDelta) { iconDelta.textContent = '↕'; iconDelta.style.color = 'var(--text-3)'; }
+        }
+      }
+      filterModalVideos();
+    }
+
     async function openChannelVideosModal(channelId, channelTitle) {
       const modal = document.getElementById('videoModal');
       const titleEl = document.getElementById('modalChannelTitle');
@@ -2501,14 +2552,18 @@
       tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;">Đang nạp video từ Turso...</td></tr>`;
       if (searchInp) searchInp.value = '';
 
+      // Mặc định luôn ưu tiên xếp theo số tăng từ cao xuống thấp
+      modalSortBy = 'delta';
+      setModalSort('delta');
+
       try {
         const rows = await queryTurso(`
-          SELECT * FROM video_items WHERE channel_id = ? ORDER BY views DESC
+          SELECT * FROM video_items WHERE channel_id = ?
         `, [channelId]);
 
-        cachedModalVideos = rows;
-        subEl.textContent = `Tổng cộng: ${rows.length} video public đã quét`;
-        renderModalVideos(rows);
+        cachedModalVideos = rows || [];
+        subEl.textContent = `Tổng cộng: ${cachedModalVideos.length} video public đã quét · Đang sắp xếp: Tăng nhiều nhất ↓`;
+        filterModalVideos();
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:30px;">Lỗi: ${err.message}</td></tr>`;
       }
@@ -2518,17 +2573,32 @@
       const tbody = document.getElementById('modalVideoTableBody');
       if (!tbody) return;
 
-      if (!videos.length) {
+      if (!videos || !videos.length) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-3);">Không tìm thấy video nào.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = videos.map((v, i) => {
+      // Sắp xếp theo cấu hình hiện tại: delta DESC hoặc views DESC
+      const sortedVideos = [...videos].sort((a, b) => {
+        if (modalSortBy === 'delta') {
+          const deltaA = parseInt(a.delta_views) || 0;
+          const deltaB = parseInt(b.delta_views) || 0;
+          if (deltaB !== deltaA) return deltaB - deltaA; // Số tăng cao xuống thấp
+          return (parseInt(b.views) || 0) - (parseInt(a.views) || 0); // Phụ: view cao xuống thấp
+        } else {
+          const viewsA = parseInt(a.views) || 0;
+          const viewsB = parseInt(b.views) || 0;
+          if (viewsB !== viewsA) return viewsB - viewsA; // View cao xuống thấp
+          return (parseInt(b.delta_views) || 0) - (parseInt(a.delta_views) || 0);
+        }
+      });
+
+      tbody.innerHTML = sortedVideos.map((v, i) => {
         const ytWatchUrl = `https://www.youtube.com/watch?v=${v.id}`;
         const views = parseInt(v.views) || 0;
         const delta = parseInt(v.delta_views) || 0;
         const deltaHtml = delta > 0 
-          ? `<span style="color:var(--green);font-weight:700;">+${delta.toLocaleString('vi-VN')}</span>`
+          ? `<span style="color:var(--green);font-weight:700;background:rgba(34,197,94,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.3);">+${delta.toLocaleString('vi-VN')}</span>`
           : `<span style="color:var(--text-3);">0</span>`;
 
         return `
@@ -2554,12 +2624,11 @@
 
     function filterModalVideos() {
       const q = (document.getElementById('modalVideoSearch')?.value || '').toLowerCase().trim();
-      if (!q) {
-        renderModalVideos(cachedModalVideos);
-        return;
+      let list = cachedModalVideos || [];
+      if (q) {
+        list = list.filter(v => (v.title || '').toLowerCase().includes(q) || (v.id || '').toLowerCase().includes(q));
       }
-      const filtered = cachedModalVideos.filter(v => (v.title || '').toLowerCase().includes(q) || (v.id || '').toLowerCase().includes(q));
-      renderModalVideos(filtered);
+      renderModalVideos(list);
     }
 
     function closeVideoModal() {
