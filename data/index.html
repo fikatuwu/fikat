@@ -617,6 +617,23 @@
       margin: 0 auto 24px;
       line-height: 1.6;
     }
+
+    @keyframes chartGlowPulse {
+      0% { box-shadow: 0 0 0 rgba(56, 189, 248, 0); border-color: var(--line); }
+      50% { box-shadow: 0 0 25px rgba(56, 189, 248, 0.45); border-color: #38bdf8; }
+      100% { box-shadow: 0 0 0 rgba(56, 189, 248, 0); border-color: var(--line); }
+    }
+    .chart-glow-pulse {
+      animation: chartGlowPulse 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes radarPulse {
+      0% { transform: scale(0.92); opacity: 0.8; }
+      50% { transform: scale(1.18); opacity: 1; filter: drop-shadow(0 0 7px #22c55e); }
+      100% { transform: scale(0.92); opacity: 0.8; }
+    }
+    .live-dot-pulse {
+      animation: radarPulse 1.8s infinite ease-in-out;
+    }
   </style>
 </head>
 <body>
@@ -714,13 +731,17 @@
           <div class="top-title" id="tabTitle">Trang chủ & Biểu đồ Tăng trưởng</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px;">
+          <div id="topbarSyncBadge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:var(--green);font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;">
+            <span class="live-dot-pulse" style="width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px #22c55e;display:inline-block;"></span>
+            <span>Live Sync: <b id="topbarCountdownSec">30s</b></span>
+          </div>
           <div class="user-pill">
             <span style="width:8px;height:8px;border-radius:50%;background:var(--green);"></span>
             <span id="currentUserName">Admin</span>
             <span class="badge-qtv">QUẢN TRỊ VIÊN</span>
           </div>
-          <button class="action-btn" style="height:36px;padding:0 14px;font-size:12.5px;" onclick="loadTursoData()">
-            🔄 Làm mới
+          <button class="action-btn" style="height:36px;padding:0 14px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;" onclick="quickRefreshRealtime()" title="Cập nhật ngay lập tức không cần F5">
+            ⚡ Làm mới
           </button>
         </div>
       </header>
@@ -988,7 +1009,7 @@
           </div>
 
           <!-- BIỂU ĐỒ REAL-TIME 30 PHÚT -->
-          <div class="card-box">
+          <div class="card-box" id="rtChartCard">
             <div class="card-header">
               <div>
                 <span class="card-title" style="display:flex;align-items:center;gap:8px;">
@@ -1735,6 +1756,10 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 750,
+            easing: 'easeOutQuart'
+          },
           interaction: {
             mode: 'index',
             intersect: false
@@ -2275,7 +2300,7 @@
         }
 
         renderRealtimeTable(channels, countMap, snapMap);
-        renderRealtimeChart(channels, snapshots);
+        renderRealtimeChart(channels, snapshots, countMap);
 
       } catch (err) {
         console.error("Lỗi nạp realtime video data:", err);
@@ -2336,12 +2361,16 @@
       }).join('');
     }
 
-    function renderRealtimeChart(channels, snapshots) {
+    function renderRealtimeChart(channels, snapshots, countMap) {
       const canvas = document.getElementById('realtimeVideoChart');
       if (!canvas) return;
 
       const uniqueTimes = Array.from(new Set(snapshots.map(s => s.captured_at).filter(Boolean)));
       if (uniqueTimes.length === 0) return;
+
+      const now = new Date();
+      const liveLabel = `⚡ ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')} (Live)`;
+      const displayTimes = [...uniqueTimes, liveLabel];
 
       const datasets = channels.map(c => {
         const color = c.color || '#38bdf8';
@@ -2354,14 +2383,24 @@
           return (val !== undefined && val !== null) ? Number(val) : null;
         });
 
+        // Điểm Live đang chạy trong chu kỳ hiện tại
+        const info = (countMap && countMap[c.id]) || { count: 0, views: 0 };
+        const lastSnap = chSnaps.length ? chSnaps[chSnaps.length - 1] : null;
+        const lastTotalViews = lastSnap ? (parseInt(lastSnap.total_video_views) || info.views) : info.views;
+        const liveGain = Math.max(0, info.views - lastTotalViews);
+        dataPoints.push(liveGain);
+
         return {
           label: c.title,
           data: dataPoints,
           borderColor: color,
           backgroundColor: color,
           borderWidth: 2.2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: (ctx) => (ctx.dataIndex === dataPoints.length - 1 ? 5.5 : 3.5),
+          pointHoverRadius: 7.5,
+          pointBackgroundColor: (ctx) => (ctx.dataIndex === dataPoints.length - 1 ? '#ffffff' : color),
+          pointBorderColor: color,
+          pointBorderWidth: 2,
           tension: 0.35,
           fill: false,
           spanGaps: true
@@ -2369,7 +2408,7 @@
       });
 
       if (rtChartInstance) {
-        rtChartInstance.data.labels = uniqueTimes;
+        rtChartInstance.data.labels = displayTimes;
         rtChartInstance.data.datasets = datasets;
         rtChartInstance.update();
         return;
@@ -2379,12 +2418,16 @@
       rtChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: uniqueTimes,
+          labels: displayTimes,
           datasets: datasets
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: {
+            duration: 750,
+            easing: 'easeOutQuart'
+          },
           interaction: {
             mode: 'index',
             intersect: false
@@ -2591,11 +2634,13 @@
       autoRefreshTimer = setInterval(async () => {
         autoRefreshCountdown--;
         const badgeSec = document.getElementById('rtCountdownSec');
-        if (badgeSec) {
-          badgeSec.textContent = `${autoRefreshCountdown}s`;
-        }
+        if (badgeSec) badgeSec.textContent = `${autoRefreshCountdown}s`;
+        const topbarSec = document.getElementById('topbarCountdownSec');
+        if (topbarSec) topbarSec.textContent = `${autoRefreshCountdown}s`;
 
         if (autoRefreshCountdown <= 0) {
+          if (badgeSec) badgeSec.textContent = `...`;
+          if (topbarSec) topbarSec.textContent = `...`;
           autoRefreshCountdown = 30;
           await triggerSilentSync();
         }
@@ -2617,8 +2662,20 @@
         const isRtActive = rtTab && rtTab.classList.contains('active');
         if (isRtActive) {
           await loadRealtimeVideoData();
+          const card = document.getElementById('rtChartCard');
+          if (card) {
+            card.classList.remove('chart-glow-pulse');
+            void card.offsetWidth;
+            card.classList.add('chart-glow-pulse');
+          }
         } else {
           await loadTursoData();
+          const card = document.getElementById('gschart');
+          if (card) {
+            card.classList.remove('chart-glow-pulse');
+            void card.offsetWidth;
+            card.classList.add('chart-glow-pulse');
+          }
         }
       } catch (e) {
         console.warn("[AutoRefresh] Lỗi đồng bộ ngầm:", e);
@@ -2631,6 +2688,8 @@
       autoRefreshCountdown = 30;
       const badgeSec = document.getElementById('rtCountdownSec');
       if (badgeSec) badgeSec.textContent = '30s';
+      const topbarSec = document.getElementById('topbarCountdownSec');
+      if (topbarSec) topbarSec.textContent = '30s';
       showToast("⚡ Đang làm mới biểu đồ và số liệu...");
       await triggerSilentSync();
       showToast("✅ Đã cập nhật số liệu mới nhất!");
