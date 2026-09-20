@@ -1066,6 +1066,17 @@
               </table>
             </div>
           </div>
+
+          <!-- PANEL: VIDEO BỊ ẨN / XÓA -->
+          <div class="card-box" id="hiddenVideosPanel" style="margin-top:18px;">
+            <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+              <span class="card-title">🚨 Cảnh Báo: Video Bị Ẩn / Xóa</span>
+              <span id="hiddenVideosBadge" style="font-size:12px;padding:3px 10px;border-radius:20px;background:rgba(239,68,68,0.15);color:#f87171;font-weight:700;display:none;"></span>
+            </div>
+            <div id="hiddenVideosContent" style="padding:12px 18px;">
+              <div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px 0;">Đang kiểm tra...</div>
+            </div>
+          </div>
         </section>
       </div>
     </main>
@@ -2243,11 +2254,15 @@
 
     async function loadRealtimeVideoData() {
       try {
-        const [channels, videoCounts, snapshots] = await Promise.all([
+        const [channels, videoCounts, snapshots, hiddenEvents] = await Promise.all([
           queryTurso("SELECT id, title, custom_id, avatar, color FROM channels ORDER BY views_all DESC"),
           queryTurso("SELECT channel_id, count(*) as vid_count, sum(views) as total_views, sum(delta_views) as live_delta FROM video_items GROUP BY channel_id"),
-          queryTurso("SELECT * FROM video_view_snapshots ORDER BY id ASC")
+          queryTurso("SELECT * FROM video_view_snapshots ORDER BY id ASC"),
+          queryTurso("SELECT e.video_id, e.channel_id, e.event_type, e.video_title, e.last_known_views, e.detected_at, c.title as ch_title FROM video_events e JOIN channels c ON c.id = e.channel_id ORDER BY e.id DESC LIMIT 50").catch(() => [])
         ]);
+
+        // Render hidden/deleted video alerts
+        renderHiddenVideosPanel(hiddenEvents || []);
 
         const countMap = {};
         videoCounts.forEach(r => {
@@ -2309,6 +2324,62 @@
       } catch (err) {
         console.error("Lỗi nạp realtime video data:", err);
       }
+    }
+
+    function renderHiddenVideosPanel(events) {
+      const content = document.getElementById('hiddenVideosContent');
+      const badge = document.getElementById('hiddenVideosBadge');
+      if (!content) return;
+
+      // Tách sự kiện ẩn/xóa vs restore
+      const hiddenEvents = events.filter(e => e.event_type === 'hidden_detected');
+      const restoreEvents = events.filter(e => e.event_type === 'restored');
+
+      if (hiddenEvents.length === 0 && restoreEvents.length === 0) {
+        content.innerHTML = '<div style="color:var(--text-3);font-size:13px;text-align:center;padding:20px 0;">✅ Không phát hiện video bị ẩn hoặc xóa</div>';
+        if (badge) badge.style.display = 'none';
+        return;
+      }
+
+      // Hiển thị badge số lượng
+      if (badge && hiddenEvents.length > 0) {
+        badge.textContent = hiddenEvents.length + ' video bị ẩn/xóa';
+        badge.style.display = 'inline-block';
+      }
+
+      const allEvents = [...hiddenEvents, ...restoreEvents].slice(0, 30);
+      const rows = allEvents.map((e, i) => {
+        const isHidden = e.event_type === 'hidden_detected';
+        const badge = isHidden
+          ? '<span style="background:rgba(239,68,68,0.18);color:#f87171;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">🔴 Bị ẩn/xóa</span>'
+          : '<span style="background:rgba(34,197,94,0.15);color:#4ade80;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;">🟢 Đã khôi phục</span>';
+        const views = parseInt(e.last_known_views || 0).toLocaleString('vi-VN');
+        const title = (e.video_title || '').slice(0, 55) + ((e.video_title || '').length > 55 ? '…' : '');
+        const ytLink = `https://youtube.com/watch?v=${e.video_id}`;
+        return `<tr>
+          <td style="padding:10px 12px;font-size:13px;">${badge}</td>
+          <td style="padding:10px 12px;font-size:13px;color:var(--text-2);">${e.ch_title || ''}</td>
+          <td style="padding:10px 12px;font-size:13px;">
+            <a href="${ytLink}" target="_blank" style="color:#60a5fa;text-decoration:none;" title="${e.video_title || ''}">${title}</a>
+          </td>
+          <td style="padding:10px 12px;font-size:13px;color:${isHidden ? '#f87171' : '#4ade80'};font-weight:600;">${views}</td>
+          <td style="padding:10px 12px;font-size:12px;color:var(--text-3);">${e.detected_at || ''}</td>
+        </tr>`;
+      }).join('');
+
+      content.innerHTML = `
+        <div style="overflow-x:auto;">
+          <table class="data-table" style="min-width:700px;">
+            <thead><tr>
+              <th style="width:130px;">Trạng thái</th>
+              <th>Kênh</th>
+              <th>Video</th>
+              <th style="width:120px;">View cuối</th>
+              <th style="width:160px;">Phát hiện lúc</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
     }
 
     function renderRealtimeTable(channels, countMap, snapMap) {
