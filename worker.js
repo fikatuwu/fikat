@@ -1716,28 +1716,34 @@ class DataSanitizer {
     const prevViews = existingVid ? Math.max(0, parseInt(existingVid.views) || 0) : 0;
     const baselineViews = existingVid ? Math.max(0, parseInt(existingVid.prev_views) || prevViews) : parsedViews;
 
-    // Quy tắc 1: Đơn điệu không giảm (Monotonicity) - views không bị tụt do scrape lỗi
+    // Quy tắc 1: Chấp nhận view giảm hợp lệ — delta không bao giờ âm
+    // View có thể giảm do: YouTube audit fake views, video bị ẩn/xóa rồi relist, đối thủ xóa video
+    // Chỉ từ chối khi API trả về 0 hoàn toàn (scrape error / network fail thực sự)
     let finalViews = parsedViews;
-    if (prevViews > 0 && parsedViews < prevViews * 0.5) {
-      console.warn(`[DataSanitizer] Nghi vấn tụt views ${cleanId}: cào được ${parsedViews}, DB đang có ${prevViews}. Giữ nguyên số cũ.`);
-      finalViews = prevViews;
-    } else if (parsedViews < prevViews) {
+    if (parsedViews === 0 && prevViews > 0) {
+      // Trường hợp duy nhất không chấp nhận: API trả về 0 khi video đang có views
+      // → Khả năng cao là lỗi mạng / API timeout, không phải video bị xóa thật
+      console.warn(`[DataSanitizer] API tra ve 0 cho video ${cleanId} (DB: ${prevViews}). Giu nguyen.`);
       finalViews = prevViews;
     }
+    // Nếu views giảm hợp lệ (video bị YouTube audit, hoặc video xóa rồi relist với view thấp hơn):
+    // → Chấp nhận số thấp hơn, cập nhật vào DB
+    // → delta sẽ = 0 (không âm), không làm ô nhiễm tổng delta kênh
 
-    // Quy tắc 2: Video mới cào lần đầu -> baseline khởi tạo, delta = 0
+    // Quy tắc 2: Video mới cào lần đầu → baseline khởi tạo, delta = 0
     let delta = 0;
     if (!existingVid || prevViews === 0) {
-      delta = 0;
+      delta = 0; // Video mới: không cộng view lịch sử vào delta
     } else if (finalViews > baselineViews) {
       delta = finalViews - baselineViews;
-      // Khử bước nhảy lượng tử của YouTube CDN (Quantization Step):
-      // Với video cũ (>10.000 view), YouTube public chỉ cập nhật khi vượt ngưỡng 1.000 (185N -> 186N)
-      // Khi vượt mốc, CDN xả cả cục +1.000 view. Ta làm mịn theo vận tốc video tối đa (~180 view/30m)
+      // Khử bước nhảy lượng tử của YouTube CDN (chỉ áp dụng cho HTML scraping, không cho API v3)
+      // API v3 trả về số chính xác nên không cần — nhưng giữ guard phòng trường hợp fallback
       if (delta >= 1000 && baselineViews >= 10000) {
         delta = Math.min(delta, 180);
       }
     }
+    // Nếu finalViews <= baselineViews: delta = 0 (view giảm hoặc không đổi → không âm)
+
 
     return {
       id: cleanId,
