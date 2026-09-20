@@ -1677,23 +1677,6 @@ async function fetchChannelRssVideos(cid) {
 
 // ── DATA SANITIZER & ETL CLEANSING SUITE (DATA ANALYST QUALITY LAYER) ─────────
 // Giới hạn vận tốc tăng trưởng thực tế theo phân tích kênh (Data Velocity Baselines)
-// Dựa trên phân tích hồi quy và dữ liệu đối soát thực tế từ YouTube Studio
-const CHANNEL_VELOCITY_PROFILES = {
-  100: { name: "TopBeat", max30m: 1200, maxVideoDelta: 400 },              // ~24.000 views/ngày
-  101: { name: "TopGlow", max30m: 1200, maxVideoDelta: 400 },              // ~24.000 views/ngày
-  102: { name: "Top Hits Studio", max30m: 350, maxVideoDelta: 120 },       // ~5.000 views/ngày
-  103: { name: "VELU", max30m: 1600, maxVideoDelta: 500 },                 // ~35.000 views/ngày
-  104: { name: "Acoustic Therapy", max30m: 1600, maxVideoDelta: 500 },     // ~35.000 views/ngày
-  105: { name: "Pure Tracks", max30m: 600, maxVideoDelta: 200 },           // ~10.000 views/ngày
-  106: { name: "Cynthia PoP Acoustic", max30m: 1600, maxVideoDelta: 500 }, // ~35.000 views/ngày
-  107: { name: "TopWave", max30m: 800, maxVideoDelta: 250 },               // ~18.000 views/ngày
-  108: { name: "LoFi Chill Music", max30m: 800, maxVideoDelta: 250 },      // ~18.000 views/ngày
-  110: { name: "Tune Top Music", max30m: 50, maxVideoDelta: 15 },          // ~300 views/ngày (Studio 48h < 1k, 60m ~ 11 views)
-  111: { name: "GlowBeat", max30m: 800, maxVideoDelta: 250 },              // ~18.000 views/ngày
-  112: { name: "PoP Infinity", max30m: 350, maxVideoDelta: 120 }           // ~5.000 views/ngày
-};
-const DEFAULT_VELOCITY_PROFILE = { name: "Default", max30m: 1000, maxVideoDelta: 300 };
-
 class DataSanitizer {
   /**
    * Làm sạch chuỗi văn bản: bóc tách HTML, decode HTML entities, normalize unicode, strip khoảng trắng
@@ -1718,10 +1701,10 @@ class DataSanitizer {
    * Làm sạch và chuẩn hóa bản ghi video:
    * 1. ID video YouTube chuẩn 11 ký tự
    * 2. Tiêu đề sạch không dính mojibake/HTML
-   * 3. Tính đơn điệu không giảm: views không bao giờ tụt do lỗi scrape
-   * 4. Zero-Delta cho video mới (Anti-Spike baseline)
-   * 5. Khử bước nhảy làm tròn của YouTube (Quantization De-spiker): xử lý hiện tượng "26 N" -> "27 N" nhảy vọt +1.000 views
-   * 6. Khử ngoại lai: delta không vượt quá trần vận tốc maxVideoDelta của từng kênh
+   * 3. Tính đơn điệu không giảm: views không bao giờ tụt do lỗi scrape mạng
+   * 4. Zero-Delta cho video mới: khi phát hiện video mới cào lần đầu, khởi tạo baseline với delta = 0
+   *    (ngăn chặn triệt để lỗi cộng dồn view lịch sử của video cũ vào view tăng trưởng 30 phút)
+   * 5. Delta thực tế không giới hạn: tôn trọng 100% số view tăng tự nhiên thực tế của video
    */
   static cleanVideo(rawVid, existingVid, channelId) {
     if (!rawVid || !rawVid.id) return null;
@@ -1733,7 +1716,7 @@ class DataSanitizer {
     const prevViews = existingVid ? Math.max(0, parseInt(existingVid.views) || 0) : 0;
     const baselineViews = existingVid ? Math.max(0, parseInt(existingVid.prev_views) || prevViews) : parsedViews;
 
-    // Quy tắc 1: Đơn điệu không giảm (Monotonicity)
+    // Quy tắc 1: Đơn điệu không giảm (Monotonicity) - views không bị tụt do scrape lỗi
     let finalViews = parsedViews;
     if (prevViews > 0 && parsedViews < prevViews * 0.5) {
       console.warn(`[DataSanitizer] Nghi vấn tụt views ${cleanId}: cào được ${parsedViews}, DB đang có ${prevViews}. Giữ nguyên số cũ.`);
@@ -1742,27 +1725,13 @@ class DataSanitizer {
       finalViews = prevViews;
     }
 
-    const profile = CHANNEL_VELOCITY_PROFILES[channelId] || DEFAULT_VELOCITY_PROFILE;
-
-    // Quy tắc 2: Chống spike video mới
+    // Quy tắc 2: Video mới cào lần đầu -> baseline khởi tạo, delta = 0 (tránh tính view lịch sử thành view 30m)
     let delta = 0;
     if (!existingVid || prevViews === 0) {
-      delta = 0; // Baseline khởi tạo
+      delta = 0;
     } else if (finalViews > baselineViews) {
-      const rawDelta = finalViews - baselineViews;
-
-      // Quy tắc 3: Khử bước nhảy làm tròn công khai của YouTube (YouTube Quantization De-Spiker)
-      // Với video >= 1.000 views, YouTube chỉ hiển thị dạng "26 N" (26.000) hay "1,2 N" (1.200).
-      // Khi nhảy số từ 26 N -> 27 N, rawDelta sẽ là bội số tròn 1.000 hoặc 100 và >= 500 views.
-      const isQuantizedJump = (prevViews >= 1000 && rawDelta >= 500 && (rawDelta % 1000 === 0 || rawDelta % 100 === 0));
-      if (isQuantizedJump) {
-        // Ước lượng vận tốc thực tế của video trong 30 phút, tối đa không quá maxVideoDelta của kênh
-        const estimatedDelta = Math.min(profile.maxVideoDelta, Math.max(5, Math.round(rawDelta / 25)));
-        console.warn(`[DataSanitizer] Khử bước nhảy làm tròn YouTube cho video ${cleanId} (+${rawDelta} -> +${estimatedDelta})`);
-        delta = estimatedDelta;
-      } else {
-        delta = Math.min(rawDelta, profile.maxVideoDelta);
-      }
+      // Tăng trưởng thực tế không giới hạn
+      delta = finalViews - baselineViews;
     }
 
     return {
@@ -1778,29 +1747,20 @@ class DataSanitizer {
 
   /**
    * Chuẩn hoá và đối soát snapshot 30m của kênh:
-   * 1. Khớp delta_30m với tổng delta_views thực tế
-   * 2. Giới hạn tăng kịch trần theo trần vận tốc thực tế (Velocity Capping) của từng kênh
-   * 3. Đồng bộ top video delta không vượt quá delta của toàn kênh
+   * 1. Delta 30 phút là tổng delta_views thực tế của các video trong kênh
+   * 2. Không giới hạn / không bóp méo view tăng thực tế của kênh
+   * 3. Đồng bộ top growing video của kênh
    */
   static cleanSnapshot(channelId, rawDelta, curTotalViews, prevSnapTotalViews, topVideo) {
-    const profile = CHANNEL_VELOCITY_PROFILES[channelId] || DEFAULT_VELOCITY_PROFILE;
-    let finalDelta = Math.max(0, parseInt(rawDelta) || 0);
-
-    // Delta 30 phút bắt buộc phải tuân theo trần vận tốc thực tế của kênh
-    if (finalDelta > profile.max30m) {
-      console.warn(`[DataSanitizer] 30m delta vượt trần kênh ${channelId} (+${finalDelta}), giới hạn ${profile.max30m}.`);
-      finalDelta = profile.max30m;
-    }
-
-    let topDelta = Math.max(0, parseInt(topVideo?.delta_views) || 0);
-    topDelta = Math.min(finalDelta, Math.min(profile.maxVideoDelta, topDelta));
+    const finalDelta = Math.max(0, parseInt(rawDelta) || 0);
+    const topDelta = Math.max(0, parseInt(topVideo?.delta_views) || 0);
 
     return {
       channel_id: channelId,
       total_video_views: curTotalViews,
       delta_30m: finalDelta,
       top_title: this.cleanText(topVideo?.title || 'Đang theo dõi'),
-      top_delta: topDelta
+      top_delta: Math.min(finalDelta, topDelta)
     };
   }
 }
@@ -2150,7 +2110,7 @@ function sanitizeUser(user) {
 function parseYtStat(str) {
   if (!str) return 0;
   const s = String(str).toLowerCase().trim();
-  const multiMatch = s.match(/([\d.,]+)\s*(triệu|tr|nghìn|ngàn|\bn\b|tỷ|m(?![a-z])|k(?![a-z])|b(?![a-z]))/i);
+  const multiMatch = s.match(/([\d.,]+)\s*(triệu|tr|nghìn|ngàn|tỷ|m|k|b|n)(?![a-zà-ỹ0-9])/i);
   if (multiMatch) {
     let rawNum = multiMatch[1].replace(/,/g, '.');
     if ((rawNum.match(/\./g) || []).length > 1) {
