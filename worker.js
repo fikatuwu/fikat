@@ -1836,7 +1836,7 @@ async function run30mVideoSnapshotJob(env) {
 
     // 0. Nạp dữ liệu video hiện tại từ DB để DataSanitizer đối soát và khử nhiễu
     const existingVidRows = await queryTursoWorker(
-      "SELECT id, channel_id, title, views, prev_views, delta_views FROM video_items"
+      "SELECT id, channel_id, title, views, prev_views, delta_views, last_delta_30m FROM video_items"
     );
     const existingMap = {};
     (existingVidRows || []).forEach(ev => { existingMap[ev.id] = ev; });
@@ -2083,9 +2083,15 @@ async function run30mVideoSnapshotJob(env) {
 
     await executeTursoBatch(snapBatch);
 
-    // 7. Chốt xong snapshot: Cập nhật prev_views = views và reset delta_views = 0
-    // Để chu kỳ 30 phút kế tiếp tích luỹ độc lập và chính xác, tuyệt đối không bị cộng dồn delta cũ!
-    await queryTursoWorker("UPDATE video_items SET prev_views = views, delta_views = 0 WHERE views > 0");
+    // 7. Chốt xong snapshot: Lưu delta 30 phút vừa qua vào last_delta_30m để popup luôn xem được,
+    // sau đó cập nhật prev_views = views và reset delta_views = 0 cho chu kỳ tiếp theo!
+    await queryTursoWorker(`
+      UPDATE video_items 
+      SET last_delta_30m = delta_views,
+          prev_views = views, 
+          delta_views = 0 
+      WHERE views > 0
+    `);
 
     const msg = `✅ [Cron 30m] Đã chốt snapshot video real-time thành công cho toàn bộ ${channels.length} kênh lúc ${timeMark}!`;
     console.log(msg);

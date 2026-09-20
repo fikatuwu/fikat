@@ -2580,25 +2580,28 @@
 
       // Sắp xếp theo cấu hình hiện tại: delta DESC hoặc views DESC
       const sortedVideos = [...videos].sort((a, b) => {
+        const deltaA = Math.max(parseInt(a.delta_views) || 0, parseInt(a.last_delta_30m) || 0);
+        const deltaB = Math.max(parseInt(b.delta_views) || 0, parseInt(b.last_delta_30m) || 0);
         if (modalSortBy === 'delta') {
-          const deltaA = parseInt(a.delta_views) || 0;
-          const deltaB = parseInt(b.delta_views) || 0;
           if (deltaB !== deltaA) return deltaB - deltaA; // Số tăng cao xuống thấp
           return (parseInt(b.views) || 0) - (parseInt(a.views) || 0); // Phụ: view cao xuống thấp
         } else {
           const viewsA = parseInt(a.views) || 0;
           const viewsB = parseInt(b.views) || 0;
           if (viewsB !== viewsA) return viewsB - viewsA; // View cao xuống thấp
-          return (parseInt(b.delta_views) || 0) - (parseInt(a.delta_views) || 0);
+          return deltaB - deltaA;
         }
       });
 
       tbody.innerHTML = sortedVideos.map((v, i) => {
         const ytWatchUrl = `https://www.youtube.com/watch?v=${v.id}`;
         const views = parseInt(v.views) || 0;
-        const delta = parseInt(v.delta_views) || 0;
-        const deltaHtml = delta > 0 
-          ? `<span style="color:var(--green);font-weight:700;background:rgba(34,197,94,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.3);">+${delta.toLocaleString('vi-VN')}</span>`
+        const liveDelta = parseInt(v.delta_views) || 0;
+        const lastDelta = parseInt(v.last_delta_30m) || 0;
+        const effectiveDelta = liveDelta > 0 ? liveDelta : lastDelta;
+        
+        const deltaHtml = effectiveDelta > 0 
+          ? `<span style="color:var(--green);font-weight:700;background:rgba(34,197,94,0.12);padding:2px 8px;border-radius:6px;border:1px solid rgba(34,197,94,0.3);">+${effectiveDelta.toLocaleString('vi-VN')}</span>`
           : `<span style="color:var(--text-3);">0</span>`;
 
         return `
