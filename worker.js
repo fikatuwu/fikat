@@ -1520,38 +1520,66 @@ async function runDailySnapshotJob(env) {
       return { ok: true, message: "Không tìm thấy kênh nào trong Turso.", count: 0, today: todayStr };
     }
 
+    const ytApiKey = env.YT_API_KEY;
+    let apiChannelStats = {};
+    if (ytApiKey) {
+      try {
+        const cids = Object.values(CHANNEL_CID_MAP).filter(Boolean);
+        if (cids.length > 0) {
+          const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${cids.join(',')}&key=${ytApiKey}&fields=items(id,statistics/viewCount,statistics/subscriberCount,statistics/videoCount)`;
+          const apiResp = await fetch(apiUrl);
+          if (apiResp.ok) {
+            const apiData = await apiResp.json();
+            for (const item of (apiData.items || [])) {
+              apiChannelStats[item.id] = {
+                views: parseInt(item.statistics?.viewCount) || 0,
+                subs: parseInt(item.statistics?.subscriberCount) || 0,
+                vids: parseInt(item.statistics?.videoCount) || 0
+              };
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("[DailyCron] Loi goi YT API channels:", err.message);
+      }
+    }
+
+    // Nạp tổng view thực tế từ toàn bộ video public trong DB để làm ground truth
+    const vidSumRows = await queryTursoWorker(`
+      SELECT channel_id, sum(views) as total_views, count(*) as vid_count
+      FROM video_items
+      GROUP BY channel_id
+    `);
+    const vidSumMap = {};
+    (vidSumRows || []).forEach(r => {
+      vidSumMap[r.channel_id] = {
+        views: parseInt(r.total_views) || 0,
+        count: parseInt(r.vid_count) || 0
+      };
+    });
+
     let count = 0;
     for (const ch of channels) {
       let subs = parseInt(ch.subscribers) || 0;
       let views = parseInt(ch.views_all) || 0;
       let vids = parseInt(ch.video_count) || 0;
 
-      const cid = ch.custom_id;
-      if (cid && (cid.startsWith('UC') || cid.startsWith('@'))) {
-        try {
-          const ytInfo = await fetchYouTubeChannelData(cid);
-          if (ytInfo && ytInfo.views_all) {
-            const newViews = parseInt(ytInfo.views_all) || 0;
-            const newSubs = parseInt(ytInfo.subscribers) || 0;
-            const newVids = parseInt(ytInfo.video_count) || 0;
+      const targetCid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
+      const apiStat = targetCid && apiChannelStats[targetCid];
+      const vidStat = vidSumMap[ch.id];
 
-            // An toàn tuyệt đối: Không bao giờ chấp nhận views tụt bất thường do scraping
-            if (newViews > views * 0.5) {
-              views = newViews;
-            } else if (newViews > 0) {
-              console.warn(`[DailyCron] Bỏ qua views bất thường cho kênh ${ch.title}: ${newViews} (hiện tại: ${views})`);
-            }
-            if (newSubs > 0) subs = newSubs;
-            if (newVids > 0) vids = newVids;
-
-            await queryTursoWorker(`
-              UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
-            `, [subs, views, vids, ch.id]);
-          }
-        } catch (e) {
-          console.warn(`[Cron] Bỏ qua lỗi kéo mạng của kênh ${ch.title} (${cid}):`, e.message);
-        }
+      if (apiStat && apiStat.views > 0) {
+        views = apiStat.views;
+        if (apiStat.subs > 0) subs = apiStat.subs;
+        if (apiStat.vids > 0) vids = apiStat.vids;
+      } else if (vidStat && vidStat.views > 0) {
+        views = Math.max(views, vidStat.views);
+        if (vidStat.count > 0) vids = vidStat.count;
       }
+
+      await queryTursoWorker(`
+        UPDATE channels SET subscribers = ?, views_all = ?, video_count = ? WHERE id = ?
+      `, [subs, views, vids, ch.id]);
 
       // Lấy snapshot trước đó theo đúng thứ tự ngày tháng lịch thực tế
       const prevSnaps = await queryTursoWorker(`
