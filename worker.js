@@ -2082,8 +2082,11 @@ async function run30mVideoSnapshotJob(env) {
       const cur = countMap[ch.id] || { count: 0, views: 0 };
       const prevTot = prevMap[ch.id] || 0;
       // Công thức view tăng trưởng theo chỉ đạo của người dùng:
-      // B (tổng view toàn bộ video lúc này) trừ A (tổng view toàn bộ video snapshot trước)
-      const bMinusA = prevTot > 0 ? Math.max(0, cur.views - prevTot) : (gainMap[ch.id] || 0);
+      // Ưu tiên tổng delta_views của toàn bộ video trong kênh (tính chính xác từng view từ YouTube Data API v3).
+      // Đồng thời so sánh với (cur.views - prevTot) để không bỏ sót video mới được bổ sung.
+      const vidGain = gainMap[ch.id] || 0;
+      const totalDiff = prevTot > 0 ? (cur.views - prevTot) : 0;
+      const bMinusA = Math.max(0, vidGain, totalDiff);
       const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: bMinusA };
 
       // Chạy qua DataSanitizer
