@@ -2486,7 +2486,9 @@
               borderWidth: 1,
               padding: 12,
               itemSort: function(a, b) {
-                return (b.parsed.y || 0) - (a.parsed.y || 0);
+                const valA = (a.raw !== null && a.raw !== undefined) ? Number(a.raw) : (a.parsed?.y || 0);
+                const valB = (b.raw !== null && b.raw !== undefined) ? Number(b.raw) : (b.parsed?.y || 0);
+                return valB - valA;
               },
               callbacks: {
                 label: function(context) {

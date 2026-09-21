@@ -1776,9 +1776,8 @@ class DataSanitizer {
   }
 
   /**
-   * Chuẩn hoá và đối soát snapshot 30m của kênh:
-   * 1. Khử triệt để hiện tượng xả đọng cache nhiều video cùng lúc làm spike view ban đêm
-   * 2. Bám sát ngưỡng trần vận tốc thực tế ban đêm (căn cứ theo YouTube Studio ground truth: TopBeat ~200 view/30m)
+   * Chuẩn hoá snapshot 30m của kênh theo công thức B - A
+   */
   static cleanSnapshot(channelId, rawDelta, curTotalViews, prevSnapTotalViews, topVideo, hour = 12) {
     // Tôn trọng 100% dữ liệu thực tế từ YouTube API (tính đúng, không ép số, không áp baseline nhân tạo)
     const finalDelta = Math.max(0, parseInt(rawDelta) || 0);
