@@ -1761,17 +1761,6 @@ class DataSanitizer {
       delta = 0; // Video mới: không cộng view lịch sử vào delta
     } else if (finalViews > baselineViews) {
       delta = finalViews - baselineViews;
-
-      // Khử triệt để bước nhảy lượng tử (Quantization Leap) của YouTube HTML Scraping:
-      // Trang web YouTube hiển thị số làm tròn: 79 N -> 80 N (+1.000 view) hoặc 2,9 N -> 3 N (+100 view).
-      // Khi video vượt ngưỡng làm tròn, số đọc được nhảy 1 bước lớn nhưng thực tế video chỉ tăng vài view.
-      if (delta >= 900 && baselineViews >= 10000) {
-        // Bước nhảy 1.000: nội suy vận tốc thực tế ~25-50 view/30m
-        delta = Math.min(delta, Math.max(25, Math.round(baselineViews * 0.0005)));
-      } else if (delta >= 90 && delta <= 130 && baselineViews >= 1000 && baselineViews < 10000) {
-        // Bước nhảy 100: nội suy vận tốc thực tế ~10-25 view/30m
-        delta = Math.min(delta, Math.max(10, Math.round(baselineViews * 0.002)));
-      }
     }
     // Nếu finalViews <= baselineViews: delta = 0 (view giảm hoặc không đổi → không âm)
 
@@ -2046,12 +2035,14 @@ async function run30mVideoSnapshotJob(env) {
     // 6. Chuẩn hoá snapshot và ghi vào Turso trong 1 Batch duy nhất
     const snapBatch = channels.map(ch => {
       const cur = countMap[ch.id] || { count: 0, views: 0 };
-      const prevTot = prevMap[ch.id] || cur.views;
-      const rawDelta = gainMap[ch.id] || 0;
-      const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: rawDelta };
+      const prevTot = prevMap[ch.id] || 0;
+      // Công thức view tăng trưởng theo chỉ đạo của người dùng:
+      // B (tổng view toàn bộ video lúc này) trừ A (tổng view toàn bộ video snapshot trước)
+      const bMinusA = prevTot > 0 ? Math.max(0, cur.views - prevTot) : (gainMap[ch.id] || 0);
+      const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: bMinusA };
 
-      // Chạy qua DataSanitizer để kiểm định chất lượng snapshot theo chuẩn Data Analyst
-      const cleanSnap = DataSanitizer.cleanSnapshot(ch.id, rawDelta, cur.views, prevTot, top, vnNow.getHours());
+      // Chạy qua DataSanitizer
+      const cleanSnap = DataSanitizer.cleanSnapshot(ch.id, bMinusA, cur.views, prevTot, top, vnNow.getHours());
 
       return {
         sql: `
@@ -2060,7 +2051,7 @@ async function run30mVideoSnapshotJob(env) {
           ON CONFLICT(channel_id, captured_at) DO UPDATE SET
             total_video_views = excluded.total_video_views,
             video_count = excluded.video_count,
-            delta_30m = CASE WHEN excluded.delta_30m >= video_view_snapshots.delta_30m THEN excluded.delta_30m ELSE video_view_snapshots.delta_30m END,
+            delta_30m = excluded.delta_30m,
             top_growing_video_title = excluded.top_growing_video_title,
             top_growing_video_delta = excluded.top_growing_video_delta
         `,
