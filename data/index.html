@@ -2418,11 +2418,21 @@
         </div>`;
     }
 
+    function parseVnDateTime(str) {
+      if (!str) return 0;
+      const parts = str.split(' ');
+      if (parts.length < 2) return 0;
+      const [d, m, y] = parts[0].split('/').map(Number);
+      const [h, min] = parts[1].split(':').map(Number);
+      return new Date(y, m - 1, d, h, min).getTime();
+    }
+
     function renderRealtimeChart(channels, snapshots, countMap) {
       const canvas = document.getElementById('realtimeVideoChart');
       if (!canvas) return;
 
-      const uniqueTimes = Array.from(new Set(snapshots.map(s => s.captured_at).filter(Boolean)));
+      const uniqueTimes = Array.from(new Set(snapshots.map(s => s.captured_at).filter(Boolean)))
+        .sort((a, b) => parseVnDateTime(a) - parseVnDateTime(b));
       if (uniqueTimes.length === 0) return;
 
       const labels = uniqueTimes;
@@ -2592,7 +2602,9 @@
         `, [channelId]);
 
         cachedModalVideos = rows || [];
-        subEl.textContent = `Tổng cộng: ${cachedModalVideos.length} video public đã quét · Đang sắp xếp: Tăng nhiều nhất ↓`;
+        const growingVids = cachedModalVideos.filter(v => (parseInt(v.delta_views) || parseInt(v.last_delta_30m) || 0) > 0);
+        const totalGrowth = growingVids.reduce((sum, v) => sum + Math.max(parseInt(v.delta_views) || 0, parseInt(v.last_delta_30m) || 0), 0);
+        subEl.innerHTML = `Đã quét: <strong style="color:var(--text-1);">${cachedModalVideos.length}</strong> video · Tăng <strong style="color:var(--green);">+${totalGrowth.toLocaleString('vi-VN')} view</strong> trong 30p gần nhất (<strong style="color:var(--green);">${growingVids.length}</strong> video có tăng view, <strong style="color:var(--text-3);">${cachedModalVideos.length - growingVids.length}</strong> video không đổi lượt nghe)`;
         filterModalVideos();
       } catch (err) {
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#ef4444;padding:30px;">Lỗi: ${err.message}</td></tr>`;
