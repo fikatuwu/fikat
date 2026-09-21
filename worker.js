@@ -1247,14 +1247,51 @@ export default {
       }
     }
 
-    // 3.9 GET /api/video-tracker/videos - Lấy danh sách video của 1 kênh
+    // 3.9 GET /api/video-tracker/videos - Lấy danh sách video của 1 kênh kèm số liệu YouTube API v3 thời gian thực
     if (pathname === "/api/video-tracker/videos" && request.method === "GET") {
       try {
         const chId = url.searchParams.get("channel_id");
         if (!chId) return jsonRes({ ok: false, message: "Thiếu channel_id" }, 400);
+
         const rows = await queryTursoWorker(`
           SELECT * FROM video_items WHERE channel_id = ? ORDER BY views DESC
         `, [chId]);
+
+        if (!rows || !rows.length) return jsonRes({ ok: true, videos: [] });
+
+        const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
+        if (ytApiKey) {
+          try {
+            const vids = rows.map(r => r.id);
+            const apiResults = await fetchExactViewsFromYtApi(vids, ytApiKey);
+            if (apiResults && Object.keys(apiResults).length > 0) {
+              const updates = [];
+              const isoNow = new Date(Date.now() + 7 * 3600 * 1000).toISOString().replace("T", " ").substring(0, 19);
+              for (const r of rows) {
+                const liveViews = apiResults[r.id];
+                if (liveViews !== undefined && liveViews !== null && liveViews > 0) {
+                  const prev = parseInt(r.prev_views) || parseInt(r.views) || liveViews;
+                  const delta = Math.max(0, liveViews - prev);
+                  r.views = liveViews;
+                  r.delta_views = delta;
+                  if (delta > 0 || !r.last_delta_30m || r.last_delta_30m === '0') {
+                    r.last_delta_30m = delta;
+                  }
+                  updates.push({
+                    sql: `UPDATE video_items SET views = ?, delta_views = ?, last_delta_30m = CASE WHEN ? > 0 THEN ? ELSE last_delta_30m END, last_scraped_at = ? WHERE id = ?`,
+                    args: [liveViews, delta, delta, delta, isoNow, r.id]
+                  });
+                }
+              }
+              if (updates.length > 0) {
+                executeTursoBatch(updates).catch(e => console.warn("Turso async video update error:", e.message));
+              }
+            }
+          } catch (apiErr) {
+            console.warn("Live API channel fetch error:", apiErr.message);
+          }
+        }
+
         return jsonRes({ ok: true, videos: rows });
       } catch (err) {
         return jsonRes({ ok: false, message: err.message }, 500);

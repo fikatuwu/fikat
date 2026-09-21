@@ -2602,9 +2602,23 @@
       setModalSort('delta');
 
       try {
-        const rows = await queryTurso(`
-          SELECT * FROM video_items WHERE channel_id = ?
-        `, [channelId]);
+        let rows = [];
+        try {
+          const apiRes = await fetch(`/api/video-tracker/videos?channel_id=${encodeURIComponent(channelId)}`);
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (apiData.ok && Array.isArray(apiData.videos)) {
+              rows = apiData.videos;
+            }
+          }
+        } catch (e) {
+          console.warn("API videos fetch fallback to Turso direct:", e);
+        }
+        if (!rows || !rows.length) {
+          rows = await queryTurso(`
+            SELECT * FROM video_items WHERE channel_id = ?
+          `, [channelId]);
+        }
 
         cachedModalVideos = rows || [];
         const growingVids = cachedModalVideos.filter(v => (parseInt(v.delta_views) || parseInt(v.last_delta_30m) || 0) > 0);
