@@ -10,6 +10,7 @@ const DEFAULT_ADMIN_PIN = "fikat2026";
 const JWT_SECRET = "fikat_cloud_super_secret_signing_key_2026";
 const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
 const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
+const YT_API_KEY_DEFAULT = "AIzaSyBCt0_9B923hAQX7Fn6dHScqMMS2HBAm_w";
 
 let dbInited = false;
 
@@ -1484,28 +1485,34 @@ async function queryTursoWorker(sql, args = []) {
 
 async function executeTursoBatch(stmts) {
   if (!stmts || !stmts.length) return [];
-  const requests = stmts.map(s => ({
-    type: "execute",
-    stmt: {
-      sql: s.sql,
-      args: (s.args || []).map(a => {
-        if (typeof a === 'number') return { type: Number.isInteger(a) ? "integer" : "float", value: String(a) };
-        if (a === null || a === undefined) return { type: "null" };
-        return { type: "text", value: String(a) };
-      })
-    }
-  }));
-  requests.push({ type: "close" });
+  const CHUNK_SIZE = 150;
+  const allResults = [];
+  for (let i = 0; i < stmts.length; i += CHUNK_SIZE) {
+    const chunk = stmts.slice(i, i + CHUNK_SIZE);
+    const requests = chunk.map(s => ({
+      type: "execute",
+      stmt: {
+        sql: s.sql,
+        args: (s.args || []).map(a => {
+          if (typeof a === 'number') return { type: Number.isInteger(a) ? "integer" : "float", value: String(a) };
+          if (a === null || a === undefined) return { type: "null" };
+          return { type: "text", value: String(a) };
+        })
+      }
+    }));
+    requests.push({ type: "close" });
 
-  const res = await fetch(TURSO_URL, {
-    method: "POST",
-    headers: {
-      "Authorization": "Bearer " + TURSO_TOKEN,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ requests })
-  });
-  return await res.json();
+    const res = await fetch(TURSO_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + TURSO_TOKEN,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ requests })
+    });
+    allResults.push(await res.json());
+  }
+  return allResults;
 }
 
 
@@ -1520,7 +1527,7 @@ async function runDailySnapshotJob(env) {
       return { ok: true, message: "Không tìm thấy kênh nào trong Turso.", count: 0, today: todayStr };
     }
 
-    const ytApiKey = env.YT_API_KEY;
+    const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
     let apiChannelStats = {};
     if (ytApiKey) {
       try {
@@ -1817,9 +1824,9 @@ async function run30mVideoSnapshotJob(env) {
     (existingVidRows || []).forEach(ev => { existingMap[ev.id] = ev; });
 
     // ── BƯỚC 1: YouTube Data API v3 (PRIMARY - Số chính xác từng view) ──────────
-    // Nếu có API key: dùng API lấy số view chính xác 100% cho tất cả video đã biết
-    // Nếu không / lỗi / hết quota: tự động fallback sang cào HTML ở Bước 2
-    const ytApiKey = env.YT_API_KEY;
+    // Dùng API lấy số view chính xác 100% cho tất cả video đã biết (chuẩn từng 1 view)
+    // Nếu lỗi / hết quota: tự động fallback sang cào HTML ở Bước 2
+    const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
     let apiSucceeded = false;
 
     if (ytApiKey && Object.keys(existingMap).length > 0) {
@@ -1846,8 +1853,8 @@ async function run30mVideoSnapshotJob(env) {
                     WHEN video_items.prev_views IS NULL OR video_items.prev_views = 0 THEN video_items.views
                     ELSE video_items.prev_views 
                   END,
-                  views = CASE WHEN excluded.views > video_items.views THEN excluded.views ELSE video_items.views END,
-                  delta_views = CASE WHEN excluded.delta_views > 0 THEN excluded.delta_views ELSE video_items.delta_views END,
+                  views = excluded.views,
+                  delta_views = excluded.delta_views,
                   last_scraped_at = excluded.last_scraped_at
               `,
               args: [cv.id, cv.channel_id, cv.title, cv.views, cv.prev_views, cv.delta_views, isoNow]
