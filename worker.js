@@ -205,6 +205,8 @@ export default {
       return jsonRes({
         appId: "suno-bulk-studio",
         name: "Suno Bulk Studio",
+        hasYtApiKey: Boolean(env.YT_API_KEY),
+        ytKeyPrefix: env.YT_API_KEY ? String(env.YT_API_KEY).substring(0, 6) + '...' : 'NOT_SET',
         currentVersion: "3.5",
         releaseDate: "16/09/2026",
         status: "stable",
