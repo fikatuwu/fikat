@@ -2485,6 +2485,9 @@
               borderColor: 'rgba(255,255,255,0.1)',
               borderWidth: 1,
               padding: 12,
+              itemSort: function(a, b) {
+                return (b.parsed.y || 0) - (a.parsed.y || 0);
+              },
               callbacks: {
                 label: function(context) {
                   const val = context.parsed.y;
