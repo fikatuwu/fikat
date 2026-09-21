@@ -1486,9 +1486,11 @@ async function queryTursoWorker(sql, args = []) {
 async function executeTursoBatch(stmts) {
   if (!stmts || !stmts.length) return [];
   const CHUNK_SIZE = 150;
-  const allResults = [];
+  const chunks = [];
   for (let i = 0; i < stmts.length; i += CHUNK_SIZE) {
-    const chunk = stmts.slice(i, i + CHUNK_SIZE);
+    chunks.push(stmts.slice(i, i + CHUNK_SIZE));
+  }
+  const promises = chunks.map(async (chunk) => {
     const requests = chunk.map(s => ({
       type: "execute",
       stmt: {
@@ -1510,9 +1512,9 @@ async function executeTursoBatch(stmts) {
       },
       body: JSON.stringify({ requests })
     });
-    allResults.push(await res.json());
-  }
-  return allResults;
+    return await res.json();
+  });
+  return await Promise.all(promises);
 }
 
 
@@ -2098,7 +2100,7 @@ async function fetchExactViewsFromYtApi(videoIds, apiKey) {
   for (let i = 0; i < videoIds.length; i += BATCH) {
     chunks.push(videoIds.slice(i, i + BATCH));
   }
-  for (const chunk of chunks) {
+  const promises = chunks.map(async (chunk) => {
     const ids = chunk.join(',');
     const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${apiKey}&fields=items(id,statistics/viewCount)`;
     const resp = await fetch(url);
@@ -2116,7 +2118,8 @@ async function fetchExactViewsFromYtApi(videoIds, apiKey) {
         resultMap[item.id] = parseInt(vc, 10) || 0;
       }
     }
-  }
+  });
+  await Promise.all(promises);
   return resultMap;
 }
 
