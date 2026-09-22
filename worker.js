@@ -2230,12 +2230,13 @@ async function run30mVideoSnapshotJob(env) {
       };
     });
 
-    // 4. Lấy snapshot gần nhất trước đó
+    // 4. Lấy snapshot gần nhất trước đó (chỉ lấy 50 dòng mới nhất để tối ưu tốc độ & bộ nhớ)
     const prevSnaps = await queryTursoWorker(`
       SELECT channel_id, total_video_views
       FROM video_view_snapshots
       WHERE captured_at != ?
       ORDER BY id DESC
+      LIMIT 50
     `, [timeMark]);
     const prevMap = {};
     (prevSnaps || []).forEach(s => {
@@ -2384,6 +2385,7 @@ async function fetchExactViewsFromYtApi(videoIds, apiKeyOrEnv) {
   }
 
   let activeKeyIndex = 0;
+  const keyUsageMap = {};
 
   async function fetchChunkWithFailover(chunk) {
     const ids = chunk.join(',');
@@ -2405,11 +2407,8 @@ async function fetchExactViewsFromYtApi(videoIds, apiKeyOrEnv) {
               }
             }
           }
-          // Ghi nhận sử dụng key (async)
-          queryTursoWorker(
-            "UPDATE api_keys SET quota_used = quota_used + 1, last_used_at = datetime('now') WHERE key_value = ?",
-            [currentKey]
-          ).catch(() => {});
+          // Đếm quota đã dùng trong bộ nhớ để gom 1 batch Turso duy nhất, tránh spam 17 subrequests
+          keyUsageMap[currentKey] = (keyUsageMap[currentKey] || 0) + 1;
           return;
         }
 
@@ -2450,6 +2449,17 @@ async function fetchExactViewsFromYtApi(videoIds, apiKeyOrEnv) {
   }
 
   await Promise.all(chunks.map(chunk => fetchChunkWithFailover(chunk)));
+
+  // Gom ghi nhận quota đã dùng vào Turso trong 1 request batch duy nhất (tiết kiệm subrequests)
+  const usageEntries = Object.entries(keyUsageMap);
+  if (usageEntries.length > 0) {
+    const quotaBatch = usageEntries.map(([k, count]) => ({
+      sql: "UPDATE api_keys SET quota_used = quota_used + ?, last_used_at = datetime('now') WHERE key_value = ?",
+      args: [count, k]
+    }));
+    executeTursoBatch(quotaBatch).catch(() => {});
+  }
+
   return resultMap;
 }
 
