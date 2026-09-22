@@ -550,10 +550,7 @@
           <label class="auth-label">Nhập lại mật khẩu:</label>
           <input type="password" id="regConfirmPassword" class="admin-input" style="width: 100%;" placeholder="••••••••" required minlength="6">
         </div>
-        <p style="font-size: 0.76rem; color: var(--text-dim); line-height: 1.5; margin-bottom: 12px;">
-          ⭐ <i>Ghi chú: Tài khoản đăng ký đầu tiên trên hệ thống sẽ tự động trở thành <b>Quản trị viên tối cao (Root Admin)</b>.</i>
-        </p>
-        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 11px;">
+        <button type="submit" id="btnSubmitRegister" class="btn-primary" style="width: 100%; justify-content: center; padding: 11px; margin-top: 8px;">
           <span>Tạo Tài Khoản Mới</span>
         </button>
       </form>
@@ -1069,17 +1066,24 @@
           });
           const data = await res.json();
           if (res.ok && data.ok) {
-            localStorage.setItem(TOKEN_KEY, data.token);
-            currentUser = data.user;
-            showAuthMsg(data.message, false);
-            setTimeout(() => {
-              authOverlay.style.display = 'none';
-              if (data.user && data.user.role === 'Quản trị viên') {
-                setupUserSession();
-              } else {
-                window.location.replace('/');
-              }
-            }, 1000);
+            if (data.token) {
+              localStorage.setItem(TOKEN_KEY, data.token);
+              currentUser = data.user;
+              showAuthMsg(data.message, false);
+              setTimeout(() => {
+                authOverlay.style.display = 'none';
+                if (data.user && data.user.role === 'Quản trị viên') {
+                  setupUserSession();
+                } else {
+                  window.location.replace('/');
+                }
+              }, 1200);
+            } else {
+              showAuthMsg(data.message || 'Đăng ký thành công! Đang chờ Quản trị viên duyệt.', false);
+              setTimeout(() => {
+                switchAuthTab('login');
+              }, 2500);
+            }
           } else {
             showAuthMsg(data.message || 'Đăng ký thất bại!');
           }

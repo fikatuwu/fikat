@@ -11,6 +11,7 @@ const JWT_SECRET = "fikat_cloud_super_secret_signing_key_2026";
 const TURSO_URL = "https://fikat-fikat.aws-ap-northeast-1.turso.io/v2/pipeline";
 const TURSO_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3ODk4MDUxMDUsImlkIjoiMDFhMGI4YjItMDkwMS03N2IxLTgwNDktOTJiNjgxMTA1OWUwIiwia2lkIjoiNTZURVBrTktsSW4wVHI2ektianlKZjBEQXU2RDdGaGJzZUhQLVFGYkFfOCIsInJpZCI6ImJhNDI1ZjdiLTVlYzYtNGI4ZS1iNTVmLTNhMmU5MDJkM2I3YSJ9.-8ybsOaX4mXhWC7-brreSN8iczUcW6sLyZA8d-zjpgRPUHnda7slsBjOpzn0d6Dvnjw42WPXO9Ess5RLa9D1AQ";
 const YT_API_KEY_DEFAULT = "AIzaSyBCt0_9B923hAQX7Fn6dHScqMMS2HBAm_w";
+const ROOT_ADMIN_USERNAME = "fikat";
 
 let dbInited = false;
 
@@ -256,7 +257,8 @@ export default {
 
         const countRow = await env.DB.prepare("SELECT COUNT(*) as cnt FROM users").first();
         const isFirstUser = (countRow?.cnt || 0) === 0;
-        const isRootAdmin = isFirstUser || rawUsername === ROOT_ADMIN_USERNAME;
+        const rootAdminUsername = ((env && env.ROOT_ADMIN_USERNAME) || ROOT_ADMIN_USERNAME || "fikat").toLowerCase();
+        const isRootAdmin = isFirstUser || rawUsername === rootAdminUsername;
         const role = isRootAdmin ? "Quản trị viên" : "Nhân viên";
 
         const salt = generateRandomHex(16);
