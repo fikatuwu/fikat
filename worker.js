@@ -1261,11 +1261,11 @@ export default {
 
         if (!rows || !rows.length) return jsonRes({ ok: true, videos: [] });
 
-        const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
-        if (ytApiKey) {
+        const activeKeys = await getActiveYtApiKeys(env);
+        if (activeKeys && activeKeys.length > 0) {
           try {
             const vids = rows.map(r => r.id);
-            const apiResults = await fetchExactViewsFromYtApi(vids, ytApiKey);
+            const apiResults = await fetchExactViewsFromYtApi(vids, activeKeys);
             if (apiResults && Object.keys(apiResults).length > 0) {
               const updates = [];
               const isoNow = new Date(Date.now() + 7 * 3600 * 1000).toISOString().replace("T", " ").substring(0, 19);
@@ -1295,6 +1295,186 @@ export default {
         }
 
         return jsonRes({ ok: true, videos: rows });
+      } catch (err) {
+        return jsonRes({ ok: false, message: err.message }, 500);
+      }
+    }
+
+    // 3.10 QUẢN LÝ YOUTUBE DATA API KEYS (MULTI-KEY POOL & FAILOVER)
+    // 3.10.1 GET /api/youtube-keys - Danh sách keys
+    if (pathname === "/api/youtube-keys" && request.method === "GET") {
+      try {
+        const rows = await queryTursoWorker(
+          "SELECT id, service, key_value, label, quota_used, quota_limit, is_active, last_error, last_used_at, created_at FROM api_keys WHERE service = 'youtube' ORDER BY is_active DESC, id ASC"
+        );
+        const keys = (rows || []).map(r => {
+          const raw = r.key_value || '';
+          const masked = raw.length > 12 ? `${raw.slice(0, 8)}...${raw.slice(-4)}` : raw;
+          return {
+            id: r.id,
+            key_value: raw,
+            masked_key: masked,
+            label: r.label || 'YouTube API Key',
+            quota_used: parseInt(r.quota_used) || 0,
+            quota_limit: parseInt(r.quota_limit) || 10000,
+            is_active: parseInt(r.is_active) === 1,
+            last_error: r.last_error || '',
+            last_used_at: r.last_used_at || '',
+            created_at: r.created_at || ''
+          };
+        });
+        return jsonRes({ ok: true, keys, total: keys.length, active: keys.filter(k => k.is_active).length });
+      } catch (err) {
+        return jsonRes({ ok: false, message: err.message }, 500);
+      }
+    }
+
+    // 3.10.2 POST /api/youtube-keys - Thêm một hoặc nhiều keys
+    if (pathname === "/api/youtube-keys" && request.method === "POST") {
+      try {
+        const body = await request.json().catch(() => ({}));
+        let rawInput = body.keys || body.key || '';
+        let keyList = [];
+        if (Array.isArray(rawInput)) {
+          keyList = rawInput;
+        } else if (typeof rawInput === 'string') {
+          keyList = rawInput.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean);
+        }
+
+        if (!keyList.length) {
+          return jsonRes({ ok: false, message: "Vui lòng nhập ít nhất một API Key hợp lệ." }, 400);
+        }
+
+        const label = (body.label || '').trim();
+        const isoNow = new Date(Date.now() + 7 * 3600 * 1000).toISOString().replace("T", " ").substring(0, 19);
+        const batch = [];
+
+        for (const k of keyList) {
+          const cleanK = k.trim();
+          if (cleanK.length < 15) continue;
+          batch.push({
+            sql: `
+              INSERT INTO api_keys (service, key_value, label, quota_used, quota_limit, is_active, last_error, created_at)
+              VALUES ('youtube', ?, ?, 0, 10000, 1, '', ?)
+              ON CONFLICT(service, key_value) DO UPDATE SET
+                is_active = 1,
+                last_error = '',
+                label = CASE WHEN excluded.label != '' THEN excluded.label ELSE api_keys.label END
+            `,
+            args: [cleanK, label || `Key Thêm ${isoNow.slice(11, 16)}`, isoNow]
+          });
+        }
+
+        if (!batch.length) {
+          return jsonRes({ ok: false, message: "Không tìm thấy key hợp lệ nào (độ dài tối thiểu 15 ký tự)." }, 400);
+        }
+
+        await executeTursoBatch(batch);
+        return jsonRes({ ok: true, message: `Đã lưu thành công ${batch.length} API Key vào hệ thống.`, addedCount: batch.length });
+      } catch (err) {
+        return jsonRes({ ok: false, message: "Lỗi lưu key: " + err.message }, 500);
+      }
+    }
+
+    // 3.10.3 POST /api/youtube-keys/toggle - Bật/Tắt trạng thái hoạt động của key
+    if (pathname === "/api/youtube-keys/toggle" && request.method === "POST") {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const keyId = body.id;
+        const keyValue = body.key_value;
+        if (!keyId && !keyValue) return jsonRes({ ok: false, message: "Thiếu id hoặc key_value" }, 400);
+
+        const row = await queryTursoWorker("SELECT is_active FROM api_keys WHERE id = ? OR key_value = ?", [keyId || 0, keyValue || '']);
+        if (!row || !row.length) return jsonRes({ ok: false, message: "Không tìm thấy key" }, 404);
+
+        const currentActive = parseInt(row[0].is_active) === 1;
+        const newActive = currentActive ? 0 : 1;
+        await queryTursoWorker("UPDATE api_keys SET is_active = ?, last_error = '' WHERE id = ? OR key_value = ?", [newActive, keyId || 0, keyValue || '']);
+        return jsonRes({ ok: true, is_active: newActive === 1, message: newActive === 1 ? "Đã kích hoạt key" : "Đã tạm dừng key" });
+      } catch (err) {
+        return jsonRes({ ok: false, message: err.message }, 500);
+      }
+    }
+
+    // 3.10.4 DELETE /api/youtube-keys - Xoá key
+    if (pathname === "/api/youtube-keys" && request.method === "DELETE") {
+      try {
+        const keyId = url.searchParams.get("id");
+        const keyValue = url.searchParams.get("key_value");
+        if (!keyId && !keyValue) return jsonRes({ ok: false, message: "Thiếu id hoặc key_value" }, 400);
+
+        await queryTursoWorker("DELETE FROM api_keys WHERE id = ? OR key_value = ?", [keyId || 0, keyValue || '']);
+        return jsonRes({ ok: true, message: "Đã xoá API key thành công khỏi hệ thống" });
+      } catch (err) {
+        return jsonRes({ ok: false, message: err.message }, 500);
+      }
+    }
+
+    // 3.10.5 POST /api/youtube-keys/test - Kiểm tra tính hợp lệ & quota của keys
+    if (pathname === "/api/youtube-keys/test" && request.method === "POST") {
+      try {
+        const body = await request.json().catch(() => ({}));
+        let keysToTest = [];
+        if (body.key_value) {
+          keysToTest = [{ id: body.id, key_value: body.key_value, label: body.label || '' }];
+        } else {
+          const rows = await queryTursoWorker("SELECT id, key_value, label FROM api_keys WHERE service = 'youtube'");
+          keysToTest = rows || [];
+        }
+
+        const testResults = [];
+        for (const k of keysToTest) {
+          const kv = (k.key_value || '').trim();
+          const masked = kv.length > 12 ? `${kv.slice(0, 8)}...${kv.slice(-4)}` : kv;
+          // Test qua video ID công khai phổ biến
+          const testUrl = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=Ks-_Mh1QhMc&key=${kv}&fields=items(id,statistics/viewCount)`;
+          try {
+            const resp = await fetch(testUrl);
+            if (resp.ok) {
+              const resJson = await resp.json();
+              if (resJson.items && resJson.items.length > 0) {
+                await queryTursoWorker(
+                  "UPDATE api_keys SET is_active = 1, last_error = '', last_used_at = datetime('now') WHERE key_value = ?",
+                  [kv]
+                );
+                testResults.push({ id: k.id, key_value: kv, masked, status: 'valid', ok: true, message: 'Hoạt động tốt (Quota còn đủ)' });
+                continue;
+              }
+            }
+
+            const errBody = await resp.text().catch(() => '');
+            let reason = `HTTP ${resp.status}`;
+            let isQuota = false;
+            if (resp.status === 403 && (errBody.includes('quotaExceeded') || errBody.includes('dailyLimitExceeded'))) {
+              reason = 'Hết Quota ngày (quotaExceeded)';
+              isQuota = true;
+            } else if (resp.status === 400 && errBody.includes('keyInvalid')) {
+              reason = 'API Key không hợp lệ / không tồn tại';
+            } else if (resp.status === 403 && errBody.includes('accessNotConfigured')) {
+              reason = 'Chưa kích hoạt YouTube Data API v3 trên Google Cloud';
+            }
+
+            await queryTursoWorker(
+              "UPDATE api_keys SET is_active = 0, last_error = ?, last_used_at = datetime('now') WHERE key_value = ?",
+              [reason, kv]
+            );
+            testResults.push({ id: k.id, key_value: kv, masked, status: isQuota ? 'quota_exceeded' : 'error', ok: false, message: reason });
+          } catch (fetchErr) {
+            testResults.push({ id: k.id, key_value: kv, masked, status: 'error', ok: false, message: fetchErr.message });
+          }
+        }
+
+        return jsonRes({ ok: true, results: testResults });
+      } catch (err) {
+        return jsonRes({ ok: false, message: err.message }, 500);
+      }
+    }
+
+    // 3.10.6 POST /api/youtube-keys/reset-all - Đặt lại tất cả keys về Active
+    if (pathname === "/api/youtube-keys/reset-all" && request.method === "POST") {
+      try {
+        await queryTursoWorker("UPDATE api_keys SET is_active = 1, quota_used = 0, last_error = '' WHERE service = 'youtube'");
+        return jsonRes({ ok: true, message: "Đã reset toàn bộ API keys về trạng thái Hoạt động (Active)." });
       } catch (err) {
         return jsonRes({ ok: false, message: err.message }, 500);
       }
@@ -1568,27 +1748,36 @@ async function runDailySnapshotJob(env) {
       return { ok: true, message: "Không tìm thấy kênh nào trong Turso.", count: 0, today: todayStr };
     }
 
-    const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
+    const activeKeys = await getActiveYtApiKeys(env);
     let apiChannelStats = {};
-    if (ytApiKey) {
-      try {
-        const cids = Object.values(CHANNEL_CID_MAP).filter(Boolean);
-        if (cids.length > 0) {
-          const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${cids.join(',')}&key=${ytApiKey}&fields=items(id,statistics/viewCount,statistics/subscriberCount,statistics/videoCount)`;
-          const apiResp = await fetch(apiUrl);
-          if (apiResp.ok) {
-            const apiData = await apiResp.json();
-            for (const item of (apiData.items || [])) {
-              apiChannelStats[item.id] = {
-                views: parseInt(item.statistics?.viewCount) || 0,
-                subs: parseInt(item.statistics?.subscriberCount) || 0,
-                vids: parseInt(item.statistics?.videoCount) || 0
-              };
+    if (activeKeys && activeKeys.length > 0) {
+      const cids = Object.values(CHANNEL_CID_MAP).filter(Boolean);
+      if (cids.length > 0) {
+        for (const k of activeKeys) {
+          try {
+            const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${cids.join(',')}&key=${k}&fields=items(id,statistics/viewCount,statistics/subscriberCount,statistics/videoCount)`;
+            const apiResp = await fetch(apiUrl);
+            if (apiResp.ok) {
+              const apiData = await apiResp.json();
+              for (const item of (apiData.items || [])) {
+                apiChannelStats[item.id] = {
+                  views: parseInt(item.statistics?.viewCount) || 0,
+                  subs: parseInt(item.statistics?.subscriberCount) || 0,
+                  vids: parseInt(item.statistics?.videoCount) || 0
+                };
+              }
+              break;
+            } else {
+              const errText = await apiResp.text().catch(() => '');
+              if (apiResp.status === 403 || apiResp.status === 429) {
+                console.warn(`[DailyCron] Key ...${k.slice(-6)} het quota (${apiResp.status}), thu key tiep theo...`);
+                continue;
+              }
             }
+          } catch (err) {
+            console.warn(`[DailyCron] Key ...${k.slice(-6)} gap loi:`, err.message);
           }
         }
-      } catch (err) {
-        console.warn("[DailyCron] Loi goi YT API channels:", err.message);
       }
     }
 
@@ -1867,13 +2056,13 @@ async function run30mVideoSnapshotJob(env) {
     // ── BƯỚC 1: YouTube Data API v3 (PRIMARY - Số chính xác từng view) ──────────
     // Dùng API lấy số view chính xác 100% cho tất cả video đã biết (chuẩn từng 1 view)
     // Nếu lỗi / hết quota: tự động fallback sang cào HTML ở Bước 2
-    const ytApiKey = env.YT_API_KEY || YT_API_KEY_DEFAULT;
+    const activeKeys = await getActiveYtApiKeys(env);
     let apiSucceeded = false;
 
-    if (ytApiKey && Object.keys(existingMap).length > 0) {
+    if (activeKeys && activeKeys.length > 0 && Object.keys(existingMap).length > 0) {
       try {
         const allVideoIds = Object.keys(existingMap);
-        const apiResults = await fetchExactViewsFromYtApi(allVideoIds, ytApiKey);
+        const apiResults = await fetchExactViewsFromYtApi(allVideoIds, activeKeys);
         if (apiResults && Object.keys(apiResults).length > 0) {
           const apiUpdateBatch = [];
           for (const [videoId, exactViews] of Object.entries(apiResults)) {
@@ -2130,38 +2319,137 @@ async function run30mVideoSnapshotJob(env) {
   }
 }
 
-// ── YOUTUBE DATA API v3: LẤY VIEW CHÍNH XÁC TỪNG VIEW (KHÔNG LÀM TRÒN) ────────
-// Nhận vào mảng videoIds (tối đa hàng trăm), tự chia batch 50 video/request
-// Trả về { videoId: exactViewCount } cho toàn bộ video hợp lệ
-// Khi lỗi (quota hết, network, key sai): throw để caller bắt và fallback sang HTML scraping
-async function fetchExactViewsFromYtApi(videoIds, apiKey) {
-  if (!videoIds || !videoIds.length || !apiKey) return {};
-  const BATCH = 50; // YouTube API giới hạn 50 video/request (tiêu 1 quota unit/request)
+// ── YOUTUBE DATA API v3: QUẢN LÝ POOL KEYS & TỰ ĐỘNG FAILOVER (XOAY VÒNG KEY) ──────
+async function getActiveYtApiKeys(env) {
+  let keys = [];
+  try {
+    const rows = await queryTursoWorker(
+      "SELECT key_value FROM api_keys WHERE service = 'youtube' AND is_active = 1 ORDER BY quota_used ASC, id ASC"
+    );
+    if (rows && rows.length > 0) {
+      keys = rows.map(r => (r.key_value || '').trim()).filter(k => k.length >= 15);
+    }
+  } catch (e) {
+    console.warn("[API Keys Pool] Loi query api_keys:", e.message);
+  }
+
+  // Bổ sung các key từ env nếu chưa có trong DB
+  const envKeys = [];
+  if (env && env.YT_API_KEYS) {
+    envKeys.push(...env.YT_API_KEYS.split(/[\r\n,;]+/).map(s => s.trim()).filter(Boolean));
+  }
+  if (env && env.YT_API_KEY) {
+    envKeys.push(env.YT_API_KEY.trim());
+  }
+  if (typeof YT_API_KEY_DEFAULT !== 'undefined' && YT_API_KEY_DEFAULT) {
+    envKeys.push(YT_API_KEY_DEFAULT.trim());
+  }
+
+  for (const ek of envKeys) {
+    if (ek && ek.length >= 15 && !keys.includes(ek)) {
+      keys.push(ek);
+    }
+  }
+
+  return keys;
+}
+
+// Lấy view chính xác từng view với hồ chứa đa keys (Multi-Key Failover)
+// Nếu key 1 bị lỗi 403 quotaExceeded / rateLimit, tự động đánh dấu và chuyển sang key 2, 3...
+async function fetchExactViewsFromYtApi(videoIds, apiKeyOrEnv) {
+  if (!videoIds || !videoIds.length) return {};
+
+  let keyPool = [];
+  if (Array.isArray(apiKeyOrEnv)) {
+    keyPool = [...apiKeyOrEnv].map(k => (k || '').trim()).filter(k => k.length >= 15);
+  } else if (typeof apiKeyOrEnv === 'string' && apiKeyOrEnv.trim().length >= 15) {
+    keyPool = [apiKeyOrEnv.trim()];
+  } else {
+    keyPool = await getActiveYtApiKeys(apiKeyOrEnv);
+  }
+
+  if (!keyPool.length) {
+    if (typeof YT_API_KEY_DEFAULT !== 'undefined' && YT_API_KEY_DEFAULT) {
+      keyPool = [YT_API_KEY_DEFAULT];
+    } else {
+      return {};
+    }
+  }
+
+  const BATCH = 50;
   const resultMap = {};
   const chunks = [];
   for (let i = 0; i < videoIds.length; i += BATCH) {
     chunks.push(videoIds.slice(i, i + BATCH));
   }
-  const promises = chunks.map(async (chunk) => {
+
+  let activeKeyIndex = 0;
+
+  async function fetchChunkWithFailover(chunk) {
     const ids = chunk.join(',');
-    const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${apiKey}&fields=items(id,statistics/viewCount)`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      const errBody = await resp.text().catch(() => '');
-      throw new Error(`YT API ${resp.status}: ${errBody.slice(0, 200)}`);
-    }
-    const data = await resp.json();
-    if (data.error) {
-      throw new Error(`YT API error ${data.error.code}: ${data.error.message}`);
-    }
-    for (const item of (data.items || [])) {
-      const vc = item.statistics && item.statistics.viewCount;
-      if (vc !== undefined && vc !== null) {
-        resultMap[item.id] = parseInt(vc, 10) || 0;
+    let lastErr = null;
+
+    while (activeKeyIndex < keyPool.length) {
+      const currentKey = keyPool[activeKeyIndex];
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids}&key=${currentKey}&fields=items(id,statistics/viewCount)`;
+
+      try {
+        const resp = await fetch(url);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.items) {
+            for (const item of data.items) {
+              const vc = item.statistics && item.statistics.viewCount;
+              if (vc !== undefined && vc !== null) {
+                resultMap[item.id] = parseInt(vc, 10) || 0;
+              }
+            }
+          }
+          // Ghi nhận sử dụng key (async)
+          queryTursoWorker(
+            "UPDATE api_keys SET quota_used = quota_used + 1, last_used_at = datetime('now') WHERE key_value = ?",
+            [currentKey]
+          ).catch(() => {});
+          return;
+        }
+
+        const errText = await resp.text().catch(() => '');
+        const isQuota = resp.status === 403 && (
+          errText.includes('quotaExceeded') || 
+          errText.includes('dailyLimitExceeded') || 
+          errText.includes('rateLimitExceeded')
+        );
+        const isInvalid = resp.status === 400 && errText.includes('keyInvalid');
+
+        if (isQuota || isInvalid || resp.status === 403 || resp.status === 429) {
+          const reason = isQuota ? 'Hết Quota (403 quotaExceeded)' : (isInvalid ? 'Key không hợp lệ' : `Lỗi HTTP ${resp.status}`);
+          console.warn(`[YT API Failover] Key ...${currentKey.slice(-6)} bị ${reason}. Tự động chuyển sang key tiếp theo trong pool!`);
+
+          queryTursoWorker(
+            "UPDATE api_keys SET is_active = 0, last_error = ?, last_used_at = datetime('now') WHERE key_value = ?",
+            [reason, currentKey]
+          ).catch(() => {});
+
+          activeKeyIndex++;
+          lastErr = new Error(reason);
+          continue;
+        }
+
+        throw new Error(`YT API HTTP ${resp.status}: ${errText.slice(0, 120)}`);
+      } catch (err) {
+        if (activeKeyIndex < keyPool.length - 1 && (err.message.includes('quota') || err.message.includes('403') || err.message.includes('429'))) {
+          activeKeyIndex++;
+          lastErr = err;
+          continue;
+        }
+        throw err;
       }
     }
-  });
-  await Promise.all(promises);
+
+    throw new Error(`Tất cả ${keyPool.length} YouTube API Keys trong pool đều đã hết quota hoặc lỗi: ${lastErr?.message || 'Unknown'}`);
+  }
+
+  await Promise.all(chunks.map(chunk => fetchChunkWithFailover(chunk)));
   return resultMap;
 }
 

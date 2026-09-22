@@ -707,6 +707,11 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             Cấu hình Database Cloud
           </button>
+          <button class="nav-btn" onclick="openApiKeysModal()" style="margin-top:2px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            <span class="nav-text" style="color:#facc15;font-weight:700;">Quản lý API Keys</span>
+            <span class="nav-badge" id="sidebarKeyBadge" style="background:rgba(234,179,8,0.2);color:#facc15;border:1px solid rgba(234,179,8,0.4);font-weight:700;">Pool</span>
+          </button>
           <button class="nav-btn" onclick="logout()" style="color:#ef4444;margin-top:10px;">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Đăng xuất
@@ -740,6 +745,9 @@
             <span id="currentUserName">Admin</span>
             <span class="badge-qtv">QUẢN TRỊ VIÊN</span>
           </div>
+          <button class="action-btn" style="height:36px;padding:0 13px;font-size:12.5px;display:inline-flex;align-items:center;gap:7px;background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.35);color:#facc15;cursor:pointer;" onclick="openApiKeysModal()" title="Quản lý hồ chứa YouTube Data API v3 Keys & Dự phòng Quota">
+            🔑 API Keys <span id="topbarKeyCountBadge" style="background:#facc15;color:#000;font-size:11px;font-weight:800;padding:1px 6px;border-radius:10px;">...</span>
+          </button>
           <button class="action-btn" style="height:36px;padding:0 14px;font-size:12.5px;display:inline-flex;align-items:center;gap:6px;" onclick="quickRefreshRealtime()" title="Cập nhật ngay lập tức không cần F5">
             ⚡ Làm mới
           </button>
@@ -952,6 +960,26 @@
                 <div style="font-family:var(--mono);font-size:12px;color:var(--green);">🟢 fikat.cloud/api/youtube/channel-info</div>
               </div>
             </div>
+
+            <!-- CẤU HÌNH YOUTUBE DATA API KEYS -->
+            <div style="margin-top:20px;background:rgba(0,0,0,0.2);padding:20px;border-radius:14px;border:1px solid var(--line);">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+                <div>
+                  <h4 style="color:#fff;display:flex;align-items:center;gap:8px;font-size:15px;">
+                    <span>🔑</span> YouTube Data API v3 Keys Pool (Multi-Key Failover)
+                  </h4>
+                  <p style="font-size:12.5px;color:var(--text-2);margin-top:4px;">
+                    Hệ thống tự động xoay vòng và dự phòng: Khi 1 key hết quota 10.000 units/ngày, tự động chuyển ngay sang key tiếp theo.
+                  </p>
+                </div>
+                <button class="action-btn" onclick="openApiKeysModal()" style="padding:8px 18px;background:rgba(234,179,8,0.15);border:1px solid rgba(234,179,8,0.4);color:#facc15;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+                  ⚙️ Quản lý & Thêm Keys
+                </button>
+              </div>
+              <div id="adminKeySummaryList" style="font-size:12.5px;color:var(--text-2);line-height:1.6;">
+                Đang kiểm tra hồ chứa API Keys...
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1099,6 +1127,93 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL QUẢN LÝ YOUTUBE DATA API V3 KEYS (MULTI-KEY POOL & FAILOVER) -->
+  <div id="apiKeysModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:99999;align-items:center;justify-content:center;backdrop-filter:blur(8px);padding:20px;">
+    <div style="background:#16120e;border:1px solid var(--line);border-radius:18px;width:100%;max-width:860px;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 30px 70px rgba(0,0,0,0.8);overflow:hidden;">
+      
+      <!-- Header -->
+      <div style="padding:18px 24px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);">
+        <div>
+          <h3 style="color:#fff;font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;">
+            <span>🔑</span> Hồ Chứa YouTube Data API v3 Keys (Multi-Key Pool)
+          </h3>
+          <p style="font-size:12px;color:var(--text-2);margin-top:3px;">
+            Tự động xoay vòng & dự phòng: Khi 1 key hết quota 10.000 units/ngày, hệ thống tự động chuyển sang key tiếp theo.
+          </p>
+        </div>
+        <button onclick="closeApiKeysModal()" style="background:transparent;border:none;color:var(--text-2);font-size:26px;cursor:pointer;line-height:1;padding:4px 10px;">&times;</button>
+      </div>
+
+      <!-- Quick Stats & Actions -->
+      <div style="padding:14px 24px;border-bottom:1px solid var(--line);background:rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+        <div style="display:flex;gap:12px;align-items:center;font-size:12.5px;">
+          <div style="background:rgba(255,255,255,0.05);padding:5px 12px;border-radius:8px;border:1px solid var(--line);">
+            Tổng Keys: <b id="keysTotalCount" style="color:#fff;">0</b>
+          </div>
+          <div style="background:rgba(34,197,94,0.1);padding:5px 12px;border-radius:8px;border:1px solid rgba(34,197,94,0.3);">
+            Khả dụng: <b id="keysActiveCount" style="color:#4ade80;">0</b>
+          </div>
+          <div style="background:rgba(239,68,68,0.1);padding:5px 12px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);">
+            Hết Quota / Lỗi: <b id="keysExceededCount" style="color:#f87171;">0</b>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <button id="btnTestAllKeys" class="action-btn" onclick="testAllApiKeys()" style="padding:6px 14px;font-size:12px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.35);color:#38bdf8;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+            ⚡ Test Quota Toàn Bộ
+          </button>
+          <button class="action-btn" onclick="resetAllApiKeysQuota()" style="padding:6px 14px;font-size:12px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.35);color:#4ade80;font-weight:700;display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+            🔄 Reset Về Active
+          </button>
+        </div>
+      </div>
+
+      <!-- Add New Key Form -->
+      <div style="padding:16px 24px;border-bottom:1px solid var(--line);background:rgba(255,255,255,0.01);">
+        <label style="display:block;font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:6px;">
+          ➕ Thêm một hoặc nhiều YouTube Data API Keys mới (Dán mỗi dòng 1 key, hoặc phân cách bằng dấu phẩy):
+        </label>
+        <textarea id="inputNewApiKeys" placeholder="AIzaSyA...&#10;AIzaSyB...&#10;AIzaSyC..." rows="2" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:#fff;font-family:var(--mono);font-size:12px;resize:vertical;outline:none;box-sizing:border-box;"></textarea>
+        
+        <div style="display:flex;gap:10px;margin-top:8px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="inputApiKeyLabel" placeholder="Ghi chú / Nhãn (tùy chọn: vd Key phụ 2, Mail anh A...)" class="search-inp" style="flex:1;min-width:200px;font-size:12px;height:36px;">
+          <button id="btnAddKeysSubmit" class="action-btn" onclick="submitNewApiKeys()" style="height:36px;padding:0 18px;font-size:12.5px;font-weight:700;background:var(--p);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+            ➕ Lưu Keys Vào Pool
+          </button>
+        </div>
+      </div>
+
+      <!-- Keys Table -->
+      <div style="overflow-y:auto;flex:1;padding:0;">
+        <table class="data-table" style="margin:0;">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>API Key (Mã khoá)</th>
+              <th style="width:140px;">Ghi chú / Nhãn</th>
+              <th style="width:130px;text-align:center;">Trạng thái</th>
+              <th style="width:160px;">Lỗi gần nhất / Quota</th>
+              <th style="width:150px;text-align:center;">Hành động</th>
+            </tr>
+          </thead>
+          <tbody id="apiKeysTableBody">
+            <tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-2);">Đang tải danh sách API keys...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer -->
+      <div style="padding:12px 24px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,0.25);">
+        <span style="font-size:11.5px;color:var(--text-3);">
+          💡 Mẹo: Bạn có thể tạo nhiều Project trên Google Cloud Console để lấy nhiều API key miễn phí (mỗi key 10.000 quota units/ngày).
+        </span>
+        <button class="action-btn" onclick="closeApiKeysModal()" style="height:32px;padding:0 16px;font-size:12px;background:rgba(255,255,255,0.08);color:var(--text);border:1px solid var(--line);cursor:pointer;">
+          Đóng
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -2887,9 +3002,300 @@
       if (tt) tt.style.opacity = '0';
     }, { passive: true });
 
+    // ========================================================================
+    // QUẢN LÝ HỒ CHỨA YOUTUBE DATA API V3 KEYS (MULTI-KEY POOL & FAILOVER)
+    // ========================================================================
+    let cachedApiKeys = [];
+    let revealedKeyIds = new Set();
+
+    async function loadApiKeys(showToastMsg = false) {
+      try {
+        const res = await fetch('/api/youtube-keys');
+        const data = await res.json();
+        if (data.ok && Array.isArray(data.keys)) {
+          cachedApiKeys = data.keys;
+          updateApiKeyBadges();
+          renderApiKeysTable();
+          updateAdminKeySummary();
+          if (showToastMsg) showToast(`🔑 Đã tải ${cachedApiKeys.length} API Keys.`);
+        }
+      } catch (err) {
+        console.warn("Lỗi tải API keys:", err.message);
+      }
+    }
+
+    function updateApiKeyBadges() {
+      const total = cachedApiKeys.length;
+      const active = cachedApiKeys.filter(k => k.is_active).length;
+      const exceeded = total - active;
+
+      const topBadge = document.getElementById('topbarKeyCountBadge');
+      if (topBadge) topBadge.textContent = `${active}/${total} Active`;
+
+      const sideBadge = document.getElementById('sidebarKeyBadge');
+      if (sideBadge) sideBadge.textContent = `${active} Key`;
+
+      const totEl = document.getElementById('keysTotalCount');
+      if (totEl) totEl.textContent = total;
+
+      const actEl = document.getElementById('keysActiveCount');
+      if (actEl) actEl.textContent = active;
+
+      const excEl = document.getElementById('keysExceededCount');
+      if (excEl) excEl.textContent = exceeded;
+    }
+
+    function updateAdminKeySummary() {
+      const container = document.getElementById('adminKeySummaryList');
+      if (!container) return;
+      if (!cachedApiKeys.length) {
+        container.innerHTML = `<span style="color:var(--text-3);">Chưa có API key nào trong hồ chứa. Bấm nút quản lý để thêm.</span>`;
+        return;
+      }
+      const activeKeys = cachedApiKeys.filter(k => k.is_active);
+      container.innerHTML = `
+        <div style="display:flex;gap:15px;align-items:center;flex-wrap:wrap;">
+          <div>Tổng số keys: <strong style="color:#fff;">${cachedApiKeys.length}</strong></div>
+          <div>Đang hoạt động: <strong style="color:#4ade80;">${activeKeys.length} keys</strong></div>
+          <div>Hết Quota / Tạm dừng: <strong style="color:#f87171;">${cachedApiKeys.length - activeKeys.length} keys</strong></div>
+          <div style="color:var(--green);font-size:11.5px;">✓ Tự động xoay vòng failover đang kích hoạt</div>
+        </div>
+      `;
+    }
+
+    function renderApiKeysTable() {
+      const tbody = document.getElementById('apiKeysTableBody');
+      if (!tbody) return;
+
+      if (!cachedApiKeys.length) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:35px;color:var(--text-3);">Chưa có API key nào. Hãy dán key vào ô phía trên để thêm vào hệ thống.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = cachedApiKeys.map((k, idx) => {
+        const isRevealed = revealedKeyIds.has(k.id);
+        const displayKey = isRevealed ? k.key_value : k.masked_key;
+        const statusBadge = k.is_active 
+          ? `<span style="background:rgba(34,197,94,0.15);color:#4ade80;border:1px solid rgba(34,197,94,0.3);padding:3px 9px;border-radius:12px;font-weight:700;font-size:11px;">🟢 Hoạt động</span>`
+          : (k.last_error && k.last_error.toLowerCase().includes('quota')
+            ? `<span style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);padding:3px 9px;border-radius:12px;font-weight:700;font-size:11px;">🔴 Hết Quota</span>`
+            : `<span style="background:rgba(156,163,175,0.15);color:#9ca3af;border:1px solid rgba(156,163,175,0.3);padding:3px 9px;border-radius:12px;font-weight:600;font-size:11px;">⚪ Tạm dừng</span>`);
+
+        const errorNote = k.last_error 
+          ? `<span style="color:#f87171;font-size:11px;word-break:break-all;">⚠️ ${escapeHtml(k.last_error)}</span>`
+          : `<span style="color:var(--green);font-size:11px;">✓ Sẵn sàng (${k.quota_used || 0} req)</span>`;
+
+        return `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="color:var(--text-3);font-size:11.5px;">${idx + 1}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:6px;">
+                <code style="font-family:var(--mono);font-size:12px;color:#fff;background:rgba(0,0,0,0.3);padding:3px 7px;border-radius:5px;">${escapeHtml(displayKey)}</code>
+                <button onclick="toggleRevealKey(${k.id})" style="background:transparent;border:none;cursor:pointer;font-size:12px;padding:2px;" title="${isRevealed ? 'Ẩn bớt' : 'Hiện đầy đủ'}">
+                  ${isRevealed ? '🙈' : '👁️'}
+                </button>
+                <button onclick="copyToClipboard('${escapeHtml(k.key_value)}')" style="background:transparent;border:none;cursor:pointer;font-size:12px;padding:2px;" title="Sao chép key">
+                  📋
+                </button>
+              </div>
+            </td>
+            <td style="font-size:12px;color:var(--text-1);">${escapeHtml(k.label || 'YouTube Key')}</td>
+            <td style="text-align:center;">${statusBadge}</td>
+            <td style="font-size:11px;">${errorNote}</td>
+            <td style="text-align:center;">
+              <div style="display:inline-flex;gap:5px;align-items:center;">
+                <button onclick="testSingleApiKey(${k.id}, '${escapeHtml(k.key_value)}')" style="padding:4px 8px;font-size:11px;border-radius:6px;background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.35);color:#38bdf8;cursor:pointer;" title="Kiểm tra quota">
+                  ⚡ Test
+                </button>
+                <button onclick="toggleApiKey(${k.id}, '${escapeHtml(k.key_value)}')" style="padding:4px 8px;font-size:11px;border-radius:6px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text-2);cursor:pointer;" title="Bật hoặc Tắt">
+                  ${k.is_active ? '⏸️ Tắt' : '▶️ Bật'}
+                </button>
+                <button onclick="deleteApiKey(${k.id}, '${escapeHtml(k.key_value)}')" style="padding:4px 7px;font-size:11px;border-radius:6px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#f87171;cursor:pointer;" title="Xoá key khỏi hệ thống">
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function toggleRevealKey(id) {
+      if (revealedKeyIds.has(id)) revealedKeyIds.delete(id);
+      else revealedKeyIds.add(id);
+      renderApiKeysTable();
+    }
+
+    function copyToClipboard(text) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => showToast("📋 Đã sao chép API Key vào clipboard!"));
+      } else {
+        const inp = document.createElement('input');
+        inp.value = text;
+        document.body.appendChild(inp);
+        inp.select();
+        document.execCommand('copy');
+        document.body.removeChild(inp);
+        showToast("📋 Đã sao chép API Key!");
+      }
+    }
+
+    async function submitNewApiKeys() {
+      const inp = document.getElementById('inputNewApiKeys');
+      const labelInp = document.getElementById('inputApiKeyLabel');
+      const btn = document.getElementById('btnAddKeysSubmit');
+      const rawText = (inp?.value || '').trim();
+      const label = (labelInp?.value || '').trim();
+
+      if (!rawText) {
+        alert("Vui lòng dán ít nhất một API Key hợp lệ.");
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "⏳ Đang lưu...";
+      }
+
+      try {
+        const res = await fetch('/api/youtube-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ keys: rawText, label })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`✅ ${data.message || 'Đã thêm thành công API Key!'}`);
+          if (inp) inp.value = '';
+          if (labelInp) labelInp.value = '';
+          await loadApiKeys();
+        } else {
+          alert("Lỗi: " + (data.message || "Không thể lưu key."));
+        }
+      } catch (e) {
+        alert("Lỗi kết nối: " + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "➕ Lưu Keys Vào Pool";
+        }
+      }
+    }
+
+    async function toggleApiKey(id, keyValue) {
+      try {
+        const res = await fetch('/api/youtube-keys/toggle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, key_value: keyValue })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(data.message || "Đã cập nhật trạng thái key!");
+          await loadApiKeys();
+        }
+      } catch (e) {
+        showToast("Lỗi: " + e.message, true);
+      }
+    }
+
+    async function deleteApiKey(id, keyValue) {
+      if (!confirm(`Bạn có chắc muốn xoá API key này khỏi pool dự phòng?`)) return;
+      try {
+        const res = await fetch(`/api/youtube-keys?id=${id}&key_value=${encodeURIComponent(keyValue)}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast("🗑️ Đã xoá API key thành công.");
+          await loadApiKeys();
+        } else {
+          alert(data.message || "Không thể xoá key.");
+        }
+      } catch (e) {
+        showToast("Lỗi: " + e.message, true);
+      }
+    }
+
+    async function testSingleApiKey(id, keyValue) {
+      showToast("⏳ Đang kiểm tra quota của API key...");
+      try {
+        const res = await fetch('/api/youtube-keys/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, key_value: keyValue })
+        });
+        const data = await res.json();
+        if (data.ok && data.results && data.results.length > 0) {
+          const r = data.results[0];
+          if (r.ok) {
+            showToast(`✅ Key ${r.masked}: ${r.message}`);
+          } else {
+            showToast(`⚠️ Key ${r.masked}: ${r.message}`, true);
+          }
+          await loadApiKeys();
+        }
+      } catch (e) {
+        showToast("Lỗi kiểm tra: " + e.message, true);
+      }
+    }
+
+    async function testAllApiKeys() {
+      const btn = document.getElementById('btnTestAllKeys');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = "⏳ Đang kiểm tra...";
+      }
+      showToast("⏳ Đang kiểm tra quota và tính hợp lệ của toàn bộ keys...");
+
+      try {
+        const res = await fetch('/api/youtube-keys/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+        const data = await res.json();
+        if (data.ok) {
+          const valid = (data.results || []).filter(r => r.ok).length;
+          showToast(`✅ Kiểm tra xong: ${valid}/${data.results.length} keys hoạt động tốt.`);
+          await loadApiKeys();
+        }
+      } catch (e) {
+        showToast("Lỗi kiểm tra: " + e.message, true);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = "⚡ Test Quota Toàn Bộ";
+        }
+      }
+    }
+
+    async function resetAllApiKeysQuota() {
+      if (!confirm("Đặt lại tất cả các keys về trạng thái Hoạt động (Active)?\\n(Dùng khi Google reset hạn ngạch 10.000 quota vào đầu ngày mới)")) return;
+      try {
+        const res = await fetch('/api/youtube-keys/reset-all', { method: 'POST' });
+        const data = await res.json();
+        if (data.ok) {
+          showToast("🔄 " + (data.message || "Đã reset trạng thái keys thành công!"));
+          await loadApiKeys();
+        }
+      } catch (e) {
+        showToast("Lỗi: " + e.message, true);
+      }
+    }
+
+    function openApiKeysModal() {
+      const modal = document.getElementById('apiKeysModal');
+      if (!modal) return;
+      modal.style.display = 'flex';
+      loadApiKeys();
+    }
+
+    function closeApiKeysModal() {
+      const modal = document.getElementById('apiKeysModal');
+      if (modal) modal.style.display = 'none';
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
       checkAuth();
       initSidebarAutoHide();
+      loadApiKeys();
     });
   </script>
 </body>
