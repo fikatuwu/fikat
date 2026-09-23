@@ -288,6 +288,9 @@ export default {
           { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
         );
       }
+
+      // Người dùng đã được cấp quyền hợp lệ -> Chuyển hướng sang CDN GitHub Release tốc độ cao
+      return Response.redirect("https://github.com/fikatuwu/fikat/releases/download/v1.0/PiLab_Studio_v1.0.zip", 302);
     }
 
     if (pathname === "/api/version" && request.method === "GET") {
