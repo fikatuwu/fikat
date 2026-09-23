@@ -203,6 +203,93 @@ export default {
     }
 
     // ── Version Info API ──────────────────────────────────────────────────────
+    if ((pathname === "/api/version/pilab" || (pathname === "/api/version" && new URL(request.url).searchParams.get("app") === "pilab")) && request.method === "GET") {
+      return jsonRes({
+        appId: "pilab-studio",
+        name: "PiLab Studio",
+        currentVersion: "1.0",
+        releaseDate: "23/09/2026",
+        status: "stable",
+        statusText: "Hoạt động ổn định",
+        download: {
+          zipFile: "PiLab_Studio_v1.0.zip",
+          fileName: "PiLab_Studio_v1.0.zip",
+          directUrl: "/downloads/PiLab_Studio_v1.0.zip",
+          fileSize: "63.7 MB",
+          architecture: "Windows x64 (Win 10 / 11)"
+        },
+        highlights: [
+          "🎨 Studio Tạo ảnh AI Flow & ChatGPT hàng loạt với công nghệ tự động ghép thẻ, tự động chọn tỷ lệ, tách slot",
+          "🎬 Studio Tạo video AI Flow từ prompt hoặc ảnh sẵn có với thuật toán chống trùng lặp",
+          "🛡️ Cơ chế bảo mật HWID & Quản lý bản quyền trực tuyến fikat.cloud cấp quyền theo nhân viên",
+          "🌙 Hỗ trợ Dark Mode & Light Mode thời thượng, chuyển đổi giao diện mượt mà chỉ 1 chạm",
+          "⚡ Bản dựng Standalone Single-File cực nhẹ, không cần cài đặt .NET runtime"
+        ]
+      });
+    }
+
+    // ── Bảo vệ Tải Tool Trực Tiếp Theo Quyền Hạn (PiLab Studio v1.0) ──────────
+    if (pathname === "/downloads/PiLab_Studio_v1.0.zip" || pathname === "/downloads/BAN_SHARE.zip" || pathname === "/api/download/pilab") {
+      let token = "";
+      const authHeader = request.headers.get("Authorization");
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.substring(7).trim();
+      } else {
+        const cookie = request.headers.get("Cookie") || "";
+        const m = cookie.match(/fikat_session_token=([^;]+)/);
+        if (m) token = decodeURIComponent(m[1].trim());
+      }
+      if (!token) token = url.searchParams.get("token") || "";
+
+      let authorized = false;
+      if (token) {
+        try {
+          const parts = token.split(".");
+          if (parts.length === 2) {
+            const payload = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(parts[0]), c => c.charCodeAt(0))));
+            if (payload.exp && Date.now() < payload.exp) {
+              const isAdmin = Boolean(payload.isRootAdmin || payload.role === "Quản trị viên");
+              const tools = Array.isArray(payload.allowedTools) ? payload.allowedTools : [];
+              if (isAdmin || tools.includes("pilab-studio")) {
+                authorized = true;
+              }
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (!authorized) {
+        return new Response(
+          `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bảo Mật Fikat - Chưa Cấp Quyền Tải</title>
+  <style>
+    body { background: #0a0907; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+    .card { background: #16130e; border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 18px; padding: 36px 28px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.85); }
+    .icon { font-size: 3rem; margin-bottom: 12px; }
+    h2 { color: #f59e0b; margin: 0 0 10px; font-size: 1.4rem; }
+    p { color: #9ca3af; line-height: 1.6; font-size: 0.92rem; margin: 0 0 22px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; padding: 12px 28px; border-radius: 9999px; font-weight: 700; font-size: 0.95rem; text-decoration: none; transition: transform 0.15s; }
+    .btn:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">🔒</div>
+    <h2>Chưa Được Cấp Quyền Tải</h2>
+    <p>Tài khoản của bạn chưa được Quản trị viên cấp quyền tải <b>PiLab Studio v1.0</b>.<br>Vui lòng đăng nhập hoặc liên hệ Quản trị viên tại <b>fikat.cloud</b> để được phân quyền sử dụng công cụ này.</p>
+    <a href="/#pilab-studio" class="btn">Về Trang Chủ Đăng Nhập</a>
+  </div>
+</body>
+</html>`,
+          { status: 403, headers: { "Content-Type": "text/html; charset=utf-8" } }
+        );
+      }
+    }
+
     if (pathname === "/api/version" && request.method === "GET") {
       return jsonRes({
         appId: "suno-bulk-studio",
@@ -270,7 +357,7 @@ export default {
           : `NV-${generateRandomHex(4).toUpperCase()}-${generateRandomHex(4).toUpperCase()}`;
         const licensedUntil = isRootAdmin ? "2099-12-31T23:59:59.000Z" : null;
         const status = isRootAdmin ? "active" : "pending";
-        const allowedTools = isRootAdmin ? '["suno-bulk-studio","tool-random-nhac","haloli-livestream"]' : '[]';
+        const allowedTools = isRootAdmin ? '["suno-bulk-studio","tool-random-nhac","haloli-livestream","pilab-studio"]' : '[]';
 
         await env.DB.prepare(`
           INSERT INTO users (id, fullName, username, passwordHash, salt, role, isRootAdmin, status, allowedTools, licenseKey, licensedUntil, hwid, createdAt, updatedAt)
@@ -374,7 +461,7 @@ export default {
             role: "Quản trị viên",
             isRootAdmin: true,
             status: "active",
-            allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream"]
+            allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream", "pilab-studio"]
           };
           const token = await createAuthToken(fakeRoot);
           return jsonRes({ ok: true, token, user: sanitizeUser(fakeRoot) });
@@ -2690,7 +2777,7 @@ async function getAuthenticatedUser(request, env) {
       role: "Quản trị viên",
       isRootAdmin: true,
       status: "active",
-      allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream", "bi-thuat"]
+      allowedTools: ["suno-bulk-studio", "tool-random-nhac", "haloli-livestream", "bi-thuat", "pilab-studio"]
     };
   }
 
