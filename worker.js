@@ -2139,12 +2139,50 @@ async function run30mVideoSnapshotJob(env) {
       "SELECT id, channel_id, title, views, prev_views, delta_views, last_delta_30m FROM video_items"
     );
     const existingMap = {};
-    (existingVidRows || []).forEach(ev => { existingMap[ev.id] = ev; });
+    const channelVidsCount = {};
+    (existingVidRows || []).forEach(ev => {
+      existingMap[ev.id] = ev;
+      channelVidsCount[ev.channel_id] = (channelVidsCount[ev.channel_id] || 0) + 1;
+    });
+
+    const activeKeys = await getActiveYtApiKeys(env);
+
+    // ── TỰ ĐỘNG PHÁT HIỆN KÊNH MỚI THÊM (CHƯA CÓ VIDEO TRONG DB) ─────────────────
+    // Nếu phát hiện kênh nào trong danh sách có 0 video: Quét nạp toàn bộ video qua API ngay lập tức!
+    const emptyChannels = channels.filter(ch => !channelVidsCount[ch.id]);
+    if (emptyChannels.length > 0 && activeKeys && activeKeys.length > 0) {
+      for (const ech of emptyChannels) {
+        try {
+          console.log(`[Auto-New-Channel] Phat hien kenh moi "${ech.title}" (ch${ech.id}) chua co video, tien hanh nap qua API...`);
+          const newVids = await fetchChannelAllVideosYtApi(ech.custom_id, activeKeys);
+          if (newVids && newVids.length > 0) {
+            const newVidBatch = [];
+            for (const nv of newVids) {
+              existingMap[nv.id] = { id: nv.id, channel_id: ech.id, title: nv.title, views: nv.views, prev_views: nv.views, delta_views: 0 };
+              newVidBatch.push({
+                sql: `
+                  INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, published_time, last_scraped_at)
+                  VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+                  ON CONFLICT(id) DO UPDATE SET
+                    views = excluded.views,
+                    prev_views = excluded.prev_views,
+                    last_scraped_at = excluded.last_scraped_at
+                `,
+                args: [nv.id, ech.id, nv.title, nv.views, nv.views, nv.time || '', isoNow]
+              });
+            }
+            await executeTursoBatch(newVidBatch);
+            console.log(`[Auto-New-Channel] Da nap thanh cong ${newVids.length} video cho kenh moi "${ech.title}"!`);
+          }
+        } catch (echErr) {
+          console.warn(`[Auto-New-Channel] Loi quet kenh ${ech.title}:`, echErr.message);
+        }
+      }
+    }
 
     // ── BƯỚC 1: YouTube Data API v3 (PRIMARY - Số chính xác từng view) ──────────
     // Dùng API lấy số view chính xác 100% cho tất cả video đã biết (chuẩn từng 1 view)
     // Nếu lỗi / hết quota: tự động fallback sang cào HTML ở Bước 2
-    const activeKeys = await getActiveYtApiKeys(env);
     let apiSucceeded = false;
 
     if (activeKeys && activeKeys.length > 0 && Object.keys(existingMap).length > 0) {
@@ -2625,6 +2663,85 @@ async function fetchExactViewsFromYtApi(videoIds, apiKeyOrEnv) {
   }
 
   return resultMap;
+}
+
+// Quét toàn bộ video công khai của 1 kênh mới thêm thông qua YouTube Data API v3
+// Sử dụng Uploads Playlist (UU...) cho tốc độ cực nhanh (50 video/request) và độ chính xác 100%
+async function fetchChannelAllVideosYtApi(customId, apiKeyOrPool) {
+  if (!customId) return [];
+  const keyPool = Array.isArray(apiKeyOrPool) ? apiKeyOrPool : [apiKeyOrPool];
+  const apiKey = keyPool[0];
+  if (!apiKey) return [];
+
+  let channelId = customId;
+  let uploadsPlaylistId = '';
+
+  try {
+    if (customId.startsWith('UC') && customId.length >= 24) {
+      channelId = customId;
+      uploadsPlaylistId = 'UU' + customId.substring(2);
+    } else {
+      // Custom ID dạng handle (@name) hoặc URL name -> Tìm channel ID qua API
+      const handle = customId.replace(/^@/, '');
+      const chUrl = `https://www.googleapis.com/youtube/v3/channels?part=id,contentDetails&forHandle=${encodeURIComponent(handle)}&key=${apiKey}`;
+      const chResp = await fetch(chUrl);
+      if (chResp.ok) {
+        const chData = await chResp.json();
+        if (chData.items && chData.items[0]) {
+          channelId = chData.items[0].id;
+          uploadsPlaylistId = chData.items[0].contentDetails?.relatedPlaylists?.uploads || ('UU' + channelId.substring(2));
+        }
+      }
+      if (!uploadsPlaylistId && channelId.startsWith('UC')) {
+        uploadsPlaylistId = 'UU' + channelId.substring(2);
+      }
+    }
+
+    if (!uploadsPlaylistId) return [];
+
+    // Phân trang lấy tối đa 500 video từ playlist uploads
+    const vids = [];
+    let pageToken = '';
+    let pageCount = 0;
+    while (pageCount < 10) {
+      const plUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsPlaylistId}&maxResults=50&key=${apiKey}${pageToken ? `&pageToken=${pageToken}` : ''}`;
+      const plResp = await fetch(plUrl);
+      if (!plResp.ok) break;
+      const plData = await plResp.json();
+      if (!plData.items || !plData.items.length) break;
+
+      for (const it of plData.items) {
+        const vidId = it.contentDetails?.videoId;
+        if (vidId && /^[a-zA-Z0-9_-]{11}$/.test(vidId)) {
+          vids.push({
+            id: vidId,
+            title: it.snippet?.title || 'Video YouTube',
+            time: it.snippet?.publishedAt || ''
+          });
+        }
+      }
+
+      pageToken = plData.nextPageToken || '';
+      pageCount++;
+      if (!pageToken) break;
+    }
+
+    if (!vids.length) return [];
+
+    // Lấy viewCount chính xác cho tất cả video qua API
+    const vidIds = vids.map(v => v.id);
+    const viewsMap = await fetchExactViewsFromYtApi(vidIds, apiKeyOrPool);
+
+    return vids.map(v => ({
+      id: v.id,
+      title: v.title,
+      views: viewsMap[v.id] || 0,
+      time: v.time
+    }));
+  } catch (err) {
+    console.warn(`[fetchChannelAllVideosYtApi] Loi fetch video cho ${customId}:`, err.message);
+    return [];
+  }
 }
 
 async function scanChannelPublicVideos(customId, maxPages = 8, budgetRef = null) {

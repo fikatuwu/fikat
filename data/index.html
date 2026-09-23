@@ -2107,6 +2107,8 @@
         if (created.length > 0) {
           const pk = created[0].id;
           await recordChannelSnapshot(pk, subs, views, vids);
+          // Tự động kích hoạt nạp toàn bộ video & chốt snapshot baseline 30 phút ngay tại thời điểm thêm kênh!
+          fetch('/api/video-tracker/snapshot', { method: 'POST' }).catch(() => {});
         }
 
         if (statusEl) {
@@ -2308,6 +2310,8 @@
         if (created.length > 0) {
           const pk = created[0].id;
           await recordChannelSnapshot(pk, subs, views, vids);
+          // Tự động kích hoạt nạp toàn bộ video & chốt snapshot baseline 30 phút ngay tại thời điểm thêm kênh!
+          fetch('/api/video-tracker/snapshot', { method: 'POST' }).catch(() => {});
         }
 
         await loadTursoData();
