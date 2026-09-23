@@ -1584,25 +1584,23 @@ export default {
     }
   },
 
-  // Cron định kỳ 30 phút: Tự động quét tổng view video public của 12 kênh
+  // Cron định kỳ 30 phút: Tự động quét tổng view video public của các kênh
   async scheduled(event, env, ctx) {
-    ctx.waitUntil((async () => {
-      const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
-      // 1. Chốt snapshot ngày lúc 06:00 AM VN
-      if (vnNow.getHours() === 6 && vnNow.getMinutes() < 30) {
-        try {
-          await runDailySnapshotJob(env);
-        } catch (e) {
-          console.error("Daily snapshot job error:", e);
-        }
-      }
-      // 2. Quét real-time video 30 phút
+    const vnNow = new Date(Date.now() + 7 * 3600 * 1000);
+    // 1. Chốt snapshot ngày lúc 06:00 AM VN
+    if (vnNow.getHours() === 6 && vnNow.getMinutes() < 30) {
       try {
-        await run30mVideoSnapshotJob(env);
+        await runDailySnapshotJob(env);
       } catch (e) {
-        console.error("30m snapshot job error:", e);
+        console.error("Daily snapshot job error:", e);
       }
-    })());
+    }
+    // 2. Quét real-time video 30 phút
+    try {
+      await run30mVideoSnapshotJob(env);
+    } catch (e) {
+      console.error("30m snapshot job error:", e);
+    }
   },
 };
 
@@ -2322,16 +2320,46 @@ async function run30mVideoSnapshotJob(env) {
 
     // 4. Lấy snapshot gần nhất trước đó (chỉ lấy 50 dòng mới nhất để tối ưu tốc độ & bộ nhớ)
     const prevSnaps = await queryTursoWorker(`
-      SELECT channel_id, total_video_views
+      SELECT channel_id, total_video_views, captured_at
       FROM video_view_snapshots
       WHERE captured_at != ?
       ORDER BY id DESC
       LIMIT 50
     `, [timeMark]);
     const prevMap = {};
+    let lastCapturedAt = null;
     (prevSnaps || []).forEach(s => {
-      if (!prevMap[s.channel_id]) prevMap[s.channel_id] = parseInt(s.total_video_views) || 0;
+      if (!prevMap[s.channel_id]) {
+        prevMap[s.channel_id] = parseInt(s.total_video_views) || 0;
+        if (!lastCapturedAt && s.captured_at) lastCapturedAt = s.captured_at;
+      }
     });
+
+    // Phát hiện khuyết mốc (gap > 30m): Tự động tính các mốc bị thiếu để nội suy chia đều view (không để dồn cục tạo cột lạ)
+    const missedIntervals = [];
+    if (lastCapturedAt) {
+      try {
+        const parts = lastCapturedAt.split(' ');
+        const dParts = parts[0].split('/');
+        const tParts = parts[1].split(':');
+        const lastDate = new Date(parseInt(dParts[2]), parseInt(dParts[1]) - 1, parseInt(dParts[0]), parseInt(tParts[0]), parseInt(tParts[1]));
+        const diffMs = vnNow.getTime() - lastDate.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin >= 45 && diffMin <= 24 * 60) {
+          const numSteps = Math.round(diffMin / 30);
+          for (let s = 1; s < numSteps; s++) {
+            const stepDate = new Date(lastDate.getTime() + s * 30 * 60000);
+            const sMin = stepDate.getMinutes() >= 30 ? 30 : 0;
+            const sTimeMark = `${String(stepDate.getDate()).padStart(2, '0')}/${String(stepDate.getMonth() + 1).padStart(2, '0')}/${stepDate.getFullYear()} ${String(stepDate.getHours()).padStart(2, '0')}:${String(sMin).padStart(2, '0')}`;
+            if (sTimeMark !== timeMark && sTimeMark !== lastCapturedAt && !missedIntervals.includes(sTimeMark)) {
+              missedIntervals.push(sTimeMark);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("[Auto-Interpolation] Parse date error:", e.message);
+      }
+    }
 
     // 5. Lấy tổng delta_views và video tăng view nhiều nhất của từng kênh
     const [gainRows, topVids] = await Promise.all([
@@ -2360,7 +2388,10 @@ async function run30mVideoSnapshotJob(env) {
     });
 
     // 6. Chuẩn hoá snapshot và ghi vào Turso trong 1 Batch duy nhất
-    const snapBatch = channels.map(ch => {
+    const snapBatch = [];
+    const totalSteps = missedIntervals.length + 1;
+
+    for (const ch of channels) {
       const cur = countMap[ch.id] || { count: 0, views: 0 };
       const prevTot = prevMap[ch.id] || 0;
       // Công thức view tăng trưởng theo chỉ đạo của người dùng:
@@ -2374,20 +2405,63 @@ async function run30mVideoSnapshotJob(env) {
       // Chạy qua DataSanitizer
       const cleanSnap = DataSanitizer.cleanSnapshot(ch.id, bMinusA, cur.views, prevTot, top, vnNow.getHours());
 
-      return {
-        sql: `
-          INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
-          VALUES (?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(channel_id, captured_at) DO UPDATE SET
-            total_video_views = excluded.total_video_views,
-            video_count = excluded.video_count,
-            delta_30m = excluded.delta_30m,
-            top_growing_video_title = excluded.top_growing_video_title,
-            top_growing_video_delta = excluded.top_growing_video_delta
-        `,
-        args: [ch.id, timeMark, cleanSnap.total_video_views, cur.count, cleanSnap.delta_30m, cleanSnap.top_title, cleanSnap.top_delta]
-      };
-    });
+      if (missedIntervals.length > 0 && prevTot > 0 && cleanSnap.delta_30m > 0) {
+        // Tự động chia đều delta cho từng khoảng 30 phút đã bị khuyết
+        const stepDelta = Math.floor(cleanSnap.delta_30m / totalSteps);
+        const topStepDelta = Math.floor(cleanSnap.top_delta / totalSteps);
+
+        // Bù các mốc bị thiếu
+        for (let i = 0; i < missedIntervals.length; i++) {
+          const interTime = missedIntervals[i];
+          const interViews = prevTot + (stepDelta * (i + 1));
+          snapBatch.push({
+            sql: `
+              INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(channel_id, captured_at) DO UPDATE SET
+                total_video_views = excluded.total_video_views,
+                video_count = excluded.video_count,
+                delta_30m = excluded.delta_30m,
+                top_growing_video_title = excluded.top_growing_video_title,
+                top_growing_video_delta = excluded.top_growing_video_delta
+            `,
+            args: [ch.id, interTime, interViews, cur.count, stepDelta, cleanSnap.top_title, topStepDelta]
+          });
+        }
+
+        // Mốc hiện tại lấy phần delta còn lại để khớp 100% tổng delta thực tế
+        const curDelta = cleanSnap.delta_30m - (stepDelta * missedIntervals.length);
+        const curTopDelta = Math.max(0, cleanSnap.top_delta - (topStepDelta * missedIntervals.length));
+        snapBatch.push({
+          sql: `
+            INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(channel_id, captured_at) DO UPDATE SET
+              total_video_views = excluded.total_video_views,
+              video_count = excluded.video_count,
+              delta_30m = excluded.delta_30m,
+              top_growing_video_title = excluded.top_growing_video_title,
+              top_growing_video_delta = excluded.top_growing_video_delta
+          `,
+          args: [ch.id, timeMark, cleanSnap.total_video_views, cur.count, curDelta, cleanSnap.top_title, curTopDelta]
+        });
+      } else {
+        // Chu kỳ bình thường 30 phút
+        snapBatch.push({
+          sql: `
+            INSERT INTO video_view_snapshots (channel_id, captured_at, total_video_views, video_count, delta_30m, top_growing_video_title, top_growing_video_delta)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(channel_id, captured_at) DO UPDATE SET
+              total_video_views = excluded.total_video_views,
+              video_count = excluded.video_count,
+              delta_30m = excluded.delta_30m,
+              top_growing_video_title = excluded.top_growing_video_title,
+              top_growing_video_delta = excluded.top_growing_video_delta
+          `,
+          args: [ch.id, timeMark, cleanSnap.total_video_views, cur.count, cleanSnap.delta_30m, cleanSnap.top_title, cleanSnap.top_delta]
+        });
+      }
+    }
 
     await executeTursoBatch(snapBatch);
 
