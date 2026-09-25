@@ -2460,17 +2460,19 @@ async function run30mVideoSnapshotJob(env) {
 
     // 4. Lấy snapshot gần nhất trước đó (chỉ lấy 50 dòng mới nhất để tối ưu tốc độ & bộ nhớ)
     const prevSnaps = await queryTursoWorker(`
-      SELECT channel_id, total_video_views, captured_at
+      SELECT channel_id, total_video_views, video_count, captured_at
       FROM video_view_snapshots
       WHERE captured_at != ?
       ORDER BY id DESC
       LIMIT 50
     `, [timeMark]);
     const prevMap = {};
+    const prevCountMap = {};
     let lastCapturedAt = null;
     (prevSnaps || []).forEach(s => {
       if (!prevMap[s.channel_id]) {
         prevMap[s.channel_id] = parseInt(s.total_video_views) || 0;
+        prevCountMap[s.channel_id] = parseInt(s.video_count) || 0;
         if (!lastCapturedAt && s.captured_at) lastCapturedAt = s.captured_at;
       }
     });
@@ -2534,12 +2536,19 @@ async function run30mVideoSnapshotJob(env) {
     for (const ch of channels) {
       const cur = countMap[ch.id] || { count: 0, views: 0 };
       const prevTot = prevMap[ch.id] || 0;
-      // Công thức view tăng trưởng theo chỉ đạo của người dùng:
-      // Ưu tiên tổng delta_views của toàn bộ video trong kênh (tính chính xác từng view từ YouTube Data API v3).
-      // Đồng thời so sánh với (cur.views - prevTot) để không bỏ sót video mới được bổ sung.
+      const prevCnt = prevCountMap[ch.id] || cur.count;
+
+      // Công thức view tăng trưởng 30 phút chuẩn xác từng view:
+      // vidGain là tổng delta_views của các video trong kênh (chuẩn từng 1 view từ YouTube API v3).
+      // TUYỆT ĐỐI KHÔNG dùng Math.max(vidGain, cur.views - prevTot) khi vừa nạp thêm video mới,
+      // vì toàn bộ tổng view tích lũy trước đó của video mới sẽ bị tính oan thành view 30m, gây cột spike ảo!
       const vidGain = gainMap[ch.id] || 0;
-      const totalDiff = prevTot > 0 ? (cur.views - prevTot) : 0;
-      const bMinusA = Math.max(0, vidGain, totalDiff);
+      let bMinusA = vidGain;
+      // Chỉ fallback sang (cur.views - prevTot) nếu vidGain = 0 VÀ số lượng video không đổi
+      if (bMinusA <= 0 && prevTot > 0 && cur.views > prevTot && cur.count <= prevCnt) {
+        bMinusA = cur.views - prevTot;
+      }
+      bMinusA = Math.max(0, bMinusA);
       const top = topMap[ch.id] || { title: 'Đang theo dõi', delta_views: bMinusA };
 
       // Chạy qua DataSanitizer
