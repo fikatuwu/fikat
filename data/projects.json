@@ -4,8 +4,8 @@
     "name": "Suno Bulk Studio",
     "category": "ai-music",
     "categoryLabel": "AI Music & Automation",
-    "version": "3.8",
-    "updatedAt": "19/09/2026",
+    "version": "3.9",
+    "updatedAt": "25/09/2026",
     "status": "active",
     "featured": true,
     "shortDesc": "Phần mềm chuyên dụng tự động tạo nhạc theo Sheet Excel/CSV ngẫu nhiên 5-10 lượt, bóc tách Stems chuyên nghiệp và tải hàng loạt chất lượng cao từ Suno AI.",
@@ -17,9 +17,11 @@
       "Native JS Injector"
     ],
     "badge": "Bản mới nhất",
-    "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.8/Suno_Bulk_Downloader.zip",
+    "downloadUrl": "https://github.com/fikatuwu/fikat/releases/download/v3.9/Suno_Bulk_Downloader.zip",
     "hasLiveUpdates": true,
     "highlights": [
+      "🚪 Khắc phục triệt để lỗi dính tài khoản & Không thể đăng xuất, tối ưu nhận diện Clerk session",
+      "🧹 Nâng cấp cơ chế Đăng xuất một chạm (Deep Logout): Gọi Clerk.signOut() và dọn sạch 100% Profile Chromium",
       "🛡️ Khắc phục triệt để lỗi giải mã DRM bằng cơ chế đa khóa Clerk JWT & Guest Listener Token",
       "⚡ Tối ưu tải trực tiếp từ CDN unencrypted tốc độ cao và tự động fallback chống lỗi tải bài mới",
       "✨ Giao diện độc lập hoàn toàn, đăng nhập popup riêng biệt và tự động cập nhật In-App",

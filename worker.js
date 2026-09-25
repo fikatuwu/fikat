@@ -297,22 +297,21 @@ export default {
       return jsonRes({
         appId: "suno-bulk-studio",
         name: "Suno Bulk Studio",
-        currentVersion: "3.5",
-        releaseDate: "16/09/2026",
+        currentVersion: "3.9",
+        releaseDate: "25/09/2026",
         status: "stable",
         statusText: "Hoạt động ổn định",
         download: {
           zipFile: "Suno_Bulk_Downloader.zip",
           fileName: "Suno_Bulk_Downloader.zip",
-          directUrl: "https://github.com/fikatuwu/fikat/releases/download/v3.5/Suno_Bulk_Downloader.zip",
-          fileSize: "116.9 MB",
+          directUrl: "https://github.com/fikatuwu/fikat/releases/download/v3.9/Suno_Bulk_Downloader.zip",
+          fileSize: "116.8 MB",
           architecture: "Windows x64 (Win 10 / 11)"
         },
         highlights: [
-          "🚀 Tự động làm mới phiên bảo mật (Auto Token Refresh): Tự động trích xuất token Clerk JWT mới nhất với skipCache, giải quyết triệt để lỗi 422 Token validation failed",
-          "⚡ Thuật toán kích hoạt nút Tạo nhạc thế hệ mới: Nhận diện thông minh mọi thành phần giao diện tạo nhạc mới của Suno, đồng bộ chính xác prompt vào React state",
-          "🔄 Cơ chế tự phục hồi thông minh (Self-Healing Session): Tự động tải lại ngầm và gửi lại bài mượt mà 100% khi phát hiện phiên bị stale",
-          "🛠️ Nút làm mới 🔄 trên thanh công cụ: Reload lại WebView2 và tái đồng bộ phiên đăng nhập chỉ với 1 click"
+          "🚪 Khắc phục triệt để lỗi dính tài khoản & Không thể đăng xuất: Tối ưu hóa thuật toán nhận diện phiên Clerk JWT, loại bỏ cookie client định danh thiết bị giả lập session, đảm bảo máy mới tải về hiển thị đúng trạng thái 'Chưa có session'.",
+          "🧹 Nâng cấp cơ chế Đăng xuất một chạm (Deep Logout): Tự động gọi Clerk.signOut() chính thức kết hợp lệnh dọn sạch toàn diện Chromium Profile (Cookies, IndexedDB, DOM Storage, Cache), cho phép chuyển đổi giữa nhiều tài khoản Suno mượt mà 100% không bị tự động đăng nhập lại.",
+          "⚡ Nâng cấp đồng bộ quy trình đăng nhập độc lập: Trực tiếp điều hướng trang đăng nhập Clerk chuẩn xác và tự động tái đồng bộ trạng thái tài khoản."
         ]
       });
     }
