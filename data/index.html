@@ -1101,6 +1101,9 @@
           <button id="btnSortDelta" onclick="setModalSort('delta')" style="padding:5px 11px;border-radius:7px;background:rgba(34,197,94,0.18);border:1px solid #22c55e;color:#4ade80;font-size:11.5px;font-weight:700;cursor:pointer;">
             🔥 Tăng nhiều nhất ↓
           </button>
+          <button id="btnSortDate" onclick="setModalSort('date')" style="padding:5px 11px;border-radius:7px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text-2);font-size:11.5px;font-weight:600;cursor:pointer;">
+            🕒 Mới đăng nhất ↓
+          </button>
           <button id="btnSortViews" onclick="setModalSort('views')" style="padding:5px 11px;border-radius:7px;background:rgba(255,255,255,0.06);border:1px solid var(--line);color:var(--text-2);font-size:11.5px;font-weight:600;cursor:pointer;">
             👀 Tổng view ↓
           </button>
@@ -1112,13 +1115,15 @@
             <tr>
               <th style="width:40px;">#</th>
               <th>Tên Video / Bài Hát</th>
-              <th style="width:140px;cursor:pointer;user-select:none;" onclick="setModalSort('views')" title="Bấm để sắp xếp theo tổng view">
+              <th style="width:130px;cursor:pointer;user-select:none;" onclick="setModalSort('views')" title="Bấm để sắp xếp theo tổng view">
                 Lượt xem <span id="thSortViewsIcon" style="font-size:10px;color:var(--text-3);">↕</span>
               </th>
               <th style="width:130px;cursor:pointer;user-select:none;" onclick="setModalSort('delta')" title="Bấm để sắp xếp theo số tăng">
                 Tăng gần đây <span id="thSortDeltaIcon" style="font-size:10px;color:#4ade80;">▼</span>
               </th>
-              <th style="width:130px;">Thời gian</th>
+              <th style="width:150px;cursor:pointer;user-select:none;" onclick="setModalSort('date')" title="Bấm để sắp xếp theo ngày đăng">
+                Ngày đăng <span id="thSortDateIcon" style="font-size:10px;color:var(--text-3);">↕</span>
+              </th>
               <th style="width:90px;text-align:center;">Link</th>
             </tr>
           </thead>
@@ -2661,43 +2666,104 @@
       }
     }
 
-    let modalSortBy = 'delta'; // 'delta' (tăng nhiều nhất) hoặc 'views' (tổng view cao nhất)
+    let modalSortBy = 'delta'; // 'delta' (tăng nhiều nhất), 'date' (mới đăng nhất), hoặc 'views' (tổng view cao nhất)
+
+    function formatPublishDate(timeStr) {
+      if (!timeStr || timeStr === '--') return '--';
+      let d = new Date(timeStr);
+      if (isNaN(d.getTime())) {
+        const m = String(timeStr).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+        if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+      }
+      if (isNaN(d.getTime())) {
+        return escapeHtml(timeStr);
+      }
+
+      const now = Date.now();
+      const diffMs = now - d.getTime();
+      const vnDateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      
+      if (diffMs < 0) return `<span title="Đăng lúc: ${vnDateStr}" style="cursor:help;color:#38bdf8;font-weight:700;">Vừa đăng</span>`;
+      
+      const diffSec = Math.floor(diffMs / 1000);
+      const diffMin = Math.floor(diffSec / 60);
+      const diffHour = Math.floor(diffMin / 60);
+      const diffDay = Math.floor(diffHour / 24);
+
+      let relText = '';
+      let badgeStyle = 'color:var(--text-3);';
+      if (diffMin < 60) {
+        relText = `${Math.max(1, diffMin)} phút trước`;
+        badgeStyle = 'color:#38bdf8;font-weight:700;';
+      } else if (diffHour < 24) {
+        relText = `${diffHour} giờ trước`;
+        badgeStyle = 'color:#38bdf8;font-weight:700;';
+      } else if (diffDay === 1) {
+        relText = `1 ngày trước (Hôm qua)`;
+        badgeStyle = 'color:#34d399;font-weight:700;';
+      } else if (diffDay < 7) {
+        relText = `${diffDay} ngày trước`;
+        badgeStyle = 'color:#a7f3d0;';
+      } else if (diffDay < 30) {
+        const weeks = Math.floor(diffDay / 7);
+        relText = `${weeks} tuần trước`;
+      } else if (diffDay < 365) {
+        const months = Math.floor(diffDay / 30);
+        relText = `${months} tháng trước`;
+      } else {
+        const years = Math.floor(diffDay / 365);
+        relText = `${years} năm trước`;
+      }
+
+      return `<span title="Đăng lúc: ${vnDateStr}" style="cursor:help;${badgeStyle}">${relText}</span>`;
+    }
 
     function setModalSort(sortKey) {
       modalSortBy = sortKey;
       const btnDelta = document.getElementById('btnSortDelta');
+      const btnDate = document.getElementById('btnSortDate');
       const btnViews = document.getElementById('btnSortViews');
       const iconDelta = document.getElementById('thSortDeltaIcon');
+      const iconDate = document.getElementById('thSortDateIcon');
       const iconViews = document.getElementById('thSortViewsIcon');
 
-      if (btnDelta && btnViews) {
-        if (sortKey === 'delta') {
+      // Reset all buttons
+      [btnDelta, btnDate, btnViews].forEach(b => {
+        if (b) {
+          b.style.background = 'rgba(255,255,255,0.06)';
+          b.style.borderColor = 'var(--line)';
+          b.style.color = 'var(--text-2)';
+          b.style.fontWeight = '600';
+        }
+      });
+      if (iconDelta) { iconDelta.textContent = '↕'; iconDelta.style.color = 'var(--text-3)'; }
+      if (iconDate) { iconDate.textContent = '↕'; iconDate.style.color = 'var(--text-3)'; }
+      if (iconViews) { iconViews.textContent = '↕'; iconViews.style.color = 'var(--text-3)'; }
+
+      if (sortKey === 'delta') {
+        if (btnDelta) {
           btnDelta.style.background = 'rgba(34,197,94,0.18)';
           btnDelta.style.borderColor = '#22c55e';
           btnDelta.style.color = '#4ade80';
           btnDelta.style.fontWeight = '700';
-
-          btnViews.style.background = 'rgba(255,255,255,0.06)';
-          btnViews.style.borderColor = 'var(--line)';
-          btnViews.style.color = 'var(--text-2)';
-          btnViews.style.fontWeight = '600';
-
-          if (iconDelta) { iconDelta.textContent = '▼'; iconDelta.style.color = '#4ade80'; }
-          if (iconViews) { iconViews.textContent = '↕'; iconViews.style.color = 'var(--text-3)'; }
-        } else {
+        }
+        if (iconDelta) { iconDelta.textContent = '▼'; iconDelta.style.color = '#4ade80'; }
+      } else if (sortKey === 'date') {
+        if (btnDate) {
+          btnDate.style.background = 'rgba(56,189,248,0.18)';
+          btnDate.style.borderColor = '#38bdf8';
+          btnDate.style.color = '#38bdf8';
+          btnDate.style.fontWeight = '700';
+        }
+        if (iconDate) { iconDate.textContent = '▼'; iconDate.style.color = '#38bdf8'; }
+      } else {
+        if (btnViews) {
           btnViews.style.background = 'rgba(245,158,11,0.18)';
           btnViews.style.borderColor = '#f59e0b';
           btnViews.style.color = '#f59e0b';
           btnViews.style.fontWeight = '700';
-
-          btnDelta.style.background = 'rgba(255,255,255,0.06)';
-          btnDelta.style.borderColor = 'var(--line)';
-          btnDelta.style.color = 'var(--text-2)';
-          btnDelta.style.fontWeight = '600';
-
-          if (iconViews) { iconViews.textContent = '▼'; iconViews.style.color = '#f59e0b'; }
-          if (iconDelta) { iconDelta.textContent = '↕'; iconDelta.style.color = 'var(--text-3)'; }
         }
+        if (iconViews) { iconViews.textContent = '▼'; iconViews.style.color = '#f59e0b'; }
       }
       filterModalVideos();
     }
@@ -2758,13 +2824,18 @@
         return;
       }
 
-      // Sắp xếp theo cấu hình hiện tại: delta DESC hoặc views DESC
+      // Sắp xếp theo cấu hình hiện tại: delta DESC, date DESC hoặc views DESC
       const sortedVideos = [...videos].sort((a, b) => {
         const deltaA = Math.max(parseInt(a.delta_views) || 0, parseInt(a.last_delta_30m) || 0);
         const deltaB = Math.max(parseInt(b.delta_views) || 0, parseInt(b.last_delta_30m) || 0);
         if (modalSortBy === 'delta') {
           if (deltaB !== deltaA) return deltaB - deltaA; // Số tăng cao xuống thấp
           return (parseInt(b.views) || 0) - (parseInt(a.views) || 0); // Phụ: view cao xuống thấp
+        } else if (modalSortBy === 'date') {
+          const dateA = new Date(a.published_time || 0).getTime() || 0;
+          const dateB = new Date(b.published_time || 0).getTime() || 0;
+          if (dateB !== dateA) return dateB - dateA; // Mới đăng nhất lên đầu
+          return deltaB - deltaA;
         } else {
           const viewsA = parseInt(a.views) || 0;
           const viewsB = parseInt(b.views) || 0;
@@ -2794,7 +2865,7 @@
             </td>
             <td class="mono-cell" style="color:#f59e0b;font-weight:700;">${views.toLocaleString('vi-VN')}</td>
             <td class="mono-cell">${deltaHtml}</td>
-            <td style="font-size:11.5px;color:var(--text-3);">${escapeHtml(v.published_time || '--')}</td>
+            <td style="font-size:11.5px;">${formatPublishDate(v.published_time)}</td>
             <td style="text-align:center;">
               <a href="${ytWatchUrl}" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:4px 9px;border-radius:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;text-decoration:none;font-size:11.5px;font-weight:700;">
                 Xem ↗

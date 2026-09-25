@@ -1344,13 +1344,71 @@ export default {
         const chId = url.searchParams.get("channel_id");
         if (!chId) return jsonRes({ ok: false, message: "Thiếu channel_id" }, 400);
 
-        const rows = await queryTursoWorker(`
+        let rows = await queryTursoWorker(`
           SELECT * FROM video_items WHERE channel_id = ? ORDER BY views DESC
         `, [chId]);
 
+        const activeKeys = await getActiveYtApiKeys(env);
+
+        // Tự động kiểm tra video mới đăng của kênh này qua Uploads Playlist
+        const targetCid = CHANNEL_CID_MAP[chId] || (chId.startsWith('UC') ? chId : null);
+        if (targetCid && activeKeys && activeKeys.length > 0) {
+          try {
+            const uploadsId = 'UU' + targetCid.substring(2);
+            const plUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=15&key=${activeKeys[0]}`;
+            const plResp = await fetch(plUrl);
+            if (plResp.ok) {
+              const plData = await plResp.json();
+              const existingIds = new Set((rows || []).map(r => r.id));
+              const newItems = [];
+              for (const item of (plData.items || [])) {
+                const vidId = item.contentDetails?.videoId;
+                if (vidId && !existingIds.has(vidId)) {
+                  newItems.push({
+                    id: vidId,
+                    channel_id: chId,
+                    title: item.snippet?.title || 'Video YouTube',
+                    published_time: item.snippet?.publishedAt || ''
+                  });
+                }
+              }
+              if (newItems.length > 0) {
+                const newIds = newItems.map(n => n.id);
+                const newViewsMap = await fetchExactViewsFromYtApi(newIds, activeKeys);
+                const isoNow = new Date(Date.now() + 7 * 3600 * 1000).toISOString().replace("T", " ").substring(0, 19);
+                const insertBatch = [];
+                for (const ni of newItems) {
+                  const vCount = newViewsMap[ni.id] || 0;
+                  const newRow = {
+                    id: ni.id,
+                    channel_id: chId,
+                    title: ni.title,
+                    views: vCount,
+                    prev_views: vCount,
+                    delta_views: 0,
+                    last_delta_30m: 0,
+                    published_time: ni.published_time,
+                    last_scraped_at: isoNow
+                  };
+                  if (!rows) rows = [];
+                  rows.unshift(newRow);
+                  insertBatch.push({
+                    sql: `INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, published_time, last_scraped_at)
+                          VALUES (?, ?, ?, ?, ?, 0, ?, ?)
+                          ON CONFLICT(id) DO UPDATE SET views=excluded.views, prev_views=excluded.prev_views, published_time=excluded.published_time, last_scraped_at=excluded.last_scraped_at`,
+                    args: [ni.id, chId, ni.title, vCount, vCount, ni.published_time, isoNow]
+                  });
+                }
+                executeTursoBatch(insertBatch).catch(() => {});
+              }
+            }
+          } catch (plErr) {
+            console.warn("Auto-detect modal new videos error:", plErr.message);
+          }
+        }
+
         if (!rows || !rows.length) return jsonRes({ ok: true, videos: [] });
 
-        const activeKeys = await getActiveYtApiKeys(env);
         if (activeKeys && activeKeys.length > 0) {
           try {
             const vids = rows.map(r => r.id);
@@ -2175,6 +2233,51 @@ async function run30mVideoSnapshotJob(env) {
           }
         } catch (echErr) {
           console.warn(`[Auto-New-Channel] Loi quet kenh ${ech.title}:`, echErr.message);
+        }
+      }
+    }
+
+    // ── TỰ ĐỘNG PHÁT HIỆN VIDEO MỚI ĐĂNG GẦN ĐÂY CỦA TẤT CẢ CÁC KÊNH ────────────
+    if (activeKeys && activeKeys.length > 0) {
+      for (const ch of channels) {
+        const targetCid = CHANNEL_CID_MAP[ch.id] || (ch.custom_id.startsWith('UC') ? ch.custom_id : null);
+        if (!targetCid) continue;
+        try {
+          const uploadsId = 'UU' + targetCid.substring(2);
+          const plUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&playlistId=${uploadsId}&maxResults=10&key=${activeKeys[0]}`;
+          const plResp = await fetch(plUrl);
+          if (plResp.ok) {
+            const plData = await plResp.json();
+            const newVidBatch = [];
+            for (const item of (plData.items || [])) {
+              const vidId = item.contentDetails?.videoId;
+              if (vidId && !existingMap[vidId]) {
+                const vidTitle = (item.snippet?.title || 'Video YouTube').slice(0, 150);
+                const pubAt = item.snippet?.publishedAt || '';
+                existingMap[vidId] = {
+                  id: vidId,
+                  channel_id: ch.id,
+                  title: vidTitle,
+                  views: 0,
+                  prev_views: 0,
+                  delta_views: 0,
+                  published_time: pubAt
+                };
+                newVidBatch.push({
+                  sql: `INSERT INTO video_items (id, channel_id, title, views, prev_views, delta_views, published_time, last_scraped_at)
+                        VALUES (?, ?, ?, 0, 0, 0, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET published_time = excluded.published_time`,
+                  args: [vidId, ch.id, vidTitle, pubAt, isoNow]
+                });
+              }
+            }
+            if (newVidBatch.length > 0) {
+              await executeTursoBatch(newVidBatch);
+              console.log(`[Auto-New-Video] Kenh ${ch.title} co ${newVidBatch.length} video moi dang!`);
+            }
+          }
+        } catch (plErr) {
+          // ignore
         }
       }
     }
